@@ -1,0 +1,30 @@
+.alert-dialog-content {
+    direction: rtl;
+    text-align: right;
+}
+
+.alert-dialog-header {
+    text-align: right;
+}
+
+.alert-dialog-title {
+    direction: rtl;
+    text-align: right;
+}
+
+.alert-dialog-description {
+    direction: rtl;
+    text-align: right;
+}
+
+.alert-dialog-footer {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    gap: 0.5rem;
+}
+
+.rtl-dialog {
+    direction: rtl !important;
+    text-align: right !important;
+}

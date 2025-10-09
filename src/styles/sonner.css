@@ -1,0 +1,68 @@
+[dir="rtl"] .sonner-toast {
+    --normal-bg: #ffffff;
+    --normal-border: #e5e5e5;
+    --normal-text: #000000;
+    --success-bg: #dcfce7;
+    --success-border: #86efac;
+    --success-text: #166534;
+    --error-bg: #fef2f2;
+    --error-border: #fecaca;
+    --error-text: #991b1b;
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .sonner-toast-message {
+    text-align: right;
+    direction: rtl;
+}
+
+[dir="rtl"] .sonner-toast-description {
+    text-align: right;
+    direction: rtl;
+}
+
+[dir="rtl"] .sonner-toast-icon {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+[dir="rtl"] .sonner-toast-action-wrapper {
+    flex-direction: row-reverse;
+    margin-right: auto;
+    margin-left: 0;
+}
+
+[dir="rtl"] .sonner-loading-wrapper {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+[dir="rtl"] .sonner-toast-content {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .sonner-toast button {
+    direction: rtl;
+    text-align: right;
+}
+
+.sonner-toaster {
+    right: 1rem !important;
+    left: auto !important;
+}
+
+[dir="rtl"] .sonner-toast-close-button {
+    right: auto;
+    left: 4px;
+}
+
+[dir="rtl"] .sonner-toast-actions {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .sonner-toast-title {
+    direction: rtl;
+    text-align: right;
+}
