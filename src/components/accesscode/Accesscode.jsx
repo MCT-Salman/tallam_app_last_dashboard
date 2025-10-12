@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, Download, ZoomIn } from "lucide-react";
-import { generateAccessCode, getAllAccessCodes, getAccessCodesByUserId, getAccessCodesByCourse, deleteAccessCode } from "@/api/api";
+import { generateAccessCode, getAllAccessCodes, getAccessCodesByUserId, getAccessCodesByCourse } from "@/api/api";
 import { getAllUsers } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getCourseLevels } from "@/api/api";

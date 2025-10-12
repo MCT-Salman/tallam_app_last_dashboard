@@ -31,6 +31,7 @@ import Suggestions from "@/components/suggestions/Suggestions"
 import Profile from "@/components/profile/Profile"
 import Settings from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
+import Review from "./components/review/Review"
 
 const App = () => {
   return (
@@ -113,13 +114,13 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/ads" element={
+              {/* <Route path="/ads" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Ads />
                   </DashboardLayout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               <Route path="/stories" element={
                 <ProtectedRoute>
                   <DashboardLayout>
@@ -131,6 +132,13 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Notifications />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/reviews" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Review />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

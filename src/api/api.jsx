@@ -452,7 +452,7 @@ export const deleteCourseLevel = (id) =>
 export const createLesson = (courseId, data) =>
     api.post(`/lessons/admin/courses/${courseId}/lessons`, data);
 
-// إنشاء درس لمستوى محدد - التصحيح: إرسال كـ JSON بدلاً من form-data
+// إنشاء درس لمستوى محدد  
 export const createLessonForLevel = (courseLevelId, data) => {
     return api.post(`/lessons/admin/levels/${courseLevelId}/lessons`, data);
 };
@@ -465,7 +465,7 @@ export const getCourseLessons = (courseId) =>
 export const getLevelLessons = (courseLevelId) =>
     api.get(`/lessons/admin/levels/${courseLevelId}/lessons`);
 
-// تحديث درس - التصحيح: إرسال كـ JSON بدلاً من form-data
+// تحديث درس 
 export const updateLesson = (id, data) => {
     return api.put(`/lessons/admin/lessons/${id}`, data);
 };
@@ -487,28 +487,28 @@ export const deleteUser = (id) => api.delete(`/users/${id}`);
 export const toggleUserActive = (id) => api.put(`/users/${id}/toggle-active`);
 
 // --- إدارة المعاملات ---
-export const getTransactions = (params) => api.get('/admin/transactions', { params });
-export const getTransactionById = (id) => api.get(`/admin/transactions/${id}`);
-export const getTransactionStats = (params) => api.get('/admin/transactions/stats/overview', { params });
-export const getTransactionsByDate = (params) => api.get('/admin/transactions/analytics/date', { params });
+// export const getTransactions = (params) => api.get('/admin/transactions', { params });
+// export const getTransactionById = (id) => api.get(`/admin/transactions/${id}`);
+// export const getTransactionStats = (params) => api.get('/admin/transactions/stats/overview', { params });
+// export const getTransactionsByDate = (params) => api.get('/admin/transactions/analytics/date', { params });
 
 // --- إدارة التقدم ---
-export const markLessonComplete = (lessonId) => api.post(`/progress/lessons/${lessonId}/complete`);
-export const getCourseProgress = (courseId) => api.get(`/progress/courses/${courseId}`);
+// export const markLessonComplete = (lessonId) => api.post(`/progress/lessons/${lessonId}/complete`);
+// export const getCourseProgress = (courseId) => api.get(`/progress/courses/${courseId}`);
 
 // --- إدارة التقييمات ---
-export const getReviewsForCourseLevel = (courseLevelId, params) =>
-    api.get(`/reviews/courselevels/${courseLevelId}`, { params });
-export const getReviewStats = (courseLevelId) =>
-    api.get(`/reviews/courselevels/${courseLevelId}/stats`);
-export const createReview = (courseLevelId, data) =>
-    api.post(`/reviews/courselevels/${courseLevelId}`, data);
-export const getMyReview = (courseLevelId) =>
-    api.get(`/reviews/courselevels/${courseLevelId}/mine`);
-export const updateReview = (reviewId, data) =>
-    api.put(`/reviews/${reviewId}`, data);
-export const deleteReview = (reviewId) =>
-    api.delete(`/reviews/${reviewId}`);
+// export const getReviewsForCourseLevel = (courseLevelId, params) =>
+//     api.get(`/reviews/courselevels/${courseLevelId}`, { params });
+// export const getReviewStats = (courseLevelId) =>
+//     api.get(`/reviews/courselevels/${courseLevelId}/stats`);
+// export const createReview = (courseLevelId, data) =>
+//     api.post(`/reviews/courselevels/${courseLevelId}`, data);
+// export const getMyReview = (courseLevelId) =>
+//     api.get(`/reviews/courselevels/${courseLevelId}/mine`);
+// export const updateReview = (reviewId, data) =>
+//     api.put(`/reviews/${reviewId}`, data);
+// export const deleteReview = (reviewId) =>
+//     api.delete(`/reviews/${reviewId}`);
 
 // --- إدارة الاختبارات ---
 export const getQuizByCourseLevel = (courseLevelId) =>
@@ -542,35 +542,35 @@ export const uploadFile = (data) => api.post('/files/admin/files', data, {
 export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
 
 // --- إدارة الإعلانات ---
-export const getAdvertisements = (params) => api.get('/ads/admin', { params });
-export const createAdvertisement = (data) => api.post('/ads/admin', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-});
-export const updateAdvertisement = (id, data) => api.put(`/ads/admin/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-});
-export const deleteAdvertisement = (id) => api.delete(`/ads/admin/${id}`);
-export const toggleAdvertisementActive = (id, isActive) =>
-    api.put(`/ads/admin/${id}`, { isActive });
+// export const getAdvertisements = (params) => api.get('/ads/admin', { params });
+// export const createAdvertisement = (data) => api.post('/ads/admin', data, {
+//     headers: { 'Content-Type': 'multipart/form-data' },
+// });
+// export const updateAdvertisement = (id, data) => api.put(`/ads/admin/${id}`, data, {
+//     headers: { 'Content-Type': 'multipart/form-data' },
+// });
+// export const deleteAdvertisement = (id) => api.delete(`/ads/admin/${id}`);
+// export const toggleAdvertisementActive = (id, isActive) =>
+//     api.put(`/ads/admin/${id}`, { isActive });
 
 // --- إعدادات التطبيق ---
-export const getAppSettings = () => api.get('/settings');
-export const updateAppSettings = (data) => api.put('/settings', data);
+// export const getAppSettings = () => api.get('/settings');
+// export const updateAppSettings = (data) => api.put('/settings', data);
 
 // --- إدارة المجالات والمواد ---
-export const getDomains = () => api.get('/catalog/admin/domains');
-export const createDomain = (name) => api.post('/catalog/admin/domains', { name });
-export const updateDomain = (id, data) => api.put(`/catalog/admin/domains/${id}`, data);
-export const toggleDomainActive = (id, isActive) =>
-    api.put(`/catalog/admin/domains/${id}/active`, { isActive });
-export const deleteDomain = (id) => api.delete(`/catalog/admin/domains/${id}`);
+// export const getDomains = () => api.get('/catalog/admin/domains');
+// export const createDomain = (name) => api.post('/catalog/admin/domains', { name });
+// export const updateDomain = (id, data) => api.put(`/catalog/admin/domains/${id}`, data);
+// export const toggleDomainActive = (id, isActive) =>
+//     api.put(`/catalog/admin/domains/${id}/active`, { isActive });
+// export const deleteDomain = (id) => api.delete(`/catalog/admin/domains/${id}`);
 
-export const getSubjects = (params) => api.get('/catalog/admin/subjects', { params });
-export const createSubject = (data) => api.post('/catalog/admin/subjects', data);
-export const updateSubject = (id, data) => api.put(`/catalog/admin/subjects/${id}`, data);
-export const toggleSubjectActive = (id, isActive) =>
-    api.put(`/catalog/admin/subjects/${id}/active`, { isActive });
-export const deleteSubject = (id) => api.delete(`/catalog/admin/subjects/${id}`);
+// export const getSubjects = (params) => api.get('/catalog/admin/subjects', { params });
+// export const createSubject = (data) => api.post('/catalog/admin/subjects', data);
+// export const updateSubject = (id, data) => api.put(`/catalog/admin/subjects/${id}`, data);
+// export const toggleSubjectActive = (id, isActive) =>
+//     api.put(`/catalog/admin/subjects/${id}/active`, { isActive });
+// export const deleteSubject = (id) => api.delete(`/catalog/admin/subjects/${id}`);
 
 // --- إدارة مستويات الدورات ---
 // getCourseLevels موجودة بالفعل أعلاه
@@ -608,24 +608,24 @@ export const deleteStory = (id) =>
     api.delete(`/story/admin/stories/${id}`);
 
 // --- إدارة الإشعارات ---
-export const getNotifications = (params) => api.get('/notifications', { params });
-export const createNotification = (data) => api.post('/notifications', data);
-export const markNotificationAsRead = (id) => api.put(`/notifications/${id}/read`);
+// export const getNotifications = (params) => api.get('/notifications', { params });
+// export const createNotification = (data) => api.post('/notifications', data);
+// export const markNotificationAsRead = (id) => api.put(`/notifications/${id}/read`);
 
 // --- إدارة المقترحات ---
-export const getSuggestions = (params) => api.get('/suggestions', { params });
-export const updateSuggestion = (id, data) => api.put(`/suggestions/${id}`, data);
-export const deleteSuggestion = (id) => api.delete(`/suggestions/${id}`);
+// export const getSuggestions = (params) => api.get('/suggestions', { params });
+// export const updateSuggestion = (id, data) => api.put(`/suggestions/${id}`, data);
+// export const deleteSuggestion = (id) => api.delete(`/suggestions/${id}`);
 
 // --- إدارة رسائل الدعم ---
-export const getSupportMessages = (params) => api.get('/support', { params });
-export const replyToSupport = (id, data) => api.post(`/support/${id}/reply`, data);
+// export const getSupportMessages = (params) => api.get('/support', { params });
+// export const replyToSupport = (id, data) => api.post(`/support/${id}/reply`, data);
 
 // --- إدارة المديرين الفرعيين ---
-export const getSubAdmins = (params) => api.get('/admin/sub-admins', { params });
-export const createSubAdmin = (data) => api.post('/admin/sub-admins', data);
-export const updateSubAdmin = (id, data) => api.put(`/admin/sub-admins/${id}`, data);
-export const deleteSubAdmin = (id) => api.delete(`/admin/sub-admins/${id}`);
+// export const getSubAdmins = (params) => api.get('/admin/sub-admins', { params });
+// export const createSubAdmin = (data) => api.post('/admin/sub-admins', data);
+// export const updateSubAdmin = (id, data) => api.put(`/admin/sub-admins/${id}`, data);
+// export const deleteSubAdmin = (id) => api.delete(`/admin/sub-admins/${id}`);
 
 
 
@@ -665,5 +665,187 @@ export const getAccessCodesByCourse = async (courseId) => {
 //   return response;
 // };
 
+// --- Suggestions API ---
+
+// جلب جميع الاقتراحات
+export const getSuggestions = async (params = {}) => {
+  const response = await api.get('/suggestions/admin', { params });
+  return response;
+};
+
+// --- Notifications API ---
+
+// في ملف api.js - أضف هذه الدوال
+
+// الإشعارات
+export const getNotifications = async (params = {}) => {
+    try {
+        const response = await api.get('/notifications/admin', { params });
+        return response;
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+    }
+};
+
+// export const createNotification = async (notificationData) => {
+//     try {
+//         // تأكد من أن البيانات تتوافق مع المتطلبات
+//         const data = {
+//             userId: notificationData.userId,
+//             title: notificationData.title,
+//             body: notificationData.body,
+//             type: notificationData.type || 'GENERAL',
+//             link: notificationData.link || undefined,
+//             imageUrl: notificationData.imageUrl || undefined,
+//             data: notificationData.data || undefined
+//         };
+        
+//         const response = await api.post('/notifications/admin', data);
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating notification:', error);
+//         throw error;
+//     }
+// };
+
+// export const createNotification = async (notificationData) => {
+//     try {
+//         // تنظيف البيانات - إزالة الحقول undefined
+//         const cleanData = Object.fromEntries(
+//             Object.entries(notificationData).filter(([_, value]) => value !== undefined && value !== null)
+//         );
+        
+//         const response = await api.post('/notifications/admin', cleanData);
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating notification:', error);
+//         throw error;
+//     }
+// };
+
+// export const createBroadcastNotification = async (notificationData) => {
+//     try {
+//         // تأكد من أن البيانات تتوافق مع المتطلبات
+//         const data = {
+//             title: notificationData.title,
+//             body: notificationData.body,
+//             type: notificationData.type || 'GENERAL',
+//             link: notificationData.link || undefined,
+//             imageUrl: notificationData.imageUrl || undefined,
+//             data: notificationData.data || undefined
+//         };
+        
+//         const response = await api.post('/notifications/admin/broadcast', data);
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating broadcast notification:', error);
+//         throw error;
+//     }
+// };
+
+// export const createNotificationForUsers = async (notificationData) => {
+//     try {
+//         // تأكد من أن البيانات تتوافق مع المتطلبات
+//         const data = {
+//             userIds: notificationData.userIds,
+//             title: notificationData.title,
+//             body: notificationData.body,
+//             type: notificationData.type || 'GENERAL',
+//             link: notificationData.link || undefined,
+//             imageUrl: notificationData.imageUrl || undefined,
+//             data: notificationData.data || undefined
+//         };
+        
+//         const response = await api.post('/notifications/admin/users', data);
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating notification for users:', error);
+//         throw error;
+//     }
+// };
+
+// الإشعارات
+export const createNotification = async (formData) => {
+    try {
+        const response = await api.post('/notifications/admin', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response;
+    } catch (error) {
+        console.error('Error creating notification:', error);
+        throw error;
+    }
+};
+
+export const createBroadcastNotification = async (formData) => {
+    try {
+        const response = await api.post('/notifications/admin/broadcast', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response;
+    } catch (error) {
+        console.error('Error creating broadcast notification:', error);
+        throw error;
+    }
+};
+
+export const createNotificationForUsers = async (formData) => {
+    try {
+        const response = await api.post('/notifications/admin/users', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response;
+    } catch (error) {
+        console.error('Error creating notification for users:', error);
+        throw error;
+    }
+};
+
+export const deleteNotification = async (notificationId) => {
+    try {
+        const response = await api.delete(`/notifications/admin/${notificationId}`);
+        return response;
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        throw error;
+    }
+};
+
+// جلب جميع الإشعارات
+// export const getNotifications = async (params = {}) => {
+//   const response = await api.get('/notifications/admin', { params });
+//   return response;
+// };
+
+// // إنشاء إشعار لمستخدم معين
+// export const createNotification = async (notificationData) => {
+//   const response = await api.post('/notifications/admin', notificationData);
+//   return response;
+// };
+
+// // إنشاء إشعار عام لجميع المستخدمين
+// export const createBroadcastNotification = async (notificationData) => {
+//   const response = await api.post('/notifications/admin/broadcast', notificationData);
+//   return response;
+// };
+
+// // إنشاء إشعار لمستخدمين محددين
+// export const createNotificationForUsers = async (notificationData) => {
+//   const response = await api.post('/notifications/admin/users', notificationData);
+//   return response;
+// };
+
+// // حذف إشعار
+// export const deleteNotification = async (notificationId) => {
+//   const response = await api.delete(`/notifications/admin/${notificationId}`);
+//   return response;
+// };
 
 export { api, BASE_URL };

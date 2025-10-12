@@ -1,6 +1,6 @@
 // src\data\sidebarItems.js
 // src\data\sidebarItems.js
-import { Home, BookOpen, Users, Settings, User, BarChart3, Bell, DollarSign, Megaphone,Ticket, Percent, UserCheck, MessageSquare, Link as LinkIcon, Image, FolderOpen} from "lucide-react"
+import { Home, BookOpen, Users, Settings, User, BarChart3, Bell, DollarSign, Megaphone,Ticket, Percent, UserCheck, MessageSquare, Link as LinkIcon, Image, FolderOpen, Star} from "lucide-react"
 
 export const sidebarItems = [
   {
@@ -68,6 +68,11 @@ export const sidebarItems = [
   //   href: "/sub-admins",
   //   icon: UserCheck
   // },
+  {
+    title: "التقييمات",
+    href: "/reviews",
+    icon: Star
+  },
   {
     title: "المقترحات",
     href: "/suggestions",
