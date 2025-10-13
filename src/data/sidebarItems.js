@@ -33,11 +33,11 @@ export const sidebarItems = [
     href: "/quizzes",
     icon: MessageSquare
   },
-  {
-    title: "إدارة الملفات",
-    href: "/files",
-    icon: FolderOpen
-  },
+  // {
+  //   title: "إدارة الملفات",
+  //   href: "/files",
+  //   icon: FolderOpen
+  // },
   {
     title: "إدارة المعاملات",
     href: "/transactions",

@@ -4,6 +4,7 @@ import Instructor from "./Instructor";
 import Course from "./Course";
 import CourseLevel from "./CourseLevel";
 import Lesson from "./Lesson";
+import Files from "./Files";
 
 const Courses = () => {
   return (
@@ -14,7 +15,7 @@ const Courses = () => {
 
       <Tabs className="w-full" defaultValue="Specialization" dir="rtl">
         {/* قائمة التبويبات */}
-        <TabsList className="grid grid-cols-5 gap-2 bg-muted rounded-lg p-1">
+        <TabsList className="grid grid-cols-6 gap-2 bg-muted rounded-lg p-1">
           <TabsTrigger
             value="Specialization"
             className="transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -45,6 +46,12 @@ const Courses = () => {
           >
             الدروس
           </TabsTrigger>
+          <TabsTrigger
+            value="File"
+            className="transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            الملفات
+          </TabsTrigger>
         </TabsList>
 
         {/* محتوى التبويبات */}
@@ -63,6 +70,9 @@ const Courses = () => {
           </TabsContent>
           <TabsContent value="Lesson" className="space-y-4">
             <Lesson />
+          </TabsContent>
+          <TabsContent value="File" className="space-y-4">
+            <Files />
           </TabsContent>
         </div>
       </Tabs>

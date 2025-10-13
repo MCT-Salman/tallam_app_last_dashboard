@@ -21,10 +21,10 @@ import Account from "@/components/account/Account"
 import Courses from "@/components/courses_managments/Courses"
 import Coupons from "@/components/coupons/Coupons"
 import Quizzes from "@/components/quizzes/Quizzes"
-import Files from "@/components/files/Files"
+// import Files from "@/components/files/Files"
 import Transactions from "@/components/transactions/Transactions"
 import Financial from "@/components/financial/Financial"
-import Ads from "@/components/ads/Ads"
+// import Ads from "@/components/ads/Ads"
 import Stories from "@/components/stories/Stories"
 import Notifications from "@/components/notifications/Notifications"
 import Suggestions from "@/components/suggestions/Suggestions"
@@ -93,13 +93,13 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/files" element={
+              {/* <Route path="/files" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Files />
                   </DashboardLayout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               <Route path="/transactions" element={
                 <ProtectedRoute>
                   <DashboardLayout>
