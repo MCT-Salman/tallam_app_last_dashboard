@@ -85,16 +85,15 @@ const Notifications = () => {
 
   // جلب جميع الإشعارات
   const fetchNotifications = async () => {
-     setLoading(true);
+    setLoading(true);
     try {
-        const params = {
-            page: currentPage,
-            limit: itemsPerPage,
-            type: typeFilter !== "all" ? typeFilter : undefined,
-            userId: userFilter !== "all" ? (userFilter === "null" ? null : userFilter) : undefined
-        };
+      // إزالة معاملات الصفحة من الـ params لأننا نريد جميع البيانات
+      const params = {
+        type: typeFilter !== "all" ? typeFilter : undefined,
+        userId: userFilter !== "all" ? (userFilter === "null" ? null : userFilter) : undefined
+      };
 
-        const res = await getNotifications(params);
+      const res = await getNotifications(params);
       console.log("Notifications API response:", res);
 
       let data = [];
@@ -106,16 +105,20 @@ const Notifications = () => {
       } else if (Array.isArray(res.data?.data)) {
         data = res.data.data;
         total = data.length;
+      } else if (Array.isArray(res.data?.data?.data)) {
+        data = res.data.data.data;
+        total = data.length;
+      } else if (Array.isArray(res.data?.data?.items)) {
+        data = res.data.data.items;
+        total = data.length;
       }
 
-      setAllNotifications(data);
-      setNotifications(data);
       console.log(`✅ Loaded ${data.length} notifications`);
+      setAllNotifications(data || []);
     } catch (err) {
       console.error("❌ Error fetching notifications:", err);
       showErrorToast("فشل تحميل الإشعارات");
       setAllNotifications([]);
-      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -123,8 +126,13 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications();
+  }, [typeFilter, userFilter]);
+
+  useEffect(() => {
     fetchUsers();
-  }, [currentPage, itemsPerPage, typeFilter, userFilter]);
+  }, []);
+
+
 
   // استخراج المستخدمين الفريدين من الإشعارات
   const uniqueUsersFromNotifications = useMemo(() => {
@@ -138,20 +146,20 @@ const Notifications = () => {
     return notificationUsers;
   }, [allNotifications]);
 
-// التعامل مع تغيير الصورة
-const onImageChange = (e) => {
+  // التعامل مع تغيير الصورة
+  const onImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
-        // لا نضع imageUrl في النموذج، سنرسل الملف مباشرة
-        setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      // لا نضع imageUrl في النموذج، سنرسل الملف مباشرة
+      setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
     } else {
-        setImageFile(null);
-        setImagePreview(null);
-        setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
+      setImageFile(null);
+      setImagePreview(null);
+      setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
     }
-};
+  };
 
   // فلترة وترتيب البيانات
   const filteredAndSortedNotifications = useMemo(() => {
@@ -222,98 +230,98 @@ const onImageChange = (e) => {
     handleFormChange("userIds", notificationForm.userIds.filter(id => id !== userId));
   };
 
-// إرسال الإشعار
-const handleSendNotification = async () => {
+  // إرسال الإشعار
+  const handleSendNotification = async () => {
     if (!notificationForm.title.trim()) return showErrorToast("يرجى إدخال عنوان الإشعار");
     if (!notificationForm.body.trim()) return showErrorToast("يرجى إدخال محتوى الإشعار");
 
     try {
-        let response;
-        let requestData;
+      let response;
+      let requestData;
 
-        // تحضير البيانات الأساسية
-        const baseData = {
-            title: notificationForm.title,
-            body: notificationForm.body,
-            type: notificationForm.type,
+      // تحضير البيانات الأساسية
+      const baseData = {
+        title: notificationForm.title,
+        body: notificationForm.body,
+        type: notificationForm.type,
+      };
+
+      // إضافة الحقول الاختيارية فقط إذا كانت تحتوي على قيم
+      if (notificationForm.link && notificationForm.link.trim()) {
+        baseData.link = notificationForm.link.trim();
+      }
+
+      console.log("📤 Preparing notification data:", baseData);
+
+      if (createDialog.type === "single") {
+        if (!notificationForm.userId) return showErrorToast("يرجى اختيار مستخدم");
+
+        requestData = {
+          userId: parseInt(notificationForm.userId),
+          ...baseData
         };
 
-        // إضافة الحقول الاختيارية فقط إذا كانت تحتوي على قيم
-        if (notificationForm.link && notificationForm.link.trim()) {
-            baseData.link = notificationForm.link.trim();
-        }
+        console.log("📤 Sending single notification:", requestData);
+        response = await createNotification(requestData);
 
-        console.log("📤 Preparing notification data:", baseData);
+      } else if (createDialog.type === "multiple") {
+        if (!notificationForm.userIds.length) return showErrorToast("يرجى اختيار مستخدمين على الأقل");
 
-        if (createDialog.type === "single") {
-            if (!notificationForm.userId) return showErrorToast("يرجى اختيار مستخدم");
-            
-            requestData = {
-                userId: parseInt(notificationForm.userId),
-                ...baseData
-            };
-            
-            console.log("📤 Sending single notification:", requestData);
-            response = await createNotification(requestData);
-            
-        } else if (createDialog.type === "multiple") {
-            if (!notificationForm.userIds.length) return showErrorToast("يرجى اختيار مستخدمين على الأقل");
-            
-            // إرسال كمصفوفة أرقام - هذا هو المهم!
-            requestData = {
-                userIds: notificationForm.userIds.map(id => parseInt(id)), // مصفوفة أرقام
-                ...baseData
-            };
-            
-            console.log("📤 Sending multiple notifications:", requestData);
-            response = await createNotificationForUsers(requestData);
-            
-        } else if (createDialog.type === "broadcast") {
-            requestData = baseData;
-            console.log("📤 Sending broadcast notification:", requestData);
-            response = await createBroadcastNotification(requestData);
-        }
+        // إرسال كمصفوفة أرقام - هذا هو المهم!
+        requestData = {
+          userIds: notificationForm.userIds.map(id => parseInt(id)), // مصفوفة أرقام
+          ...baseData
+        };
 
-        showSuccessToast(response.data.message || "تم إرسال الإشعار بنجاح");
-        
-        // إعادة تعيين النموذج
-        setNotificationForm({
-            type: "GENERAL",
-            title: "",
-            body: "",
-            link: "",
-            imageUrl: "",
-            data: "",
-            userId: "",
-            userIds: []
-        });
-        setImageFile(null);
-        setImagePreview(null);
-        setCreateDialog({ isOpen: false, type: "single" });
-        fetchNotifications();
+        console.log("📤 Sending multiple notifications:", requestData);
+        response = await createNotificationForUsers(requestData);
+
+      } else if (createDialog.type === "broadcast") {
+        requestData = baseData;
+        console.log("📤 Sending broadcast notification:", requestData);
+        response = await createBroadcastNotification(requestData);
+      }
+
+      showSuccessToast(response.data.message || "تم إرسال الإشعار بنجاح");
+
+      // إعادة تعيين النموذج
+      setNotificationForm({
+        type: "GENERAL",
+        title: "",
+        body: "",
+        link: "",
+        imageUrl: "",
+        data: "",
+        userId: "",
+        userIds: []
+      });
+      setImageFile(null);
+      setImagePreview(null);
+      setCreateDialog({ isOpen: false, type: "single" });
+      fetchNotifications();
     } catch (err) {
-        console.error("❌ Error sending notification:", err.response?.data || err);
-        showErrorToast(err?.response?.data?.message || "فشل إرسال الإشعار");
+      console.error("❌ Error sending notification:", err.response?.data || err);
+      showErrorToast(err?.response?.data?.message || "فشل إرسال الإشعار");
     }
-};
+  };
 
-// دالة مساعدة لرفع الصورة
-const uploadImage = async (file) => {
+  // دالة مساعدة لرفع الصورة
+  const uploadImage = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
-    
+
     try {
-        const response = await api.post('/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response;
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response;
     } catch (error) {
-        console.error('Error uploading image:', error);
-        throw error;
+      console.error('Error uploading image:', error);
+      throw error;
     }
-};
+  };
 
   // حذف الإشعار
   const handleDelete = async (id) => {
@@ -350,6 +358,13 @@ const uploadImage = async (file) => {
     return notificationType?.label || type;
   };
 
+  // حساب البيانات المعروضة في الصفحة الحالية
+  const paginatedNotifications = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredAndSortedNotifications.slice(startIndex, endIndex);
+  }, [filteredAndSortedNotifications, currentPage, itemsPerPage]);
+
   // Pagination calculations
   const totalItems = filteredAndSortedNotifications.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -360,8 +375,15 @@ const uploadImage = async (file) => {
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+      // التمرير للأعلى عند تغيير الصفحة
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // إعادة تعيين الصفحة عند تغيير الفلتر
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, userFilter, itemsPerPage]);
 
   // Handle sort
   const handleSort = (field) => {
@@ -956,7 +978,7 @@ const uploadImage = async (file) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAndSortedNotifications.length > 0 ? filteredAndSortedNotifications.map(notification => (
+                  {paginatedNotifications.length > 0 ? paginatedNotifications.map(notification => (
                     <TableRow key={notification.id} className="hover:bg-gray-50">
                       <TableCell className="table-cell font-medium">
                         <div className="flex items-center gap-2">
@@ -1034,8 +1056,8 @@ const uploadImage = async (file) => {
 
             {/* Cards View - for small screens */}
             <div className="block md:hidden">
-              {filteredAndSortedNotifications.length > 0 ? (
-                filteredAndSortedNotifications.map(notification => (
+              {paginatedNotifications.length > 0 ? (
+                paginatedNotifications.map(notification => (
                   <NotificationCard key={notification.id} notification={notification} />
                 ))
               ) : (
@@ -1046,10 +1068,12 @@ const uploadImage = async (file) => {
             </div>
 
             {/* Pagination */}
-            {filteredAndSortedNotifications.length > 0 && (
+            {/* Pagination */}
+            {filteredAndSortedNotifications.length > 0 && totalPages > 1 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
                   عرض {startItem} إلى {endItem} من {totalItems} إشعار
+                  {(searchTerm || typeFilter !== "all" || userFilter !== "all") && ` (مفلتر)`}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1063,30 +1087,34 @@ const uploadImage = async (file) => {
                   </Button>
 
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNumber;
-                      if (totalPages <= 5) {
-                        pageNumber = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNumber = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNumber = totalPages - 4 + i;
-                      } else {
-                        pageNumber = currentPage - 2 + i;
-                      }
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // عرض 5 صفحات فقط حول الصفحة الحالية
+                        if (totalPages <= 7) return true;
+                        return page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 2 && page <= currentPage + 2);
+                      })
+                      .map((pageNumber, index, array) => {
+                        // إضافة نقاط عندما تكون هناك فجوات
+                        const showEllipsis = index > 0 && pageNumber - array[index - 1] > 1;
 
-                      return (
-                        <Button
-                          key={pageNumber}
-                          variant={currentPage === pageNumber ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNumber)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {pageNumber}
-                        </Button>
-                      );
-                    })}
+                        return (
+                          <React.Fragment key={pageNumber}>
+                            {showEllipsis && (
+                              <span className="px-2 text-muted-foreground">...</span>
+                            )}
+                            <Button
+                              variant={currentPage === pageNumber ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(pageNumber)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNumber}
+                            </Button>
+                          </React.Fragment> 
+                        );
+                      })}
                   </div>
 
                   <Button

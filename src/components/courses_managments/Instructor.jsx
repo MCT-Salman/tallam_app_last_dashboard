@@ -1,56 +1,48 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Upload } from "lucide-react"
-import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive } from "@/api/api"
-import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
-import { BASE_URL } from "@/api/api"
+import React, { useEffect, useState, useMemo } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { getInstructors, createInstructor, updateInstructor, deleteInstructor, toggleInstructorStatus, BASE_URL } from "@/api/api";
+import { getSpecializations } from "@/api/api";
+import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
 import { imageConfig } from "@/utils/corsConfig";
 
-const Account = () => {
-    const [users, setUsers] = useState([])
-    const [allUsers, setAllUsers] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [form, setForm] = useState({
-        name: "",
-        phone: "",
-        birthDate: "",
-        sex: "ذكر",
-        role: "STUDENT",
-        country: "",
-        isActive: true,
-        expiresAt: ""
-    })
-    const [imageFile, setImageFile] = useState(null)
-    const [imagePreview, setImagePreview] = useState(null)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [editItem, setEditItem] = useState(null)
-    const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
-    const [detailDialog, setDetailDialog] = useState({ isOpen: false, user: null })
+const Instructor = () => {
+    const [instructors, setInstructors] = useState([]);
+    const [allInstructors, setAllInstructors] = useState([]);
+    const [specializations, setSpecializations] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({ 
+        name: "", 
+        bio: "", 
+        specializationId: "" 
+    });
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editItem, setEditItem] = useState(null);
+    const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" });
 
     // Pagination & Filtering states
-    const [currentPage, setCurrentPage] = useState(1)
-    const [itemsPerPage, setItemsPerPage] = useState(10)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [statusFilter, setStatusFilter] = useState("all")
-    const [roleFilter, setRoleFilter] = useState("all")
-    const [countryFilter, setCountryFilter] = useState("all")
-    const [sortBy, setSortBy] = useState("createdAt")
-    const [sortOrder, setSortOrder] = useState("desc")
-    const [totalUsers, setTotalUsers] = useState(0)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [specializationFilter, setSpecializationFilter] = useState("all");
+    const [sortBy, setSortBy] = useState("name");
+    const [sortOrder, setSortOrder] = useState("asc");
 
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return "/default-avatar.png";
+        if (!imageUrl) return "/tallaam_logo2.png";
         const cleanBaseUrl = BASE_URL.replace(/\/$/, "");
         const cleanImageUrl = imageUrl.replace(/^\//, "");
         return `${cleanBaseUrl}/${cleanImageUrl}`;
@@ -68,142 +60,110 @@ const Account = () => {
         }
     };
 
-    // جلب جميع المستخدمين
-    const fetchUsers = async () => {
-        setLoading(true)
+    // جلب جميع المدرسين مرة واحدة
+    const fetchInstructors = async () => {
+        setLoading(true);
         try {
-            const params = {
-                skip: (currentPage - 1) * itemsPerPage,
-                take: itemsPerPage,
-                q: searchTerm || undefined,
-                role: roleFilter !== "all" ? roleFilter : undefined,
-                country: countryFilter !== "all" ? countryFilter : undefined,
-                isActive: statusFilter !== "all" ? (statusFilter === "active") : undefined
-            }
-
-            console.log("📤 Fetching users with params:", params)
-
-            const res = await getAllUsers(params)
-            console.log("📊 Users API response:", res)
-            
-            // معالجة الـ response بناءً على الهيكل الجديد
-            let data = []
-            let total = 0
-            
-            if (res.data?.data?.items) {
-                data = res.data.data.items
-                total = res.data.data.total
-                console.log(`✅ Loaded ${data.length} users out of ${total} total`)
-            } else if (Array.isArray(res.data?.data)) {
-                data = res.data.data
-                total = data.length
-            } else if (Array.isArray(res.data)) {
-                data = res.data
-                total = data.length
-            }
-            
-            setAllUsers(data || [])
-            setUsers(data || [])
-            setTotalUsers(total || 0)
+            const res = await getInstructors();
+            const data = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+            console.log("All Instructors data:", data);
+            setAllInstructors(data);
         } catch (err) {
-            console.error("❌ Error fetching users:", err)
-            showErrorToast("فشل تحميل المستخدمين")
-            setAllUsers([])
-            setUsers([])
-            setTotalUsers(0)
+            console.error(err);
+            showErrorToast("فشل تحميل المدرسين");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
-    // استخراج الدول الفريدة من المستخدمين
-    const uniqueCountries = useMemo(() => {
-        const countries = allUsers
-            .map(user => user.country)
-            .filter(country => country && country.trim() !== "")
-            .filter((country, index, self) => self.indexOf(country) === index)
-            .sort()
-        return countries
-    }, [allUsers])
+    // جلب التخصصات
+    const fetchSpecializations = async () => {
+        try {
+            const res = await getSpecializations();
+            const data = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+            setSpecializations(data);
+        } catch (err) {
+            console.error(err);
+            showErrorToast("فشل تحميل التخصصات");
+        }
+    };
 
     useEffect(() => {
-        fetchUsers()
-    }, [currentPage, itemsPerPage, searchTerm, statusFilter, roleFilter, countryFilter])
+        fetchInstructors();
+        fetchSpecializations();
+    }, []);
 
-    // فلترة وترتيب البيانات
-    const filteredAndSortedUsers = useMemo(() => {
-        let filtered = [...allUsers]
+    // فلترة وترتيب البيانات على جانب العميل
+    const filteredAndSortedInstructors = useMemo(() => {
+        let filtered = [...allInstructors];
 
-        // البحث بالاسم والهاتف
+        // البحث بالاسم
         if (searchTerm.trim()) {
-            filtered = filtered.filter(user =>
-                user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.phone?.includes(searchTerm)
-            )
+            filtered = filtered.filter(item =>
+                item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
         }
 
         // فلترة بالحالة
         if (statusFilter !== "all") {
-            filtered = filtered.filter(user =>
-                statusFilter === "active" ? user.isActive : !user.isActive
-            )
+            filtered = filtered.filter(item =>
+                statusFilter === "active" ? item.isActive : !item.isActive
+            );
         }
 
-        // فلترة بالدور
-        if (roleFilter !== "all") {
-            filtered = filtered.filter(user => user.role === roleFilter)
-        }
-
-        // فلترة بالبلد
-        if (countryFilter !== "all") {
-            filtered = filtered.filter(user => 
-                user.country?.toLowerCase().includes(countryFilter.toLowerCase())
-            )
+        // فلترة بالتخصص
+        if (specializationFilter !== "all") {
+            filtered = filtered.filter(item =>
+                item.specializationId === specializationFilter
+            );
         }
 
         // الترتيب
         filtered.sort((a, b) => {
-            let aValue, bValue
+            let aValue, bValue;
 
             switch (sortBy) {
                 case "name":
-                    aValue = a.name?.toLowerCase() || ""
-                    bValue = b.name?.toLowerCase() || ""
-                    break
-                case "role":
-                    aValue = a.role || ""
-                    bValue = b.role || ""
-                    break
+                    aValue = a.name?.toLowerCase() || "";
+                    bValue = b.name?.toLowerCase() || "";
+                    break;
                 case "createdAt":
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-                    break
+                    aValue = new Date(a.createdAt);
+                    bValue = new Date(b.createdAt);
+                    break;
                 case "isActive":
-                    aValue = a.isActive
-                    bValue = b.isActive
-                    break
+                    aValue = a.isActive;
+                    bValue = b.isActive;
+                    break;
                 default:
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
+                    aValue = a.name?.toLowerCase() || "";
+                    bValue = b.name?.toLowerCase() || "";
             }
 
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-            return 0
-        })
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
 
-        return filtered
-    }, [allUsers, searchTerm, statusFilter, roleFilter, countryFilter, sortBy, sortOrder])
+        return filtered;
+    }, [allInstructors, searchTerm, statusFilter, specializationFilter, sortBy, sortOrder]);
+
+    // حساب البيانات المعروضة في الصفحة الحالية
+    const paginatedInstructors = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredAndSortedInstructors.slice(startIndex, endIndex);
+    }, [filteredAndSortedInstructors, currentPage, itemsPerPage]);
 
     // إعادة تعيين الصفحة عند تغيير الفلتر
     useEffect(() => {
-        setCurrentPage(1)
-    }, [searchTerm, statusFilter, roleFilter, countryFilter, itemsPerPage])
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, specializationFilter, itemsPerPage]);
 
     // التعامل مع تغييرات النموذج
     const handleFormChange = (key, value) => {
-        setForm(prev => ({ ...prev, [key]: value }))
-    }
+        setForm(prev => ({ ...prev, [key]: value }));
+    };
 
     // التعامل مع تغيير الصورة
     const onImageChange = (e) => {
@@ -217,525 +177,291 @@ const Account = () => {
         }
     };
 
-    // حفظ المستخدم (إضافة أو تعديل)
+    // حفظ المدرب (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!form.name.trim()) return showErrorToast("يرجى إدخال اسم المستخدم")
-        if (!form.phone.trim()) return showErrorToast("يرجى إدخال رقم الهاتف")
-        if (!form.birthDate) return showErrorToast("يرجى إدخال تاريخ الميلاد")
+        if (!form.name.trim()) return showErrorToast("يرجى إدخال اسم المدرب");
+        if (!form.specializationId) return showErrorToast("يرجى اختيار التخصص");
 
         try {
             let imageToSend = imageFile;
             
-            // إذا كان تعديل ولم يتم اختيار صورة جديدة، نستخدم الصورة القديمة
-            if (editItem && !imageFile && editItem.avatarUrl) {
+            if (editItem && !imageFile) {
                 const imageUrl = getImageUrl(editItem.avatarUrl);
-                imageToSend = await urlToFile(imageUrl, `user-${editItem.id}.jpg`);
+                imageToSend = await urlToFile(imageUrl, `instructor-${editItem.id}.jpg`);
+                
+                if (!imageToSend) {
+                    return showErrorToast("فشل في تحميل الصورة القديمة");
+                }
             }
-
-            const userData = {
-                name: form.name,
-                phone: form.phone,
-                birthDate: form.birthDate,
-                sex: form.sex,
-                role: form.role,
-                country: form.country || "",
-                isActive: Boolean(form.isActive),
-                expiresAt: form.expiresAt || null,
-                ...(imageToSend && { avatarUrl: imageToSend })
+            
+            if (!editItem && !imageFile) {
+                return showErrorToast("يرجى اختيار صورة");
             }
-
-            console.log("📤 Sending user data:", userData)
 
             if (editItem) {
-                await updateUser(editItem.id, userData)
-                showSuccessToast("تم تعديل المستخدم بنجاح")
-                setEditItem(null)
+                await updateInstructor(editItem.id, {
+                    name: form.name,
+                    bio: form.bio,
+                    specializationId: form.specializationId,
+                    avatarUrl: imageToSend
+                });
+                showSuccessToast("تم تعديل المدرب بنجاح");
+                setEditItem(null);
             } else {
-                await createUser(userData)
-                showSuccessToast("تم إنشاء المستخدم بنجاح")
+                await createInstructor({
+                    name: form.name,
+                    bio: form.bio,
+                    specializationId: form.specializationId,
+                    avatarUrl: imageFile
+                });
+                showSuccessToast("تم إنشاء المدرب بنجاح");
             }
 
-            // إعادة تعيين النموذج
-            setForm({
-                name: "",
-                phone: "",
-                birthDate: "",
-                sex: "ذكر",
-                role: "STUDENT",
-                country: "",
-                isActive: true,
-                expiresAt: ""
-            })
-            setImageFile(null)
-            setImagePreview(null)
-            setIsDialogOpen(false)
-            fetchUsers()
+            setForm({ name: "", bio: "", specializationId: "" });
+            setImageFile(null);
+            setImagePreview(null);
+            setIsDialogOpen(false);
+            fetchInstructors();
         } catch (err) {
-            console.error("❌ Save error:", err.response?.data || err)
-            showErrorToast(err?.response?.data?.message || "فشل العملية")
+            console.error(err.response?.data || err);
+            showErrorToast(err?.response?.data?.message || "فشل العملية");
         }
-    }
+    };
 
-    // تبديل حالة المستخدم
+    // تبديل حالة المدرب
     const handleToggleActive = async (id, isActive) => {
         try {
-            await toggleUserActive(id)
-            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`)
-            fetchUsers()
+            await toggleInstructorStatus(id, !isActive);
+            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} المدرب بنجاح`);
+            fetchInstructors();
         } catch (err) {
-            showErrorToast(err?.response?.data?.message || "فشل تغيير الحالة")
+            showErrorToast(err?.response?.data?.message || "فشل تغيير الحالة");
         }
-    }
+    };
 
-    // حذف المستخدم
+    // حذف المدرب
     const handleDelete = async (id) => {
         try {
-            await deleteUser(id)
-            fetchUsers()
-            showSuccessToast("تم الحذف بنجاح")
+            await deleteInstructor(id);
+            fetchInstructors();
+            showSuccessToast("تم الحذف بنجاح");
         } catch (err) {
-            showErrorToast(err?.response?.data?.message || "فشل الحذف")
+            showErrorToast(err?.response?.data?.message || "فشل الحذف");
         }
-    }
+    };
 
-    // تنسيق التاريخ بالميلادي السوري
-    const formatDate = (dateString) => {
-        if (!dateString) return "غير محدد"
-        return new Date(dateString).toLocaleDateString('en-US')
-    }
+    // الحصول على اسم التخصص من الـ ID
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === specializationId);
+        return specialization ? specialization.name : "غير محدد";
+    };
 
-    // الحصول على لون البادج حسب الدور
-    const getRoleBadgeVariant = (role) => {
-        switch (role) {
-            case 'ADMIN': return 'destructive'
-            case 'SUBADMIN': return 'default'
-            case 'STUDENT': return 'secondary'
-            default: return 'outline'
-        }
-    }
-
-    // الحصول على نص الدور
-    const getRoleText = (role) => {
-        switch (role) {
-            case 'ADMIN': return 'مدير'
-            case 'SUBADMIN': return 'مساعد مدير'
-            case 'STUDENT': return 'طالب'
-            default: return role
-        }
-    }
-
-    // Pagination calculations - استخدام total من الـ API
-    const totalPages = Math.ceil(totalUsers / itemsPerPage)
-    const startItem = (currentPage - 1) * itemsPerPage + 1
-    const endItem = Math.min(currentPage * itemsPerPage, totalUsers)
+    // Pagination calculations
+    const totalItems = filteredAndSortedInstructors.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
     // Handle page change
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page)
+            setCurrentPage(page);
         }
-    }
+    };
+
+    // Handle items per page change
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+    };
 
     // Handle sort
     const handleSort = (field) => {
         if (sortBy === field) {
-            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
         } else {
-            setSortBy(field)
-            setSortOrder("asc")
+            setSortBy(field);
+            setSortOrder("asc");
         }
-    }
+    };
 
     // Reset filters
     const resetFilters = () => {
-        setSearchTerm("")
-        setStatusFilter("all")
-        setRoleFilter("all")
-        setCountryFilter("all")
-        setSortBy("createdAt")
-        setSortOrder("desc")
-        setCurrentPage(1)
-    }
-
-    // مكون عرض الصورة المحسن
-    const UserAvatar = ({ user, size = "medium" }) => {
-        const imageUrl = user.avatarUrl ? getImageUrl(user.avatarUrl) : null;
-        const sizeClass = size === "large" ? "w-24 h-24" : size === "small" ? "w-8 h-8" : "w-12 h-12";
-        
-        return (
-            <div className={`${sizeClass} bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border`}>
-                {imageUrl ? (
-                    <img 
-                        src={imageUrl} 
-                        alt={user.name}
-                        className={`${sizeClass} rounded-full object-cover`}
-                        {...imageConfig}
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                        }}
-                    />
-                ) : null}
-                {!imageUrl && (
-                    <User className={size === "large" ? "w-12 h-12 text-gray-500" : "w-5 h-5 text-gray-500"} />
-                )}
-            </div>
-        );
+        setSearchTerm("");
+        setStatusFilter("all");
+        setSpecializationFilter("all");
+        setSortBy("name");
+        setSortOrder("asc");
+        setCurrentPage(1);
     };
 
-    // مكون بطاقة المستخدم للعرض على الجوال
-    const UserCard = ({ user }) => (
+    // مكون البطاقة للعنصر الواحد مع تصميم محسن للصورة
+    const InstructorCard = ({ item }) => (
         <Card className="mb-4 overflow-hidden">
-            {/* صورة المستخدم في أعلى البطاقة */}
-            <div className="relative h-32 bg-gray-100 flex items-center justify-center">
-                <UserAvatar user={user} size="large" />
-                {/* حالة المستخدم في الزاوية */}
+            {/* الصورة تأخذ رأس البطاقة كامل */}
+            <div className="relative h-48 bg-gray-100">
+                <img
+                    src={getImageUrl(item.avatarUrl)}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    {...imageConfig}
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/tallaam_logo2.png";
+                    }}
+                />
+                {/* حالة المدرب في الزاوية */}
                 <div className="absolute top-3 left-3">
-                    <Badge variant={user.isActive ? "default" : "secondary"}>
-                        {user.isActive ? "نشط" : "معطل"}
+                    <Badge variant={item.isActive ? "default" : "secondary"}>
+                        {item.isActive ? "نشط" : "معطل"}
                     </Badge>
                 </div>
             </div>
             
             <CardContent className="p-4">
                 <div className="space-y-3">
-                    <div className="text-center">
-                        <h3 className="font-bold text-lg">{user.name || "بدون اسم"}</h3>
-                        <div className="flex justify-center gap-2 mt-1">
-                            <Badge variant={getRoleBadgeVariant(user.role)}>
-                                {getRoleText(user.role)}
-                            </Badge>
-                        </div>
+                    <div>
+                        <h3 className="font-bold text-xl">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            {getSpecializationName(item.specializationId)}
+                        </p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2 dir-ltr text-left">
-                            <Phone className="w-4 h-4 text-gray-500" />
-                            <span>{user.phone}</span>
+                    {item.bio && (
+                        <div>
+                            <p className="text-sm line-clamp-3">{item.bio}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-gray-500" />
-                            <span>{user.country || "غير محدد"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500" />
-                            <span>{formatDate(user.birthDate)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className={user.isVerified ? "text-green-600" : "text-orange-600"}>
-                                {user.isVerified ? "مفعل" : "غير مفعل"}
-                            </span>
-                        </div>
-                    </div>
+                    )}
                 </div>
                 
                 <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setDetailDialog({ isOpen: true, user })}
+                    <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleToggleActive(item.id, item.isActive)}
                         className="flex-1"
                     >
-                        <Eye className="w-4 h-4 ml-1" />
-                        التفاصيل
+                        {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        <span className="mr-2">{item.isActive ? "إيقاف" : "تفعيل"}</span>
                     </Button>
                     <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleActive(user.id, user.isActive)}
-                        className="flex-1"
-                    >
-                        {user.isActive ? <Pause className="w-4 h-4 ml-1" /> : <Play className="w-4 h-4 ml-1" />}
-                        {user.isActive ? "إيقاف" : "تفعيل"}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => {
-                            setEditItem(user)
-                            setForm({
-                                name: user.name || "",
-                                phone: user.phone || "",
-                                birthDate: user.birthDate?.split('T')[0] || "",
-                                sex: user.sex || "ذكر",
-                                role: user.role || "STUDENT",
-                                country: user.country || "",
-                                isActive: user.isActive || true,
-                                expiresAt: user.expiresAt?.split('T')[0] || ""
-                            })
-                            setImageFile(null)
-                            setImagePreview(user.avatarUrl ? getImageUrl(user.avatarUrl) : null)
-                            setIsDialogOpen(true)
+                            setEditItem(item);
+                            setForm({ 
+                                name: item.name, 
+                                bio: item.bio || "", 
+                                specializationId: item.specializationId 
+                            });
+                            setImageFile(null);
+                            setImagePreview(item.avatarUrl ? getImageUrl(item.avatarUrl) : null);
+                            setIsDialogOpen(true);
                         }}
                         className="flex-1"
                     >
-                        <Edit className="w-4 h-4 ml-1" />
-                        تعديل
+                        <Edit className="w-4 h-4" />
+                        <span className="mr-2">تعديل</span>
                     </Button>
                     <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => setDeleteDialog({
-                            isOpen: true,
-                            itemId: user.id,
-                            itemName: user.name || "بدون اسم"
-                        })}
+                        onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.name })}
                         className="flex-1"
                     >
-                        <Trash2 className="w-4 h-4 ml-1" />
-                        حذف
+                        <Trash2 className="w-4 h-4" />
+                        <span className="mr-2">حذف</span>
                     </Button>
                 </div>
             </CardContent>
         </Card>
     );
 
-    // عرض التفاصيل الكاملة للمستخدم
-    const renderUserDetails = (user) => {
-        if (!user) return null
-
-        return (
-            <div className="space-y-6 text-right">
-                {/* صورة المستخدم في الأعلى */}
-                <div className="flex justify-center">
-                    <UserAvatar user={user} size="large" />
-                </div>
-
-                {/* المعلومات الأساسية */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="font-bold">الاسم:</Label>
-                        <p className="mt-1">{user.name || "غير محدد"}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">رقم الهاتف:</Label>
-                        <p className="mt-1 dir-ltr text-left">{user.phone || "غير محدد"}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">تاريخ الميلاد:</Label>
-                        <p className="mt-1">{formatDate(user.birthDate)}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الجنس:</Label>
-                        <p className="mt-1">{user.sex || "غير محدد"}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الدور:</Label>
-                        <div className="mt-1">
-                            <Badge variant={getRoleBadgeVariant(user.role)}>
-                                {getRoleText(user.role)}
-                            </Badge>
-                        </div>
-                    </div>
-                    <div>
-                        <Label className="font-bold">البلد:</Label>
-                        <p className="mt-1">{user.country || "غير محدد"}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الحالة:</Label>
-                        <div className="mt-1">
-                            <Badge variant={user.isActive ? "default" : "secondary"}>
-                                {user.isActive ? "نشط" : "معطل"}
-                            </Badge>
-                        </div>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الحساب مفعل:</Label>
-                        <div className="mt-1">
-                            <Badge variant={user.isVerified ? "default" : "secondary"}>
-                                {user.isVerified ? "مفعل" : "غير مفعل"}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-
-                {/* معلومات إضافية */}
-                <div className="border-t pt-4">
-                    <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label className="font-medium">تاريخ الإنشاء:</Label>
-                            <p>{formatDate(user.createdAt)}</p>
-                        </div>
-                        <div>
-                            <Label className="font-medium">آخر تحديث:</Label>
-                            <p>{formatDate(user.updatedAt)}</p>
-                        </div>
-                        <div>
-                            <Label className="font-medium">تاريخ الانتهاء:</Label>
-                            <p>{formatDate(user.expiresAt)}</p>
-                        </div>
-                        <div>
-                            <Label className="font-medium">معرف المستخدم:</Label>
-                            <p>{user.id || "غير محدد"}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة المستخدمين</CardTitle>
+                    <CardTitle>إدارة المدرسين</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
                                 size="sm"
                                 onClick={() => {
-                                    setEditItem(null)
-                                    setForm({
-                                        name: "",
-                                        phone: "",
-                                        birthDate: "",
-                                        sex: "ذكر",
-                                        role: "STUDENT",
-                                        country: "",
-                                        isActive: true,
-                                        expiresAt: ""
-                                    })
-                                    setImageFile(null)
-                                    setImagePreview(null)
+                                    setEditItem(null);
+                                    setForm({ name: "", bio: "", specializationId: "" });
+                                    setImageFile(null);
+                                    setImagePreview(null);
                                 }}
                             >
-                                إضافة مستخدم <Plus className="w-4 h-4 cursor-pointer" />
+                                إضافة مدرس <Plus className="w-4 h-4 cursor-pointer" />
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-md">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل المستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
+                                <DialogTitle>{editItem ? "تعديل المدرب" : "إضافة مدرس جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
-                                {/* معاينة الصورة */}
-                                <div className="flex justify-center">
-                                    <div className="relative">
-                                        <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border">
-                                            {imagePreview ? (
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="معاينة الصورة"
-                                                    className="w-24 h-24 rounded-full object-cover"
-                                                    {...imageConfig}
-                                                />
-                                            ) : (
-                                                <User className="w-12 h-12 text-gray-500" />
-                                            )}
+                                <div className="space-y-2">
+                                    <Label>الاسم *</Label>
+                                    <Input 
+                                        value={form.name} 
+                                        onChange={(e) => handleFormChange("name", e.target.value)} 
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>التخصص *</Label>
+                                    <Select 
+                                        value={form.specializationId} 
+                                        onValueChange={(value) => handleFormChange("specializationId", value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="اختر التخصص" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {specializations.map((spec) => (
+                                                <SelectItem key={spec.id} value={spec.id}>
+                                                    {spec.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>السيرة الذاتية</Label>
+                                    <Textarea 
+                                        value={form.bio} 
+                                        onChange={(e) => handleFormChange("bio", e.target.value)}
+                                        rows={3}
+                                        placeholder="أدخل السيرة الذاتية للمدرب..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="instructor-image">الصورة *</Label>
+                                    <Input 
+                                        id="instructor-image" 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={onImageChange} 
+                                    />
+                                    {imagePreview && (
+                                        <div className="mt-2">
+                                            <img
+                                                src={imagePreview}
+                                                alt="معاينة"
+                                                className="max-h-40 rounded-md border"
+                                                {...imageConfig}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = "/tallaam_logo2.png";
+                                                }}
+                                            />
                                         </div>
-                                        <Label 
-                                            htmlFor="user-avatar" 
-                                            className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full cursor-pointer"
-                                        >
-                                            <Upload className="w-4 h-4" />
-                                        </Label>
-                                    </div>
+                                    )}
                                 </div>
-
-                                {/* حقل رفع الصورة مخفي */}
-                                <Input 
-                                    id="user-avatar"
-                                    type="file" 
-                                    accept="image/*" 
-                                    onChange={onImageChange}
-                                    className="hidden"
-                                />
-
-                                <div className="space-y-2">
-                                    <Label>الاسم الكامل *</Label>
-                                    <Input
-                                        value={form.name}
-                                        onChange={(e) => handleFormChange("name", e.target.value)}
-                                        placeholder="أدخل الاسم الكامل..."
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>رقم الهاتف *</Label>
-                                    <Input
-                                        value={form.phone}
-                                        onChange={(e) => handleFormChange("phone", e.target.value)}
-                                        placeholder="أدخل رقم الهاتف..."
-                                        className="dir-ltr text-left"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>تاريخ الميلاد *</Label>
-                                        <Input
-                                            type="date"
-                                            value={form.birthDate}
-                                            onChange={(e) => handleFormChange("birthDate", e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>الجنس</Label>
-                                        <Select
-                                            value={form.sex}
-                                            onValueChange={(value) => handleFormChange("sex", value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر الجنس" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ذكر">ذكر</SelectItem>
-                                                <SelectItem value="أنثى">أنثى</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>الدور *</Label>
-                                        <Select
-                                            value={form.role}
-                                            onValueChange={(value) => handleFormChange("role", value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر الدور" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="STUDENT">طالب</SelectItem>
-                                                <SelectItem value="SUBADMIN">مساعد مدير</SelectItem>
-                                                <SelectItem value="ADMIN">مدير</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>البلد</Label>
-                                        <Input
-                                            value={form.country}
-                                            onChange={(e) => handleFormChange("country", e.target.value)}
-                                            placeholder="أدخل اسم البلد..."
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>تاريخ الانتهاء</Label>
-                                        <Input
-                                            type="date"
-                                            value={form.expiresAt}
-                                            onChange={(e) => handleFormChange("expiresAt", e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2 flex items-center gap-2">
-                                        <Label>الحالة</Label>
-                                        <Switch
-                                            checked={form.isActive}
-                                            onCheckedChange={(checked) => handleFormChange("isActive", checked)}
-                                        />
-                                        <span>{form.isActive ? "نشط" : "معطل"}</span>
-                                    </div>
-                                </div>
-
                                 <Button onClick={handleSave}>
                                     {editItem ? "حفظ التعديل" : "حفظ"}
                                 </Button>
@@ -745,12 +471,12 @@ const Account = () => {
                 </div>
 
                 {/* Filters Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Search */}
                     <div className="relative">
                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="بحث بالاسم أو الهاتف..."
+                            placeholder="بحث بالاسم..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pr-10"
@@ -769,59 +495,43 @@ const Account = () => {
                         </SelectContent>
                     </Select>
 
-                    {/* Role Filter */}
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    {/* Specialization Filter */}
+                    <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
                         <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالدور" />
+                            <SelectValue placeholder="فلترة بالتخصص" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">جميع الأدوار</SelectItem>
-                            <SelectItem value="STUDENT">طالب</SelectItem>
-                            <SelectItem value="SUBADMIN">مساعد مدير</SelectItem>
-                            <SelectItem value="ADMIN">مدير</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Country Filter - ديناميكي */}
-                    <Select value={countryFilter} onValueChange={setCountryFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالبلد" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع البلدان</SelectItem>
-                            {uniqueCountries.map(country => (
-                                <SelectItem key={country} value={country}>
-                                    {country}
+                            <SelectItem value="all">جميع التخصصات</SelectItem>
+                            {specializations.map((spec) => (
+                                <SelectItem key={spec.id} value={spec.id}>
+                                    {spec.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
 
                     {/* Items Per Page */}
-                    <Select 
-                        value={itemsPerPage.toString()} 
-                        onValueChange={(value) => setItemsPerPage(Number(value))}
-                    >
+                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
                         <SelectTrigger>
                             <SelectValue placeholder="عدد العناصر" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="5">5 عناصر</SelectItem>
                             <SelectItem value="10">10 عناصر</SelectItem>
-                            <SelectItem value="20">20 عناصر</SelectItem>
-                            <SelectItem value="50">50 عناصر</SelectItem>
+                            <SelectItem value="20">20 عنصر</SelectItem>
+                            <SelectItem value="50">50 عنصر</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 {/* Reset Filters & Results Count */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div className="flex justify-between items-center">
                     <div className="text-sm text-muted-foreground">
-                        عرض {startItem} إلى {endItem} من {totalUsers} مستخدم
-                        {(searchTerm || statusFilter !== "all" || roleFilter !== "all" || countryFilter !== "all") && ` (مفلتر)`}
+                        عرض {filteredAndSortedInstructors.length} من أصل {allInstructors.length} مدرس
+                        {(searchTerm || statusFilter !== "all" || specializationFilter !== "all") && ` (مفلتر)`}
                     </div>
-
-                    {(searchTerm || statusFilter !== "all" || roleFilter !== "all" || countryFilter !== "all") && (
+                    
+                    {(searchTerm || statusFilter !== "all" || specializationFilter !== "all") && (
                         <Button variant="outline" size="sm" onClick={resetFilters}>
                             إعادة تعيين الفلترة
                         </Button>
@@ -842,22 +552,20 @@ const Account = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="table-header">الصورة</TableHead>
-                                        <TableHead className="table-header">المستخدم</TableHead>
-                                        <TableHead
+                                        <TableHead 
                                             className="table-header cursor-pointer hover:bg-gray-100"
-                                            onClick={() => handleSort("role")}
+                                            onClick={() => handleSort("name")}
                                         >
                                             <div className="flex items-center gap-1">
-                                                الدور
-                                                {sortBy === "role" && (
+                                                الاسم 
+                                                {sortBy === "name" && (
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}
                                             </div>
                                         </TableHead>
-                                        <TableHead className="table-header">الهاتف</TableHead>
-                                        <TableHead className="table-header">البلد</TableHead>
-                                        <TableHead className="table-header">تاريخ الميلاد</TableHead>
-                                        <TableHead
+                                        <TableHead className="table-header">التخصص</TableHead>
+                                        <TableHead className="table-header">السيرة الذاتية</TableHead>
+                                        <TableHead 
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("isActive")}
                                         >
@@ -868,114 +576,71 @@ const Account = () => {
                                                 )}
                                             </div>
                                         </TableHead>
-                                        <TableHead
-                                            className="table-header cursor-pointer hover:bg-gray-100"
-                                            onClick={() => handleSort("createdAt")}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                تاريخ الإنشاء
-                                                {sortBy === "createdAt" && (
-                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                                                )}
-                                            </div>
-                                        </TableHead>
                                         <TableHead className="table-header text-right">الإجراءات</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {allUsers.length > 0 ? allUsers.map(user => (
-                                        <TableRow key={user.id}>
+                                    {paginatedInstructors.length > 0 ? paginatedInstructors.map(item => (
+                                        <TableRow key={item.id}>
                                             <TableCell className="table-cell">
-                                                <UserAvatar user={user} size="small" />
+                                                <img
+                                                    src={getImageUrl(item.avatarUrl)}
+                                                    alt={item.name}
+                                                    className="w-12 h-12 object-contain rounded-md"
+                                                    {...imageConfig}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "/tallaam_logo2.png";
+                                                    }}
+                                                />
                                             </TableCell>
+                                            <TableCell className="table-cell">{item.name}</TableCell>
                                             <TableCell className="table-cell">
-                                                <div className="flex items-center gap-3">
-                                                    <div>
-                                                        <div className="font-medium">{user.name || "بدون اسم"}</div>
-                                                    </div>
+                                                {getSpecializationName(item.specializationId)}
+                                            </TableCell>
+                                            <TableCell className="table-cell max-w-xs">
+                                                <div className="truncate" title={item.bio}>
+                                                    {item.bio || "لا يوجد"}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="table-cell">
-                                                <Badge variant={getRoleBadgeVariant(user.role)}>
-                                                    {getRoleText(user.role)}
+                                                <Badge variant={item.isActive ? "default" : "secondary"}>
+                                                    {item.isActive ? "نشط" : "معطل"}
                                                 </Badge>
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                <div className="flex items-center gap-2  text-left" dir='ltr'>
-                                                    <Phone className="w-4 h-4 text-gray-500" />
-                                                    {user.phone}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                {user.country ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="w-4 h-4 text-gray-500" />
-                                                        {user.country}
-                                                    </div>
-                                                ) : (
-                                                    "غير محدد"
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                {formatDate(user.birthDate)}
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                <Badge variant={user.isActive ? "default" : "secondary"}>
-                                                    {user.isActive ? "نشط" : "معطل"}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                {formatDate(user.createdAt)}
                                             </TableCell>
                                             <TableCell className="table-cell text-right space-x-2">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => setDetailDialog({ isOpen: true, user })}
-                                                    title="عرض التفاصيل"
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    onClick={() => handleToggleActive(item.id, item.isActive)}
                                                 >
-                                                    <Eye className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => handleToggleActive(user.id, user.isActive)}
-                                                    title={user.isActive ? "تعطيل" : "تفعيل"}
-                                                >
-                                                    {user.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                    {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                                 </Button>
                                                 <Button
                                                     size="icon"
                                                     variant="ghost"
                                                     onClick={() => {
-                                                        setEditItem(user)
-                                                        setForm({
-                                                            name: user.name || "",
-                                                            phone: user.phone || "",
-                                                            birthDate: user.birthDate?.split('T')[0] || "",
-                                                            sex: user.sex || "ذكر",
-                                                            role: user.role || "STUDENT",
-                                                            country: user.country || "",
-                                                            isActive: user.isActive || true,
-                                                            expiresAt: user.expiresAt?.split('T')[0] || ""
-                                                        })
-                                                        setImageFile(null)
-                                                        setImagePreview(user.avatarUrl ? getImageUrl(user.avatarUrl) : null)
-                                                        setIsDialogOpen(true)
+                                                        setEditItem(item);
+                                                        setForm({ 
+                                                            name: item.name, 
+                                                            bio: item.bio || "", 
+                                                            specializationId: item.specializationId 
+                                                        });
+                                                        setImageFile(null);
+                                                        setImagePreview(item.avatarUrl ? getImageUrl(item.avatarUrl) : null);
+                                                        setIsDialogOpen(true);
                                                     }}
-                                                    title="تعديل"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </Button>
                                                 <Button
                                                     size="icon"
                                                     variant="destructive"
-                                                    onClick={() => setDeleteDialog({
-                                                        isOpen: true,
-                                                        itemId: user.id,
-                                                        itemName: user.name || "بدون اسم"
+                                                    onClick={() => setDeleteDialog({ 
+                                                        isOpen: true, 
+                                                        itemId: item.id, 
+                                                        itemName: item.name 
                                                     })}
-                                                    title="حذف"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -983,8 +648,8 @@ const Account = () => {
                                         </TableRow>
                                     )) : (
                                         <TableRow>
-                                            <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
-                                                لا توجد مستخدمين متاحين
+                                            <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                                                {allInstructors.length === 0 ? "لا توجد مدرسين متاحين" : "لا توجد نتائج مطابقة للبحث"}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -994,24 +659,24 @@ const Account = () => {
 
                         {/* Cards View - for small screens */}
                         <div className="block md:hidden">
-                            {allUsers.length > 0 ? (
-                                allUsers.map(user => (
-                                    <UserCard key={user.id} user={user} />
+                            {paginatedInstructors.length > 0 ? (
+                                paginatedInstructors.map(item => (
+                                    <InstructorCard key={item.id} item={item} />
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    لا توجد مستخدمين متاحين
+                                    {allInstructors.length === 0 ? "لا توجد مدرسين متاحين" : "لا توجد نتائج مطابقة للبحث"}
                                 </div>
                             )}
                         </div>
 
                         {/* Pagination */}
-                        {allUsers.length > 0 && (
+                        {paginatedInstructors.length > 0 && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                                 <div className="text-sm text-muted-foreground">
-                                    عرض {startItem} إلى {endItem} من {totalUsers} مستخدم
+                                    عرض {startItem} إلى {endItem} من {totalItems} مدرس
                                 </div>
-
+                                
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="outline"
@@ -1021,20 +686,20 @@ const Account = () => {
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
-
+                                    
                                     <div className="flex items-center gap-1">
                                         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            let pageNumber
+                                            let pageNumber;
                                             if (totalPages <= 5) {
-                                                pageNumber = i + 1
+                                                pageNumber = i + 1;
                                             } else if (currentPage <= 3) {
-                                                pageNumber = i + 1
+                                                pageNumber = i + 1;
                                             } else if (currentPage >= totalPages - 2) {
-                                                pageNumber = totalPages - 4 + i
+                                                pageNumber = totalPages - 4 + i;
                                             } else {
-                                                pageNumber = currentPage - 2 + i
+                                                pageNumber = currentPage - 2 + i;
                                             }
-
+                                            
                                             return (
                                                 <Button
                                                     key={pageNumber}
@@ -1045,10 +710,10 @@ const Account = () => {
                                                 >
                                                     {pageNumber}
                                                 </Button>
-                                            )
+                                            );
                                         })}
                                     </div>
-
+                                    
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -1064,24 +729,23 @@ const Account = () => {
                 )}
             </CardContent>
 
-            {/* Delete Confirmation Dialog */}
             <AlertDialog
                 open={deleteDialog.isOpen}
                 onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
             >
                 <AlertDialogContent className="text-right" dir="rtl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المستخدم؟</AlertDialogTitle>
+                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المدرب؟</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
-                            سيتم حذف المستخدم "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+                            سيتم حذف المدرب "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row-reverse gap-2">
                         <AlertDialogAction
                             className="bg-red-500 hover:bg-red-600"
                             onClick={async () => {
-                                await handleDelete(deleteDialog.itemId)
-                                setDeleteDialog({ isOpen: false, itemId: null, itemName: "" })
+                                await handleDelete(deleteDialog.itemId);
+                                setDeleteDialog({ isOpen: false, itemId: null, itemName: "" });
                             }}
                         >
                             حذف
@@ -1092,18 +756,8 @@ const Account = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            {/* User Details Dialog */}
-            <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, user: null })}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>تفاصيل المستخدم</DialogTitle>
-                    </DialogHeader>
-                    {renderUserDetails(detailDialog.user)}
-                </DialogContent>
-            </Dialog>
         </Card>
-    )
-}
+    );
+};
 
-export default Account
+export default Instructor;

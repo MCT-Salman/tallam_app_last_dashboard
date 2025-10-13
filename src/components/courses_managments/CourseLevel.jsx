@@ -267,9 +267,9 @@ const CourseLevel = () => {
                 name: form.name,
                 description: form.description || '',
                 order: parseInt(form.order),
-                priceUSD: parseFloat(form.priceUSD) || 0,  
-                priceSAR: parseFloat(form.priceSAR) || 0,  
-                isFree: Boolean(form.isFree),              
+                priceUSD: parseFloat(form.priceUSD) || 0,
+                priceSAR: parseFloat(form.priceSAR) || 0,
+                isFree: Boolean(form.isFree),
                 previewUrl: form.previewUrl || '',
                 downloadUrl: form.downloadUrl || '',
                 instructorId: form.instructorId,
@@ -323,7 +323,23 @@ const CourseLevel = () => {
         }
     };
 
-    // حذف المستوى - ⭐ التصحيح هنا
+    // حذف المستوى 
+    // const handleDelete = async (id) => {
+    //     if (!id) {
+    //         showErrorToast("معرف المستوى غير محدد");
+    //         return;
+    //     }
+
+    //     try {
+    //         await deleteCourseLevel(id);
+    //         fetchCourseLevels(selectedCourse);
+    //         showSuccessToast("تم الحذف بنجاح");
+    //     } catch (err) {
+    //         showErrorToast(err?.response?.data?.message || "فشل الحذف");
+    //     }
+    // };
+
+    // في CourseLevel.jsx - دالة handleDelete
     const handleDelete = async (id) => {
         if (!id) {
             showErrorToast("معرف المستوى غير محدد");
@@ -335,7 +351,14 @@ const CourseLevel = () => {
             fetchCourseLevels(selectedCourse);
             showSuccessToast("تم الحذف بنجاح");
         } catch (err) {
-            showErrorToast(err?.response?.data?.message || "فشل الحذف");
+            // التحقق من رسالة الخطأ وعرض الرسالة المناسبة
+            const errorMessage = err?.response?.data?.message || err?.message || "فشل الحذف";
+
+            if (errorMessage.includes('دروس مرتبطة') || err?.response?.data?.code === 'P2003') {
+                showErrorToast("لا يمكن حذف المستوى لأنه يحتوي على دروس مرتبطة. يرجى حذف الدروس أولاً.");
+            } else {
+                showErrorToast(errorMessage);
+            }
         }
     };
 
@@ -665,11 +688,15 @@ const CourseLevel = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <Label className="font-medium">تاريخ الإنشاء:</Label>
-                        <p className="text-gray-600 mt-1">{item.createdAt}</p>
+                        <p className="text-gray-600 mt-1">
+                            {new Date(item.createdAt).toLocaleDateString('en-US')}
+                        </p>
                     </div>
                     <div>
                         <Label className="font-medium">آخر تحديث:</Label>
-                        <p className="text-gray-600 mt-1">{item.updatedAt}</p>
+                        <p className="text-gray-600 mt-1">
+                            {new Date(item.updatedAt).toLocaleDateString('en-US')}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1183,7 +1210,13 @@ const CourseLevel = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المستوى؟</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
-                            سيتم حذف المستوى "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+                            سيتم حذف المستوى "{deleteDialog.itemName}" بشكل نهائي.
+                            {deleteDialog.relatedLessonsCount > 0 && (
+                                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                                    ⚠️ <strong>تحذير:</strong> هذا المستوى يحتوي على {deleteDialog.relatedLessonsCount} دروس مرتبطة.
+                                    يجب حذف هذه الدروس أولاً قبل حذف المستوى.
+                                </div>
+                            )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row-reverse gap-2">
@@ -1193,6 +1226,7 @@ const CourseLevel = () => {
                                 await handleDelete(deleteDialog.itemId);
                                 setDeleteDialog({ isOpen: false, itemId: null, itemName: "" });
                             }}
+                            disabled={deleteDialog.relatedLessonsCount > 0}
                         >
                             حذف
                         </AlertDialogAction>
