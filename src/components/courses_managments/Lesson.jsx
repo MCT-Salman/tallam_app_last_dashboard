@@ -14,14 +14,17 @@ import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye
 import { getLevelLessons, createLessonForLevel, updateLesson, deleteLesson, toggleLessonStatus, getInstructors } from "@/api/api"
 import { getCourses } from "@/api/api"
 import { getCourseLevels } from "@/api/api"
+import { getSpecializations } from "@/api/api" // ⬅️ استيراد دالة جلب الاختصاصات
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Lesson = () => {
     const [lessons, setLessons] = useState([])
     const [allLessons, setAllLessons] = useState([])
+    const [specializations, setSpecializations] = useState([]) // ⬅️ حالة الاختصاصات
     const [courses, setCourses] = useState([])
     const [levels, setLevels] = useState([])
-    const [instructors, setInstructors] = useState([]) // ⬅️ أضف هذا
+    const [instructors, setInstructors] = useState([])
+    const [selectedSpecialization, setSelectedSpecialization] = useState("") // ⬅️ اختصاص محدد
     const [selectedCourse, setSelectedCourse] = useState("")
     const [selectedLevel, setSelectedLevel] = useState("")
     const [loading, setLoading] = useState(false)
@@ -49,14 +52,41 @@ const Lesson = () => {
     const [sortBy, setSortBy] = useState("orderIndex")
     const [sortOrder, setSortOrder] = useState("asc")
 
-    // جلب الكورسات
-    const fetchCourses = async () => {
+    // جلب الاختصاصات
+    const fetchSpecializations = async () => {
+        try {
+            const res = await getSpecializations();
+            const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                Array.isArray(res.data?.data?.data) ? res.data.data.data :
+                Array.isArray(res.data?.data) ? res.data.data : [];
+            console.log("Specializations data:", data);
+            setSpecializations(data);
+        } catch (err) {
+            console.error("Error fetching specializations:", err);
+            showErrorToast("فشل تحميل الاختصاصات");
+        }
+    };
+
+    // جلب الكورسات بناءً على الاختصاص المحدد
+    const fetchCourses = async (specializationId) => {
+        if (!specializationId) {
+            setCourses([]);
+            setSelectedCourse("");
+            return;
+        }
+
         try {
             const res = await getCourses();
-            const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+            let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
                 Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
-            console.log("Courses data:", data);
-            setCourses(data);
+            
+            // فلترة الكورسات حسب الاختصاص المحدد
+            const filteredCourses = allCourses.filter(course => 
+                course.specializationId === parseInt(specializationId)
+            );
+            
+            console.log("Filtered courses:", filteredCourses);
+            setCourses(filteredCourses);
         } catch (err) {
             console.error(err);
             showErrorToast("فشل تحميل الكورسات");
@@ -171,9 +201,22 @@ const Lesson = () => {
     }
 
     useEffect(() => {
-        fetchCourses()
-        fetchInstructors() // ⬅️ أضف هذا
+        fetchSpecializations() // ⬅️ جلب الاختصاصات أولاً
+        fetchInstructors()
     }, [])
+
+    // عند تغيير الاختصاص المحدد
+    useEffect(() => {
+        if (selectedSpecialization) {
+            fetchCourses(selectedSpecialization)
+            setSelectedCourse("")
+            setSelectedLevel("")
+        } else {
+            setCourses([])
+            setSelectedCourse("")
+            setSelectedLevel("")
+        }
+    }, [selectedSpecialization])
 
     // عند تغيير الكورس المحدد
     useEffect(() => {
@@ -286,101 +329,53 @@ const Lesson = () => {
     }
 
     // حفظ الدرس (إضافة أو تعديل)
-    // const handleSave = async () => {
-    //     if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان الدرس")
-    //     if (!form.orderIndex) return showErrorToast("يرجى إدخال ترتيب الدرس")
-    //     if (!form.youtubeUrl) return showErrorToast("يرجى إدخال رابط YouTube")
-    //     if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
+    const handleSave = async () => {
+        if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان الدرس")
+        if (!form.orderIndex) return showErrorToast("يرجى إدخال ترتيب الدرس")
+        if (!form.youtubeUrl) return showErrorToast("يرجى إدخال رابط YouTube")
+        if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
 
-    //     try {
-    //         const lessonData = {
-    //             title: form.title,
-    //             description: form.description || '',
-    //             youtubeUrl: form.youtubeUrl,
-    //             youtubeId: form.youtubeId,
-    //             googleDriveUrl: form.googleDriveUrl || '',
-    //             durationSec: parseInt(form.durationSec) || 0,
-    //             orderIndex: parseInt(form.orderIndex),
-    //             isFreePreview: Boolean(form.isFreePreview)
-    //         }
+        try {
+            const lessonData = {
+                title: form.title,
+                description: form.description || '',
+                youtubeUrl: form.youtubeUrl,
+                youtubeId: form.youtubeId,
+                googleDriveUrl: form.googleDriveUrl || '',
+                durationSec: parseInt(form.durationSec) || 0,
+                orderIndex: parseInt(form.orderIndex),
+                isFreePreview: Boolean(form.isFreePreview)
+            }
 
-    //         console.log("📤 Sending lesson data:", lessonData);
+            console.log("📤 Sending lesson data:", lessonData);
 
-    //         if (editItem) {
-    //             await updateLesson(editItem.id, lessonData)
-    //             showSuccessToast("تم تعديل الدرس بنجاح")
-    //             setEditItem(null)
-    //         } else {
-    //             await createLessonForLevel(selectedLevel, lessonData)
-    //             showSuccessToast("تم إنشاء الدرس بنجاح")
-    //         }
+            if (editItem) {
+                await updateLesson(editItem.id, lessonData)
+                showSuccessToast("تم تعديل الدرس بنجاح")
+                setEditItem(null)
+            } else {
+                await createLessonForLevel(selectedLevel, lessonData)
+                showSuccessToast("تم إنشاء الدرس بنجاح")
+            }
 
-    //         setForm({
-    //             title: "",
-    //             description: "",
-    //             youtubeUrl: "",
-    //             youtubeId: "",
-    //             googleDriveUrl: "",
-    //             durationSec: "",
-    //             orderIndex: "",
-    //             isFreePreview: false
-    //         })
-    //         setIsDialogOpen(false)
-    //         fetchLevelLessons(selectedLevel)
-    //     } catch (err) {
-    //         console.error("❌ Save error:", err.response?.data || err)
-    //         showErrorToast(err?.response?.data?.message || "فشل العملية")
-    //     }
-    // }
-
-    // في دالة handleSave، تأكد من إرسال googleDriveUrl
-const handleSave = async () => {
-    if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان الدرس")
-    if (!form.orderIndex) return showErrorToast("يرجى إدخال ترتيب الدرس")
-    if (!form.youtubeUrl) return showErrorToast("يرجى إدخال رابط YouTube")
-    if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
-
-    try {
-        const lessonData = {
-            title: form.title,
-            description: form.description || '',
-            youtubeUrl: form.youtubeUrl,
-            youtubeId: form.youtubeId,
-            googleDriveUrl: form.googleDriveUrl || '', // ⬅️ تأكد من إرسال هذا الحقل
-            durationSec: parseInt(form.durationSec) || 0,
-            orderIndex: parseInt(form.orderIndex),
-            isFreePreview: Boolean(form.isFreePreview)
+            // إعادة تعيين النموذج
+            setForm({
+                title: "",
+                description: "",
+                youtubeUrl: "",
+                youtubeId: "",
+                googleDriveUrl: "",
+                durationSec: "",
+                orderIndex: "",
+                isFreePreview: false
+            })
+            setIsDialogOpen(false)
+            fetchLevelLessons(selectedLevel)
+        } catch (err) {
+            console.error("❌ Save error:", err.response?.data || err)
+            showErrorToast(err?.response?.data?.message || "فشل العملية")
         }
-
-        console.log("📤 Sending lesson data:", lessonData);
-
-        if (editItem) {
-            await updateLesson(editItem.id, lessonData)
-            showSuccessToast("تم تعديل الدرس بنجاح")
-            setEditItem(null)
-        } else {
-            await createLessonForLevel(selectedLevel, lessonData)
-            showSuccessToast("تم إنشاء الدرس بنجاح")
-        }
-
-        // إعادة تعيين النموذج
-        setForm({
-            title: "",
-            description: "",
-            youtubeUrl: "",
-            youtubeId: "",
-            googleDriveUrl: "",
-            durationSec: "",
-            orderIndex: "",
-            isFreePreview: false
-        })
-        setIsDialogOpen(false)
-        fetchLevelLessons(selectedLevel)
-    } catch (err) {
-        console.error("❌ Save error:", err.response?.data || err)
-        showErrorToast(err?.response?.data?.message || "فشل العملية")
     }
-}
 
     // تبديل حالة الدرس
     const handleToggleActive = async (id, isActive) => {
@@ -515,9 +510,6 @@ const handleSave = async () => {
                     <div>
                         <Label className="font-bold">المدرس:</Label>
                         <p className="mt-1">{getInstructorInfo(lesson)}</p>
-                        {/* <div className="text-xs text-gray-500 mt-1">
-                            instructorId: {lesson.courseLevel?.instructorId || "غير موجود"}
-                        </div> */}
                     </div>
                 </div>
 
@@ -709,13 +701,35 @@ const handleSave = async () => {
                     </Dialog>
                 </div>
 
-                {/* Course and Level Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* التصنيف الهرمي: اختصاص → كورس → مستوى */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* اختيار الاختصاص */}
+                    <div className="space-y-2">
+                        <Label>اختر الاختصاص</Label>
+                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="اختر الاختصاص" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {specializations.map((spec) => (
+                                    <SelectItem key={spec.id} value={spec.id}>
+                                        {spec.name || spec.title}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* اختيار الكورس */}
                     <div className="space-y-2">
                         <Label>اختر الكورس</Label>
-                        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                        <Select 
+                            value={selectedCourse} 
+                            onValueChange={setSelectedCourse}
+                            disabled={!selectedSpecialization}
+                        >
                             <SelectTrigger>
-                                <SelectValue placeholder="اختر الكورس" />
+                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
                             </SelectTrigger>
                             <SelectContent>
                                 {courses.map((course) => (
@@ -727,6 +741,7 @@ const handleSave = async () => {
                         </Select>
                     </div>
 
+                    {/* اختيار المستوى */}
                     <div className="space-y-2">
                         <Label>اختر المستوى</Label>
                         <Select 
@@ -824,7 +839,9 @@ const handleSave = async () => {
             <CardContent>
                 {!selectedLevel ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        {!selectedCourse ? "يرجى اختيار كورس أولاً" : "يرجى اختيار مستوى لعرض دروسه"}
+                        {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
+                         !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+                         "يرجى اختيار مستوى لعرض دروسه"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">
@@ -952,9 +969,9 @@ const handleSave = async () => {
                                                             youtubeUrl: item.youtubeUrl || "",
                                                             youtubeId: item.youtubeId || "",
                                                             googleDriveUrl: item.googleDriveUrl || "",
-                                                            durationSec: item.durationSec?.toString() || "",
-                                                            orderIndex: item.orderIndex?.toString() || "",
-                                                            isFreePreview: item.isFreePreview || false
+                                                            durationSec: item.durationSec || "",
+                                                            orderIndex: item.orderIndex || "",
+                                                            isFreePreview: Boolean(item.isFreePreview)
                                                         })
                                                         setIsDialogOpen(true)
                                                     }}
@@ -964,12 +981,8 @@ const handleSave = async () => {
                                                 </Button>
                                                 <Button
                                                     size="icon"
-                                                    variant="destructive"
-                                                    onClick={() => setDeleteDialog({
-                                                        isOpen: true,
-                                                        itemId: item.id,
-                                                        itemName: item.title || "بدون عنوان"
-                                                    })}
+                                                    variant="ghost"
+                                                    onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title })}
                                                     title="حذف"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -978,8 +991,8 @@ const handleSave = async () => {
                                         </TableRow>
                                     )) : (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
-                                                {allLessons.length === 0 ? "لا توجد دروس لهذا المستوى" : "لا توجد نتائج مطابقة للبحث"}
+                                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                                {allLessons.length === 0 ? "لا توجد دروس في هذا المستوى" : "لم يتم العثور على نتائج"}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -987,131 +1000,116 @@ const handleSave = async () => {
                             </Table>
                         </div>
 
-                        {/* Mobile Cards View - تحسين التجاوب */}
-                        <div className="block md:hidden space-y-4">
+                        {/* Card View - for mobile screens */}
+                        <div className="md:hidden space-y-4">
                             {paginatedLessons.length > 0 ? paginatedLessons.map(item => (
                                 <Card key={item.id} className="p-4">
                                     <div className="space-y-3">
-                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                                            <h3 className="font-bold text-lg flex-1">{item.title || "بدون عنوان"}</h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Badge variant="secondary">ترتيب: {item.orderIndex || "0"}</Badge>
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary">{item.orderIndex || "0"}</Badge>
+                                                <Badge variant={item.isActive ? "default" : "secondary"}>
+                                                    {item.isActive ? "نشط" : "معطل"}
+                                                </Badge>
                                                 <Badge variant={item.isFreePreview ? "default" : "secondary"}>
                                                     {item.isFreePreview ? "مجاني" : "مدفوع"}
                                                 </Badge>
                                             </div>
-                                        </div>
-
-                                        {item.description && (
-                                            <p className="text-sm text-gray-600">
-                                                {item.description}
-                                            </p>
-                                        )}
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">المدة:</span>
-                                                <span>{formatDuration(item.durationSec)}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">الحالة:</span>
-                                                <Badge variant={item.isActive ? "default" : "secondary"}>
-                                                    {item.isActive ? "نشط" : "معطل"}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">الكورس:</span>
-                                                <span className="flex-1">{getCourseInfo(item)}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">المدرس:</span>
-                                                <span className="flex-1">{getInstructorInfo(item)}</span>
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => setDetailDialog({ isOpen: true, lesson: item })}
+                                                >
+                                                    <Info className="w-4 h-4" />
+                                                </Button>
+                                                {item.youtubeUrl && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => window.open(item.youtubeUrl, '_blank')}
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {/* أزرار الإجراءات - تصميم متجاوب */}
-                                        <div className="flex flex-wrap gap-2 pt-3 border-t">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => setDetailDialog({ isOpen: true, lesson: item })}
-                                                className="flex-1 min-w-[120px]"
-                                            >
-                                                <Info className="w-4 h-4 ml-1" />
-                                                التفاصيل
-                                            </Button>
-                                            {item.youtubeUrl && (
+                                        <div>
+                                            <h3 className="font-medium">{item.title || "بدون عنوان"}</h3>
+                                            {item.description && (
+                                                <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <span className="text-muted-foreground">المدة:</span>
+                                                <span className="mr-2">{formatDuration(item.durationSec)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-muted-foreground">الكورس:</span>
+                                                <span className="mr-2">{getCourseInfo(item)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-muted-foreground">المدرس:</span>
+                                                <span className="mr-2">{getInstructorInfo(item)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-2 border-t">
+                                            <div className="flex gap-1">
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    onClick={() => window.open(item.youtubeUrl, '_blank')}
-                                                    className="flex-1 min-w-[120px]"
+                                                    variant="ghost"
+                                                    onClick={() => handleToggleActive(item.id, item.isActive)}
                                                 >
-                                                    <Eye className="w-4 h-4 ml-1" />
-                                                    مشاهدة
+                                                    {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                                 </Button>
-                                            )}
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleToggleActive(item.id, item.isActive)}
-                                                className="flex-1 min-w-[120px]"
-                                            >
-                                                {item.isActive ? <Pause className="w-4 h-4 ml-1" /> : <Play className="w-4 h-4 ml-1" />}
-                                                {item.isActive ? "إيقاف" : "تفعيل"}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    setEditItem(item)
-                                                    setForm({
-                                                        title: item.title || "",
-                                                        description: item.description || "",
-                                                        youtubeUrl: item.youtubeUrl || "",
-                                                        youtubeId: item.youtubeId || "",
-                                                        googleDriveUrl: item.googleDriveUrl || "",
-                                                        durationSec: item.durationSec?.toString() || "",
-                                                        orderIndex: item.orderIndex?.toString() || "",
-                                                        isFreePreview: item.isFreePreview || false
-                                                    })
-                                                    setIsDialogOpen(true)
-                                                }}
-                                                className="flex-1 min-w-[120px]"
-                                            >
-                                                <Edit className="w-4 h-4 ml-1" />
-                                                تعديل
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={() => setDeleteDialog({
-                                                    isOpen: true,
-                                                    itemId: item.id,
-                                                    itemName: item.title || "بدون عنوان"
-                                                })}
-                                                className="flex-1 min-w-[120px]"
-                                            >
-                                                <Trash2 className="w-4 h-4 ml-1" />
-                                                حذف
-                                            </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        setEditItem(item)
+                                                        setForm({
+                                                            title: item.title || "",
+                                                            description: item.description || "",
+                                                            youtubeUrl: item.youtubeUrl || "",
+                                                            youtubeId: item.youtubeId || "",
+                                                            googleDriveUrl: item.googleDriveUrl || "",
+                                                            durationSec: item.durationSec || "",
+                                                            orderIndex: item.orderIndex || "",
+                                                            isFreePreview: Boolean(item.isFreePreview)
+                                                        })
+                                                        setIsDialogOpen(true)
+                                                    }}
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title })}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
                             )) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    {allLessons.length === 0 ? "لا توجد دروس لهذا المستوى" : "لا توجد نتائج مطابقة للبحث"}
+                                    {allLessons.length === 0 ? "لا توجد دروس في هذا المستوى" : "لم يتم العثور على نتائج"}
                                 </div>
                             )}
                         </div>
 
                         {/* Pagination */}
                         {paginatedLessons.length > 0 && (
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                                 <div className="text-sm text-muted-foreground">
-                                    عرض {startItem} إلى {endItem} من {totalItems} درس
+                                    عرض {startItem} - {endItem} من أصل {totalItems} درس
                                 </div>
-
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="outline"
@@ -1119,89 +1117,77 @@ const handleSave = async () => {
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
                                     >
-                                        <ChevronRight className="h-4 w-4" />
+                                        <ChevronRight className="w-4 h-4" />
                                     </Button>
-
                                     <div className="flex items-center gap-1">
                                         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            let pageNumber
+                                            let pageNumber;
                                             if (totalPages <= 5) {
-                                                pageNumber = i + 1
+                                                pageNumber = i + 1;
                                             } else if (currentPage <= 3) {
-                                                pageNumber = i + 1
+                                                pageNumber = i + 1;
                                             } else if (currentPage >= totalPages - 2) {
-                                                pageNumber = totalPages - 4 + i
+                                                pageNumber = totalPages - 4 + i;
                                             } else {
-                                                pageNumber = currentPage - 2 + i
+                                                pageNumber = currentPage - 2 + i;
                                             }
-
                                             return (
                                                 <Button
                                                     key={pageNumber}
                                                     variant={currentPage === pageNumber ? "default" : "outline"}
                                                     size="sm"
                                                     onClick={() => handlePageChange(pageNumber)}
-                                                    className="w-8 h-8 p-0"
                                                 >
                                                     {pageNumber}
                                                 </Button>
-                                            )
+                                            );
                                         })}
                                     </div>
-
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages}
                                     >
-                                        <ChevronLeft className="h-4 w-4" />
+                                        <ChevronLeft className="w-4 h-4" />
                                     </Button>
                                 </div>
                             </div>
                         )}
                     </>
                 )}
-            </CardContent>
 
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog
-                open={deleteDialog.isOpen}
-                onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
-            >
-                <AlertDialogContent className="text-right" dir="rtl">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا الدرس؟</AlertDialogTitle>
-                        <AlertDialogDescription className="text-right">
-                            سيتم حذف الدرس "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex flex-row-reverse gap-2">
-                        <AlertDialogAction
-                            className="bg-red-500 hover:bg-red-600"
-                            onClick={async () => {
-                                await handleDelete(deleteDialog.itemId)
+                {/* Delete Confirmation Dialog */}
+                <AlertDialog open={deleteDialog.isOpen} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, isOpen: open })}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                هل أنت متأكد من حذف الدرس "{deleteDialog.itemName}"؟ هذا الإجراء لا يمكن التراجع عنه.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => {
+                                handleDelete(deleteDialog.itemId)
                                 setDeleteDialog({ isOpen: false, itemId: null, itemName: "" })
-                            }}
-                        >
-                            حذف
-                        </AlertDialogAction>
-                        <AlertDialogCancel onClick={() => setDeleteDialog({ isOpen: false, itemId: null, itemName: "" })}>
-                            إلغاء
-                        </AlertDialogCancel>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                            }}>
+                                حذف
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
-            {/* Lesson Details Dialog */}
-            <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog(prev => ({ ...prev, isOpen }))}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>تفاصيل الدرس</DialogTitle>
-                    </DialogHeader>
-                    {renderLessonDetails(detailDialog.lesson)}
-                </DialogContent>
-            </Dialog>
+                {/* Lesson Details Dialog */}
+                <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ ...detailDialog, isOpen: open })}>
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>تفاصيل الدرس</DialogTitle>
+                        </DialogHeader>
+                        {renderLessonDetails(detailDialog.lesson)}
+                    </DialogContent>
+                </Dialog>
+            </CardContent>
         </Card>
     )
 }
