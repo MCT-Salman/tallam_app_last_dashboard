@@ -70,7 +70,7 @@ const Course = () => {
             setAllCourses(data);
         } catch (err) {
             console.error(err);
-            showErrorToast("فشل تحميل الكورسات");
+            showErrorToast(" فشل تحميل المواد ");
         } finally {
             setLoading(false);
         }
@@ -180,7 +180,7 @@ const Course = () => {
 
     // حفظ الكورس (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان الكورس");
+        if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان المادة");
         if (!form.specializationId) return showErrorToast("يرجى اختيار التخصص");
 
         try {
@@ -208,7 +208,7 @@ const Course = () => {
                     specializationId: form.specializationId,
                     imageUrl: imageToSend
                 });
-                showSuccessToast("تم تعديل الكورس بنجاح");
+                showSuccessToast("تم تعديل المادة بنجاح");
                 setEditItem(null);
             } else {
                 await createCourse({
@@ -217,7 +217,7 @@ const Course = () => {
                     specializationId: form.specializationId,
                     imageUrl: imageFile
                 });
-                showSuccessToast("تم إنشاء الكورس بنجاح");
+                showSuccessToast("تم إنشاء المادة بنجاح");
             }
 
             setForm({ title: "", description: "", specializationId: "" });
@@ -235,7 +235,7 @@ const Course = () => {
     const handleToggleActive = async (id, isActive) => {
         try {
             await toggleCourseStatus(id, !isActive);
-            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} الكورس بنجاح`);
+            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} المادة بنجاح`);
             fetchCourses();
         } catch (err) {
             showErrorToast(err?.response?.data?.message || "فشل تغيير الحالة");
@@ -386,7 +386,7 @@ const Course = () => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة الكورسات (المواد)</CardTitle>
+                    <CardTitle>إدارة المواد</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -398,13 +398,13 @@ const Course = () => {
                                     setImagePreview(null);
                                 }}
                             >
-                                إضافة كورس <Plus className="w-4 h-4 cursor-pointer" />
+                                إضافة مادة <Plus className="w-4 h-4 cursor-pointer" />
                             </Button>
                         </DialogTrigger>
 
                         <DialogContent className="sm:max-w-md">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل الكورس" : "إضافة كورس جديد"}</DialogTitle>
+                                <DialogTitle>{editItem ? "تعديل المادة" : "إضافة مادة جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">
@@ -412,7 +412,7 @@ const Course = () => {
                                     <Input 
                                         value={form.title} 
                                         onChange={(e) => handleFormChange("title", e.target.value)} 
-                                        placeholder="أدخل عنوان الكورس..."
+                                        placeholder="أدخل عنوان المادة..."
                                     />
                                 </div>
 
@@ -441,12 +441,12 @@ const Course = () => {
                                         value={form.description} 
                                         onChange={(e) => handleFormChange("description", e.target.value)}
                                         rows={3}
-                                        placeholder="أدخل وصف الكورس..."
+                                        placeholder="أدخل وصف المادة..."
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="course-image">صورة الكورس *</Label>
+                                    <Label htmlFor="course-image">صورة المادة *</Label>
                                     <Input 
                                         id="course-image" 
                                         type="file" 
@@ -533,7 +533,7 @@ const Course = () => {
                 {/* Reset Filters & Results Count */}
                 <div className="flex justify-between items-center">
                     <div className="text-sm text-muted-foreground">
-                        عرض {filteredAndSortedCourses.length} من أصل {allCourses.length} كورس
+                        عرض {filteredAndSortedCourses.length} من أصل {allCourses.length} مادة
                         {(searchTerm || statusFilter !== "all" || specializationFilter !== "all") && ` (مفلتر)`}
                     </div>
                     
@@ -655,7 +655,7 @@ const Course = () => {
                                     )) : (
                                         <TableRow>
                                             <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                                                {allCourses.length === 0 ? "لا توجد كورسات متاحة" : "لا توجد نتائج مطابقة للبحث"}
+                                                {allCourses.length === 0 ? "لا توجد مادة متاحة" : "لا توجد نتائج مطابقة للبحث"}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -671,7 +671,7 @@ const Course = () => {
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    {allCourses.length === 0 ? "لا توجد كورسات متاحة" : "لا توجد نتائج مطابقة للبحث"}
+                                    {allCourses.length === 0 ? "لا توجد مادة متاحة" : "لا توجد نتائج مطابقة للبحث"}
                                 </div>
                             )}
                         </div>
@@ -680,7 +680,7 @@ const Course = () => {
                         {paginatedCourses.length > 0 && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                                 <div className="text-sm text-muted-foreground">
-                                    عرض {startItem} إلى {endItem} من {totalItems} كورس
+                                    عرض {startItem} إلى {endItem} من {totalItems} مادة
                                 </div>
                                 
                                 <div className="flex items-center gap-2">
@@ -741,9 +741,9 @@ const Course = () => {
             >
                 <AlertDialogContent className="text-right" dir="rtl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا الكورس؟</AlertDialogTitle>
+                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المادة</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
-                            سيتم حذف الكورس "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+                            سيتم حذف المادة "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row-reverse gap-2">

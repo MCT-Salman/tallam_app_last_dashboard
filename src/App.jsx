@@ -20,14 +20,14 @@ import "./styles/sonner.css"
 import Account from "@/components/account/Account"
 import Courses from "@/components/courses_managments/Courses"
 import Coupons from "@/components/coupons/Coupons"
-import Quizzes from "@/components/quizzes/Quizzes"
+// import Quizzes from "@/components/quizzes/Quizzes"
 // import Files from "@/components/files/Files"
 import Transactions from "@/components/transactions/Transactions"
 import Financial from "@/components/financial/Financial"
 // import Ads from "@/components/ads/Ads"
 import Stories from "@/components/stories/Stories"
 import Notifications from "@/components/notifications/Notifications"
-import Suggestions from "@/components/suggestions/Suggestions"
+// import Suggestions from "@/components/suggestions/Suggestions"
 import Profile from "@/components/profile/Profile"
 import Settings from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
@@ -86,13 +86,13 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/quizzes" element={
+              {/* <Route path="/quizzes" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Quizzes />
                   </DashboardLayout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               {/* <Route path="/files" element={
                 <ProtectedRoute>
                   <DashboardLayout>
@@ -142,13 +142,13 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/suggestions" element={
+              {/* <Route path="/suggestions" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Suggestions />
                   </DashboardLayout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <DashboardLayout>

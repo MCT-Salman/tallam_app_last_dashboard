@@ -28,11 +28,11 @@ export const sidebarItems = [
     href: "/coupons",
     icon: Percent
   },
-  {
-    title: "إدارة الاختبارات",
-    href: "/quizzes",
-    icon: MessageSquare
-  },
+  // {
+  //   title: "إدارة الاختبارات",
+  //   href: "/quizzes",
+  //   icon: MessageSquare
+  // },
   // {
   //   title: "إدارة الملفات",
   //   href: "/files",
@@ -73,11 +73,11 @@ export const sidebarItems = [
     href: "/reviews",
     icon: Star
   },
-  {
-    title: "المقترحات",
-    href: "/suggestions",
-    icon: MessageSquare
-  },
+  // {
+  //   title: "المقترحات",
+  //   href: "/suggestions",
+  //   icon: MessageSquare
+  // },
   // {
   //   title: "التحقق من الروابط",
   //   href: "/link-verification",

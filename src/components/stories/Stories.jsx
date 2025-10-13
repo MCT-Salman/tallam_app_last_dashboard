@@ -176,20 +176,26 @@ const Stories = () => {
         }
     }
 
-    // حفظ القصة (إضافة أو تعديل)
+    // حفظ القصة (إضافة أو تعديل) - التصحيح النهائي
     const handleSave = async () => {
         if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان القصة")
         if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة للقصة")
 
         try {
             const storyData = new FormData()
+            
+            // إضافة البيانات الأساسية
             storyData.append('title', form.title)
             storyData.append('orderIndex', form.orderIndex || "0")
             storyData.append('isActive', form.isActive.toString())
             
             if (form.startedAt) storyData.append('startedAt', form.startedAt)
             if (form.endedAt) storyData.append('endedAt', form.endedAt)
-            if (imageFile) storyData.append('imageUrl', imageFile)
+            
+            // ⬅️ التصحيح المهم: استخدام الحقل الصحيح للصورة
+            if (imageFile) {
+                storyData.append('imageUrl', imageFile) // هذا هو الحقل الذي يتوقعه الـ API
+            }
 
             console.log("📤 Sending story data:", {
                 title: form.title,
@@ -197,15 +203,25 @@ const Stories = () => {
                 isActive: form.isActive,
                 startedAt: form.startedAt,
                 endedAt: form.endedAt,
-                hasImage: !!imageFile
+                hasImage: !!imageFile,
+                isEdit: !!editItem
             })
 
+            // طباعة محتويات FormData للتأكد
+            for (let [key, value] of storyData.entries()) {
+                console.log(`📦 FormData: ${key} =`, value)
+            }
+
             if (editItem) {
-                await updateStory(editItem.id, storyData)
+                console.log(`🔄 Updating story ID: ${editItem.id}`)
+                const response = await updateStory(editItem.id, storyData)
+                console.log("✅ Update response:", response)
                 showSuccessToast("تم تعديل القصة بنجاح")
                 setEditItem(null)
             } else {
-                await createStory(storyData)
+                console.log("🆕 Creating new story")
+                const response = await createStory(storyData)
+                console.log("✅ Create response:", response)
                 showSuccessToast("تم إنشاء القصة بنجاح")
             }
 
@@ -220,9 +236,15 @@ const Stories = () => {
             setImageFile(null)
             setImagePreview(null)
             setIsDialogOpen(false)
-            fetchStories()
+            
+            // إعادة تحميل البيانات بعد فترة قصيرة
+            setTimeout(() => {
+                fetchStories()
+            }, 1000)
+            
         } catch (err) {
-            console.error("❌ Save error:", err.response?.data || err)
+            console.error("❌ Save error:", err)
+            console.error("❌ Error response:", err.response?.data)
             showErrorToast(err?.response?.data?.message || "فشل العملية")
         }
     }
@@ -577,7 +599,9 @@ const Stories = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="story-image">صورة القصة *</Label>
+                                    <Label htmlFor="story-image">
+                                        صورة القصة {!editItem && "*"}
+                                    </Label>
                                     <Input
                                         id="story-image"
                                         type="file"
@@ -598,6 +622,29 @@ const Stories = () => {
                                             />
                                         </div>
                                     )}
+                                    {editItem && !imagePreview && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                الصورة الحالية:
+                                            </p>
+                                            <img
+                                                src={getImageUrl(editItem.imageUrl)}
+                                                alt="الصورة الحالية"
+                                                className="max-h-40 rounded-md border mt-1"
+                                                {...imageConfig}
+                                                onError={(e) => {
+                                                    e.target.onerror = null
+                                                    e.target.src = "/default-story.png"
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-gray-500">
+                                        {editItem 
+                                            ? "اترك الحقل فارغاً للحفاظ على الصورة الحالية" 
+                                            : "يجب اختيار صورة للقصة الجديدة"
+                                        }
+                                    </p>
                                 </div>
 
                                 <Button onClick={handleSave}>
