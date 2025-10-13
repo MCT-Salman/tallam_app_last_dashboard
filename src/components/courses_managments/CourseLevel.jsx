@@ -676,7 +676,7 @@ const CourseLevel = () => {
                                 </a>
                             </div>
                         )}
-                        {item.downloadUrl && (
+                        {/* {item.downloadUrl && (
                             <div>
                                 <Label className="font-medium">رابط التحميل:</Label>
                                 <a
@@ -688,7 +688,7 @@ const CourseLevel = () => {
                                     {item.downloadUrl}
                                 </a>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
             )}
@@ -844,14 +844,14 @@ const CourseLevel = () => {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label>رابط التحميل</Label>
                                     <Input
                                         value={form.downloadUrl}
                                         onChange={(e) => handleFormChange("downloadUrl", e.target.value)}
                                         placeholder="رابط تحميل الملفات..."
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="level-image">صورة المستوى *</Label>

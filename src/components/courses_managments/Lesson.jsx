@@ -514,12 +514,12 @@ const Lesson = () => {
                 </div>
 
                 {/* الوصف */}
-                {lesson.description && (
+                {/* {lesson.description && (
                     <div>
                         <Label className="font-bold">الوصف:</Label>
                         <p className="mt-1 p-2 bg-gray-50 rounded-md">{lesson.description}</p>
                     </div>
-                )}
+                )} */}
 
                 {/* الروابط */}
                 <div className="grid grid-cols-1 gap-4">
@@ -629,7 +629,7 @@ const Lesson = () => {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label>وصف الدرس</Label>
                                     <Textarea
                                         value={form.description}
@@ -637,7 +637,7 @@ const Lesson = () => {
                                         rows={3}
                                         placeholder="أدخل وصف الدرس..."
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">

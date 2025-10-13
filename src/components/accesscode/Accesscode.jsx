@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, Download, ZoomIn } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, Download, ZoomIn, Phone } from "lucide-react";
 import { generateAccessCode, getAllAccessCodes, getAccessCodesByUserId, getAccessCodesByCourse } from "@/api/api";
 import { getAllUsers } from "@/api/api";
 import { getCourses } from "@/api/api";
@@ -929,6 +929,10 @@ const CodeCard = ({ item }) => {
                                                 {item.code}
                                             </TableCell>
                                             <TableCell className="table-cell">
+                                                <div className="flex items-center gap-2" dir="ltr">
+                                                    <Phone className="w-4 h-4 text-muted-foreground" />
+                                                    {item.user?.phone || "غير محدد"}
+                                                </div>
                                                 <div className="flex items-center gap-2">
                                                     <User className="w-4 h-4 text-muted-foreground" />
                                                     {item.user?.name || "غير محدد"}
