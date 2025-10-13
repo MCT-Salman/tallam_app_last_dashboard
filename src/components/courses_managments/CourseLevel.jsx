@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon } from "lucide-react";
 import { getCourseLevels, createCourseLevel, updateCourseLevel, deleteCourseLevel, toggleCourseLevelStatus, BASE_URL } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getInstructors } from "@/api/api";
+import { getSpecializations } from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
 import { imageConfig } from "@/utils/corsConfig";
 
@@ -22,6 +23,8 @@ const CourseLevel = () => {
     const [allLevels, setAllLevels] = useState([]);
     const [courses, setCourses] = useState([]);
     const [instructors, setInstructors] = useState([]);
+    const [specializations, setSpecializations] = useState([]);
+    const [selectedSpecialization, setSelectedSpecialization] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("");
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
@@ -72,6 +75,18 @@ const CourseLevel = () => {
         }
     };
 
+    // جلب التخصصات
+    const fetchSpecializations = async () => {
+        try {
+            const res = await getSpecializations();
+            const data = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+            setSpecializations(data);
+        } catch (err) {
+            console.error(err);
+            showErrorToast("فشل تحميل التخصصات");
+        }
+    };
+
     // جلب الكورسات
     const fetchCourses = async () => {
         try {
@@ -113,9 +128,7 @@ const CourseLevel = () => {
             // استخراج البيانات بناءً على الهيكل الفعلي
             let data = [];
             if (Array.isArray(res.data?.data)) {
-                // إذا كان res.data.data مصفوفة
                 if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-                    // المستويات هي العنصر الأول في المصفوفة
                     data = res.data.data[0];
                 } else {
                     data = res.data.data;
@@ -138,9 +151,18 @@ const CourseLevel = () => {
     };
 
     useEffect(() => {
+        fetchSpecializations();
         fetchCourses();
         fetchInstructors();
     }, []);
+
+    // عند تغيير التخصص المحدد
+    useEffect(() => {
+        if (selectedSpecialization) {
+            setSelectedCourse("");
+            setAllLevels([]);
+        }
+    }, [selectedSpecialization]);
 
     // عند تغيير الكورس المحدد
     useEffect(() => {
@@ -150,6 +172,12 @@ const CourseLevel = () => {
             setAllLevels([]);
         }
     }, [selectedCourse]);
+
+    // الحصول على الكورسات المصفاة حسب التخصص
+    const filteredCourses = useMemo(() => {
+        if (!selectedSpecialization) return [];
+        return courses.filter(course => course.specializationId === selectedSpecialization);
+    }, [courses, selectedSpecialization]);
 
     // فلترة وترتيب البيانات على جانب العميل
     const filteredAndSortedLevels = useMemo(() => {
@@ -307,7 +335,7 @@ const CourseLevel = () => {
         }
     };
 
-    // تبديل حالة المستوى - ⭐ التصحيح هنا
+    // تبديل حالة المستوى
     const handleToggleActive = async (id, isActive) => {
         if (!id) {
             showErrorToast("معرف المستوى غير محدد");
@@ -323,23 +351,7 @@ const CourseLevel = () => {
         }
     };
 
-    // حذف المستوى 
-    // const handleDelete = async (id) => {
-    //     if (!id) {
-    //         showErrorToast("معرف المستوى غير محدد");
-    //         return;
-    //     }
-
-    //     try {
-    //         await deleteCourseLevel(id);
-    //         fetchCourseLevels(selectedCourse);
-    //         showSuccessToast("تم الحذف بنجاح");
-    //     } catch (err) {
-    //         showErrorToast(err?.response?.data?.message || "فشل الحذف");
-    //     }
-    // };
-
-    // في CourseLevel.jsx - دالة handleDelete
+    // حذف المستوى
     const handleDelete = async (id) => {
         if (!id) {
             showErrorToast("معرف المستوى غير محدد");
@@ -351,7 +363,6 @@ const CourseLevel = () => {
             fetchCourseLevels(selectedCourse);
             showSuccessToast("تم الحذف بنجاح");
         } catch (err) {
-            // التحقق من رسالة الخطأ وعرض الرسالة المناسبة
             const errorMessage = err?.response?.data?.message || err?.message || "فشل الحذف";
 
             if (errorMessage.includes('دروس مرتبطة') || err?.response?.data?.code === 'P2003') {
@@ -373,10 +384,16 @@ const CourseLevel = () => {
         return instructor ? instructor.name : "غير محدد";
     };
 
-    // دالة جديدة للحصول على اسم الكورس
+    // الحصول على اسم الكورس
     const getCourseName = (courseId) => {
         const course = courses.find(crs => crs.id === courseId);
         return course ? course.title : "غير محدد";
+    };
+
+    // الحصول على اسم التخصص
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === specializationId);
+        return specialization ? specialization.name : "غير محدد";
     };
 
     // Pagination calculations
@@ -419,7 +436,19 @@ const CourseLevel = () => {
         setCurrentPage(1);
     };
 
-    // مكون البطاقة للعنصر الواحد - ⭐ التصحيح هنا
+    // Reset all selections
+    const resetAllSelections = () => {
+        setSelectedSpecialization("");
+        setSelectedCourse("");
+        setAllLevels([]);
+        setSearchTerm("");
+        setStatusFilter("all");
+        setInstructorFilter("all");
+        setFreeFilter("all");
+        setCurrentPage(1);
+    };
+
+    // مكون البطاقة للعنصر الواحد
     const LevelCard = ({ item }) => (
         <Card className="mb-4 overflow-hidden" key={item.id}>
             {/* الصورة تأخذ رأس البطاقة كامل */}
@@ -508,7 +537,7 @@ const CourseLevel = () => {
                             setForm({
                                 name: item.name,
                                 description: item.description || "",
-                                order: (item.order || "").toString(), // ⭐ التصحيح هنا
+                                order: (item.order || "").toString(),
                                 priceUSD: (item.priceUSD || "0").toString(),
                                 priceSAR: (item.priceSAR || "0").toString(),
                                 isFree: item.isFree || false,
@@ -609,6 +638,23 @@ const CourseLevel = () => {
                             </p>
                         </div>
                     </div>
+
+                    <div>
+                        <Label className="font-semibold text-base">المدرب:</Label>
+                        <p className="text-gray-700 mt-1">{getInstructorName(item.instructorId)}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* معلومات المسار */}
+            <div className="border-t pt-4">
+                <h3 className="font-semibold text-lg mb-3">معلومات المسار</h3>
+                <div className="flex items-center gap-2 text-sm bg-gray-50 p-3 rounded-lg">
+                    <span className="font-medium">التخصص:</span>
+                    <span>{getSpecializationName(selectedSpecialization)}</span>
+                    <ChevronRightIcon className="h-4 w-4" />
+                    <span className="font-medium">الكورس:</span>
+                    <span>{getCourseName(selectedCourse)}</span>
                 </div>
             </div>
 
@@ -647,41 +693,6 @@ const CourseLevel = () => {
                 </div>
             )}
 
-            {/* معلومات المدرب */}
-            {item.instructor && (
-                <div className="border-t pt-4">
-                    <h3 className="font-semibold text-lg mb-3">معلومات المدرب</h3>
-                    <div className="flex items-start gap-4">
-                        <img
-                            src={getImageUrl(item.instructor.avatarUrl)}
-                            alt={item.instructor.name}
-                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div>
-                            <p className="font-semibold text-lg">{item.instructor.name}</p>
-                            <p className="text-gray-600 mt-1">{item.instructor.bio}</p>
-                            <Badge variant={item.instructor.isActive ? "default" : "secondary"} className="mt-2">
-                                {item.instructor.isActive ? "نشط" : "غير نشط"}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* معلومات الكورس */}
-            {item.course && (
-                <div className="border-t pt-4">
-                    <h3 className="font-semibold text-lg mb-3">معلومات الكورس</h3>
-                    <div className="space-y-2">
-                        <p><span className="font-medium">العنوان:</span> {item.course.title}</p>
-                        <p><span className="font-medium">الوصف:</span> {item.course.description}</p>
-                        {item.course.subject && (
-                            <p><span className="font-medium">التخصص:</span> {item.course.subject.name}</p>
-                        )}
-                    </div>
-                </div>
-            )}
-
             {/* التواريخ */}
             <div className="border-t pt-4">
                 <h3 className="font-semibold text-lg mb-3">التواريخ</h3>
@@ -689,26 +700,19 @@ const CourseLevel = () => {
                     <div>
                         <Label className="font-medium">تاريخ الإنشاء:</Label>
                         <p className="text-gray-600 mt-1">
-                            {new Date(item.createdAt).toLocaleDateString('en-US')}
+                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('ar-SA') : "غير محدد"}
                         </p>
                     </div>
                     <div>
                         <Label className="font-medium">آخر تحديث:</Label>
                         <p className="text-gray-600 mt-1">
-                            {new Date(item.updatedAt).toLocaleDateString('en-US')}
+                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ar-SA') : "غير محدد"}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
     );
-
-    useEffect(() => {
-        console.log("Courses:", courses);
-        console.log("Instructors:", instructors);
-        console.log("Selected Course:", selectedCourse);
-        console.log("All Levels:", allLevels);
-    }, [courses, instructors, selectedCourse, allLevels]);
 
     return (
         <Card>
@@ -880,21 +884,71 @@ const CourseLevel = () => {
                     </Dialog>
                 </div>
 
-                {/* Course Selection */}
-                <div className="space-y-2">
-                    <Label>اختر الكورس</Label>
-                    <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="اختر الكورس لعرض مستوياته" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {courses.map((course) => (
-                                <SelectItem key={course.id} value={course.id}>
-                                    {course.title}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                {/* Course Selection Path */}
+                <div className="space-y-4">
+                    {/* مسار الاختيار */}
+                    {(selectedSpecialization || selectedCourse) && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                                <span>المسار المختار:</span>
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                </Badge>
+                                <ChevronRightIcon className="h-4 w-4 text-blue-500" />
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                </Badge>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={resetAllSelections}
+                                    className="mr-auto text-red-500 hover:text-red-700"
+                                >
+                                    إعادة تعيين
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* اختيار التخصص أولاً */}
+                        <div className="space-y-2">
+                            <Label>اختر التخصص أولاً</Label>
+                            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="اختر التخصص" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {specializations.map((spec) => (
+                                        <SelectItem key={spec.id} value={spec.id}>
+                                            {spec.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* اختيار الكورس - يعتمد على التخصص المختار */}
+                        <div className="space-y-2">
+                            <Label>اختر الكورس</Label>
+                            <Select 
+                                value={selectedCourse} 
+                                onValueChange={setSelectedCourse}
+                                disabled={!selectedSpecialization}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر التخصص أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredCourses.map((course) => (
+                                        <SelectItem key={course.id} value={course.id}>
+                                            {course.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters Section - Only show when a course is selected */}
@@ -972,7 +1026,7 @@ const CourseLevel = () => {
             <CardContent>
                 {!selectedCourse ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        يرجى اختيار كورس لعرض مستوياته
+                        {!selectedSpecialization ? "يرجى اختيار تخصص أولاً" : "يرجى اختيار كورس لعرض مستوياته"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">
@@ -1090,7 +1144,7 @@ const CourseLevel = () => {
                                                         setForm({
                                                             name: item.name,
                                                             description: item.description || "",
-                                                            order: (item.order || "").toString(), // ⭐ التصحيح هنا
+                                                            order: (item.order || "").toString(),
                                                             priceUSD: (item.priceUSD || "0").toString(),
                                                             priceSAR: (item.priceSAR || "0").toString(),
                                                             isFree: item.isFree || false,
@@ -1211,12 +1265,6 @@ const CourseLevel = () => {
                         <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المستوى؟</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
                             سيتم حذف المستوى "{deleteDialog.itemName}" بشكل نهائي.
-                            {deleteDialog.relatedLessonsCount > 0 && (
-                                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                                    ⚠️ <strong>تحذير:</strong> هذا المستوى يحتوي على {deleteDialog.relatedLessonsCount} دروس مرتبطة.
-                                    يجب حذف هذه الدروس أولاً قبل حذف المستوى.
-                                </div>
-                            )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row-reverse gap-2">
@@ -1226,7 +1274,6 @@ const CourseLevel = () => {
                                 await handleDelete(deleteDialog.itemId);
                                 setDeleteDialog({ isOpen: false, itemId: null, itemName: "" });
                             }}
-                            disabled={deleteDialog.relatedLessonsCount > 0}
                         >
                             حذف
                         </AlertDialogAction>

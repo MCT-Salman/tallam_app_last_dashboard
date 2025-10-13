@@ -364,250 +364,259 @@ const AccessCode = () => {
         setCurrentPage(1);
     };
 
-    // عرض التفاصيل الكاملة للكود
-    const renderCodeDetails = (item) => {
-        if (!item) return null;
+  // عرض التفاصيل الكاملة للكود
+const renderCodeDetails = (item) => {
+    if (!item) return null;
 
-        const transaction = item.transaction?.[0];
-        const amountPaid = transaction?.amountPaid?.d?.[0] || transaction?.amountPaid;
+    const transaction = item.transaction?.[0];
+    
+    // معالجة amountPaid بشكل صحيح
+    let amountPaid = "";
+    if (transaction?.amountPaid) {
+        if (typeof transaction.amountPaid === 'object') {
+            // إذا كان كائن، نحاول استخراج القيمة
+            amountPaid = transaction.amountPaid.d?.[0] || transaction.amountPaid.value || transaction.amountPaid.s || "";
+        } else {
+            // إذا كان قيمة بسيطة
+            amountPaid = transaction.amountPaid;
+        }
+    }
 
-        return (
-            <div className="space-y-6 text-right">
-                {/* المعلومات الأساسية */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <div>
-                            <Label className="font-bold text-base">الكود:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="text-lg font-mono font-bold bg-gray-100 px-3 py-2 rounded-lg">
-                                    {item.code}
-                                </p>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => copyToClipboard(item.code)}
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
+    // التأكد أن amountPaid ليس كائن قبل العرض
+    const displayAmount = typeof amountPaid === 'object' ? JSON.stringify(amountPaid) : amountPaid;
 
-                        <div>
-                            <Label className="font-bold text-base">الحالة:</Label>
-                            <div className="mt-1">
-                                <Badge variant={item.isActive && !item.used ? "default" : "secondary"}>
-                                    {item.isActive && !item.used ? "نشط" : "مستخدم"}
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label className="font-bold text-base">المستخدم:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <User className="w-4 h-4 text-muted-foreground" />
-                                <div>
-                                    <p className="font-medium">{item.user?.name || "غير محدد"}</p>
-                                    <p className="text-sm text-muted-foreground" dir="ltr">{item.user?.phone}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label className="font-bold text-base">مدة الصلاحية:</Label>
-                            <p className="mt-1">{item.validityInMonths || "غير محدد"} شهر</p>
+    return (
+        <div className="space-y-6 text-right">
+            {/* المعلومات الأساسية */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <div>
+                        <Label className="font-bold text-base">الكود:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <p className="text-lg font-mono font-bold bg-gray-100 px-3 py-2 rounded-lg">
+                                {item.code}
+                            </p>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyToClipboard(item.code)}
+                            >
+                                <Copy className="w-4 h-4" />
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div>
-                            <Label className="font-bold text-base">الكورس:</Label>
-                            <p className="mt-1">{item.courseLevel?.course?.title || "غير محدد"}</p>
+                    <div>
+                        <Label className="font-bold text-base">الحالة:</Label>
+                        <div className="mt-1">
+                            <Badge variant={item.isActive && !item.used ? "default" : "secondary"}>
+                                {item.isActive && !item.used ? "نشط" : "مستخدم"}
+                            </Badge>
                         </div>
+                    </div>
 
-                        <div>
-                            <Label className="font-bold text-base">المستوى:</Label>
-                            <p className="mt-1">{item.courseLevel?.name || "غير محدد"}</p>
+                    <div>
+                        <Label className="font-bold text-base">المستخدم:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                                <p className="font-medium">{item.user?.name || "غير محدد"}</p>
+                                <p className="text-sm text-muted-foreground" dir="ltr">{item.user?.phone}</p>
+                            </div>
                         </div>
+                    </div>
 
-                        <div>
-                            <Label className="font-bold text-base">المدرب:</Label>
-                            <p className="mt-1">{item.courseLevel?.instructor?.name || "غير محدد"}</p>
-                        </div>
-
-                        <div>
-                            <Label className="font-bold text-base">تاريخ الإصدار:</Label>
-                            <p className="mt-1">{formatDate(item.issuedAt)}</p>
-                        </div>
-                        
+                    <div>
+                        <Label className="font-bold text-base">مدة الصلاحية:</Label>
+                        <p className="mt-1">{item.validityInMonths || "غير محدد"} شهر</p>
                     </div>
                 </div>
 
-                {/* المعلومات المالية */}
-                {transaction && (
-                    <div className="border-t pt-4">
-                        <h3 className="font-bold text-lg mb-3">المعلومات المالية</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                    <div>
+                        <Label className="font-bold text-base">الكورس:</Label>
+                        <p className="mt-1">{item.courseLevel?.course?.title || "غير محدد"}</p>
+                    </div>
+
+                    <div>
+                        <Label className="font-bold text-base">المستوى:</Label>
+                        <p className="mt-1">{item.courseLevel?.name || "غير محدد"}</p>
+                    </div>
+
+                    <div>
+                        <Label className="font-bold text-base">المدرب:</Label>
+                        <p className="mt-1">{item.courseLevel?.instructor?.name || "غير محدد"}</p>
+                    </div>
+
+                    <div>
+                        <Label className="font-bold text-base">تاريخ الإصدار:</Label>
+                        <p className="mt-1">{formatDate(item.issuedAt)}</p>
+                    </div>
+                    
+                </div>
+            </div>
+
+            {/* المعلومات المالية */}
+            {transaction && (
+                <div className="border-t pt-4">
+                    <h3 className="font-bold text-lg mb-3">المعلومات المالية</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {displayAmount && (
                             <div>
                                 <Label className="font-medium">المبلغ المدفوع:</Label>
                                 <p className="text-lg font-medium text-green-600 mt-1">
-                                    {amountPaid} ل.س
+                                    {displayAmount} ل.س
                                 </p>
                             </div>
-                            <div>
-                                <Label className="font-medium">الملاحظات:</Label>
-                                <p className="mt-1 p-2 bg-gray-50 rounded">{transaction.notes || "لا توجد ملاحظات"}</p>
-                            </div>
-                        </div>
-
-                        {/* صورة الإيصال - تصميم محسن */}
-                        {transaction.receiptImageUrl && (
-                            <div className="mt-6">
-                                <Label className="font-medium text-lg block mb-3">صورة الإيصال:</Label>
-                                <div className="flex flex-col items-center">
-                                    <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group">
-                                        <img
-                                            src={getImageUrl(transaction.receiptImageUrl)}
-                                            alt="صورة الإيصال"
-                                            className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto cursor-zoom-in transition-all duration-300 group-hover:shadow-lg"
-                                            {...imageConfig}
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = "/tallaam_logo2.png";
-                                            }}
-                                            onClick={() => {
-                                                // فتح الصورة في نافذة جديدة
-                                                window.open(getImageUrl(transaction.receiptImageUrl), '_blank');
-                                            }}
-                                        />
-                                        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <ZoomIn className="w-3 h-3 inline ml-1" />
-                                            انقر للتكبير
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
-                                        <Eye className="w-4 h-4" />
-                                        انقر على الصورة لعرضها بحجم كامل
-                                    </p>
-                                </div>
-                            </div>
                         )}
-                    </div>
-                )}
-
-                {/* معلومات إضافية */}
-                <div className="border-t pt-4">
-                    <h3 className="font-bold text-lg mb-3">معلومات إضافية</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label className="font-medium">معرف الكود:</Label>
-                            <p className="font-mono bg-gray-100 p-2 rounded">{item.id}</p>
+                            <Label className="font-medium">الملاحظات:</Label>
+                            <p className="mt-1 p-2 bg-gray-50 rounded">{transaction.notes || "لا توجد ملاحظات"}</p>
                         </div>
-                        <div>
-                            <Label className="font-medium">تم الإصدار بواسطة:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <User className="w-4 h-4 text-muted-foreground" />
-                                <p className="font-medium">{getIssuedByName(item.issuedBy)}</p>
+                    </div>
+
+                    {/* صورة الإيصال - تصميم محسن */}
+                    {transaction.receiptImageUrl && (
+                        <div className="mt-6">
+                            <Label className="font-medium text-lg block mb-3">صورة الإيصال:</Label>
+                            <div className="flex flex-col items-center">
+                                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group">
+                                    <img
+                                        src={getImageUrl(transaction.receiptImageUrl)}
+                                        alt="صورة الإيصال"
+                                        className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto cursor-zoom-in transition-all duration-300 group-hover:shadow-lg"
+                                        {...imageConfig}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "/tallaam_logo2.png";
+                                        }}
+                                        onClick={() => {
+                                            // فتح الصورة في نافذة جديدة
+                                            window.open(getImageUrl(transaction.receiptImageUrl), '_blank');
+                                        }}
+                                    />
+                                    <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ZoomIn className="w-3 h-3 inline ml-1" />
+                                        انقر للتكبير
+                                    </div>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                                    <Eye className="w-4 h-4" />
+                                    انقر على الصورة لعرضها بحجم كامل
+                                </p>
                             </div>
                         </div>
-                        {/* <div>
-                            <Label className="font-medium">تاريخ الإنشاء:</Label>
-                            <p>{formatDate(item.createdAt)}</p>
+                    )}
+                </div>
+            )}
+
+            {/* معلومات إضافية */}
+            <div className="border-t pt-4">
+                <h3 className="font-bold text-lg mb-3">معلومات إضافية</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label className="font-medium">معرف الكود:</Label>
+                        <p className="font-mono bg-gray-100 p-2 rounded">{item.id}</p>
+                    </div>
+                    <div>
+                        <Label className="font-medium">تم الإصدار بواسطة:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <p className="font-medium">{getIssuedByName(item.issuedBy)}</p>
                         </div>
-                        <div>
-                            <Label className="font-medium">آخر تحديث:</Label>
-                            <p>{formatDate(item.updatedAt)}</p>
-                        </div> */}
                     </div>
                 </div>
             </div>
-        );
-    };
+        </div>
+    );
+};
 
-    // مكون البطاقة للعنصر الواحد
-    const CodeCard = ({ item }) => {
-        const transaction = item.transaction?.[0];
-        const amountPaid = transaction?.amountPaid?.d?.[0] || transaction?.amountPaid;
+// مكون البطاقة للعنصر الواحد
+const CodeCard = ({ item }) => {
+    const transaction = item.transaction?.[0];
+    
+    // معالجة amountPaid بشكل صحيح
+    let amountPaid = "";
+    if (transaction?.amountPaid) {
+        if (typeof transaction.amountPaid === 'object') {
+            // إذا كان كائن، نحاول استخراج القيمة
+            amountPaid = transaction.amountPaid.d?.[0] || transaction.amountPaid.value || "";
+        } else {
+            // إذا كان قيمة بسيطة
+            amountPaid = transaction.amountPaid;
+        }
+    }
 
-        return (
-            <Card className="mb-4">
-                <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-primary text-primary-foreground rounded-lg p-3">
-                                <FileText className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">{item.code}</h3>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    <Badge variant={item.isActive && !item.used ? "default" : "secondary"}>
-                                        {item.isActive && !item.used ? "نشط" : "مستخدم"}
+    // التأكد أن amountPaid ليس كائن قبل العرض
+    const displayAmount = typeof amountPaid === 'object' ? JSON.stringify(amountPaid) : amountPaid;
+
+    return (
+        <Card className="mb-4">
+            <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary text-primary-foreground rounded-lg p-3">
+                            <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-lg">{item.code}</h3>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                <Badge variant={item.isActive && !item.used ? "default" : "secondary"}>
+                                    {item.isActive && !item.used ? "نشط" : "مستخدم"}
+                                </Badge>
+                                {item.validityInMonths && (
+                                    <Badge variant="outline">
+                                        {item.validityInMonths} شهر
                                     </Badge>
-                                    {item.validityInMonths && (
-                                        <Badge variant="outline">
-                                            {item.validityInMonths} شهر
-                                        </Badge>
-                                    )}
-                                </div>
+                                )}
                             </div>
                         </div>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => copyToClipboard(item.code)}
-                        >
-                            <Copy className="w-4 h-4" />
-                        </Button>
                     </div>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(item.code)}
+                    >
+                        <Copy className="w-4 h-4" />
+                    </Button>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            <span>{item.user?.name || "غير محدد"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Book className="w-4 h-4 text-muted-foreground" />
-                            <span>{item.courseLevel?.course?.title || "غير محدد"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <span>{formatDate(item.issuedAt)}</span>
-                        </div>
-                        {amountPaid && (
-                            <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-muted-foreground" />
-                                <span>{amountPaid} ل.س</span>
-                            </div>
-                        )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span>{item.user?.name || "غير محدد"}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                        <Book className="w-4 h-4 text-muted-foreground" />
+                        <span>{item.courseLevel?.course?.title || "غير محدد"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span>{formatDate(item.issuedAt)}</span>
+                    </div>
+                    {displayAmount && (
+                        <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                            <span>{displayAmount} ل.س</span>
+                        </div>
+                    )}
+                </div>
 
-                    <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setDetailDialog({ isOpen: true, item })}
-                            className="flex-1"
-                        >
-                            <Eye className="w-4 h-4 ml-1" />
-                            التفاصيل
-                        </Button>
-                        {/* <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => setDeleteDialog({ 
-                                isOpen: true, 
-                                itemId: item.id, 
-                                itemName: item.code 
-                            })}
-                            className="flex-1"
-                        >
-                            <Trash2 className="w-4 h-4 ml-1" />
-                            حذف
-                        </Button> */}
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    };
+                <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDetailDialog({ isOpen: true, item })}
+                        className="flex-1"
+                    >
+                        <Eye className="w-4 h-4 ml-1" />
+                        التفاصيل
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
 
     return (
         <Card>

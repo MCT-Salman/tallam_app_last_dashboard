@@ -535,12 +535,38 @@ export const toggleCouponActive = (id, isActive) =>
     api.put(`/coupons/admin/${id}`, { isActive });
 
 // --- إدارة الملفات ---
+
+// GET - جلب قائمة الملفات (يحتاج تأكيد الـ endpoint الصحيح)
 export const getFiles = (params) => api.get('/files/admin/files', { params });
+
+// POST - رفع ملف جديد
 export const uploadFile = (data) => api.post('/files/admin/files', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
 });
+
+// PUT - تعديل ملف
+export const updateFile = (id, data) => api.put(`/files/admin/files/${id}`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+});
+
+// DELETE - حذف ملف
 export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
 
+// GET - جلب تفاصيل ملف معين
+export const getFileDetails = (id) => api.get(`/files/admin/files/${id}`);
+
+// --- إذا لم يعمل GET أعلاه، جرب هذه الـ endpoints البديلة ---
+
+// البديل 1: استخدام POST لجلب الملفات
+export const getFilesPost = (data) => api.post('/files/admin/files/list', data, {
+    headers: { 'Content-Type': 'application/json' },
+});
+
+// البديل 2: endpoint مختلف
+export const getFilesAlt = (params) => api.get('/files/admin', { params });
+
+// البديل 3: endpoint مختلف آخر
+export const getFilesAlt2 = (params) => api.get('/files/admin/list', { params });
 // --- إدارة الإعلانات ---
 // export const getAdvertisements = (params) => api.get('/ads/admin', { params });
 // export const createAdvertisement = (data) => api.post('/ads/admin', data, {

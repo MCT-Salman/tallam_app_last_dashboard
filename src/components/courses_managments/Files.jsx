@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Download, File, FileText, Image, Archive, Video, Music, FileQuestion } from "lucide-react"
-import { getFiles, uploadFile, deleteFile, getCourses, getCourseLevels } from "@/api/api"
+import { getFiles, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFilesPost } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
 
@@ -26,6 +26,7 @@ const Files = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, file: null })
+    const [editDialog, setEditDialog] = useState({ isOpen: false, file: null, newFile: null })
 
     // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1)
@@ -93,58 +94,87 @@ const Files = () => {
         }
     }
 
-    // جلب الملفات
-    const fetchFiles = async () => {
-        if (!selectedLevel) {
-            setAllFiles([])
-            setTotalFiles(0)
-            return
+   // جلب الملفات
+const fetchFiles = async () => {
+    if (!selectedLevel) {
+        setAllFiles([])
+        setTotalFiles(0)
+        return
+    }
+
+    setLoading(true)
+    try {
+        const requestBody = {
+            courseLevelId: Number(selectedLevel),
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchTerm || undefined
         }
 
-        setLoading(true)
+        // تنظيف البيانات - إزالة القيم undefined
+        Object.keys(requestBody).forEach(key => {
+            if (requestBody[key] === undefined) {
+                delete requestBody[key]
+            }
+        })
+
+        console.log("📤 Fetching files with body:", requestBody)
+
+        let res;
+        
+        // استخدام POST فقط لإرسال البيانات في body
         try {
+            res = await getFilesPost(requestBody);
+            console.log("✅ POST request successful:", res);
+        } catch (postError) {
+            console.log("❌ POST failed, trying GET without courseLevelId...");
+            // إذا فشل POST، جرب GET بدون courseLevelId في query
             const params = {
                 page: currentPage,
                 limit: itemsPerPage,
-                courseLevelId: Number(selectedLevel),
                 q: searchTerm || undefined
             }
+            res = await getFiles(params);
+        }
 
-            console.log("📤 Fetching files with params:", params)
-
-            const res = await getFiles(params)
-            console.log("📊 Files API response:", res)
-            
-            let data = []
-            let total = 0
-            let paginationData = {}
-            
-            if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+        console.log("📊 Files API response:", res)
+        
+        let data = []
+        let total = 0
+        let paginationData = {}
+        
+        // معالجة الاستجابة بجميع الأشكال المحتملة
+        if (res.data?.success) {
+            if (Array.isArray(res.data.data)) {
+                data = res.data.data
+                total = res.data.data.length
+            } else if (res.data.data?.data && Array.isArray(res.data.data.data)) {
                 data = res.data.data.data
                 total = res.data.data.pagination?.total || data.length
                 paginationData = res.data.data.pagination || {}
-            } else if (Array.isArray(res.data?.data)) {
+            } else if (Array.isArray(res.data.data)) {
                 data = res.data.data
                 total = data.length
-            } else if (Array.isArray(res.data)) {
-                data = res.data
-                total = data.length
             }
-            
-            setAllFiles(data || [])
-            setTotalFiles(total || 0)
-            setPagination(paginationData)
-        } catch (err) {
-            console.error("❌ Error fetching files:", err)
-            console.error("❌ Error response:", err.response?.data)
-            const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
-            showErrorToast(errorMessage)
-            setAllFiles([])
-            setTotalFiles(0)
-        } finally {
-            setLoading(false)
+        } else if (Array.isArray(res.data)) {
+            data = res.data
+            total = data.length
         }
+        
+        setAllFiles(data || [])
+        setTotalFiles(total || 0)
+        setPagination(paginationData)
+    } catch (err) {
+        console.error("❌ Error fetching files:", err)
+        console.error("❌ Error response:", err.response?.data)
+        const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
+        showErrorToast(errorMessage)
+        setAllFiles([])
+        setTotalFiles(0)
+    } finally {
+        setLoading(false)
     }
+}
 
     useEffect(() => {
         fetchCourses()
@@ -162,19 +192,19 @@ const Files = () => {
     }, [selectedCourse])
 
     // عند تغيير المستوى المحدد أو معاملات الصفحة
-    useEffect(() => {
-        if (selectedLevel) {
-            fetchFiles()
-        } else {
-            setAllFiles([])
-            setTotalFiles(0)
-        }
-    }, [selectedLevel, currentPage, itemsPerPage, searchTerm])
+useEffect(() => {
+    if (selectedLevel) {
+        fetchFiles()
+    } else {
+        setAllFiles([])
+        setTotalFiles(0)
+    }
+}, [selectedLevel, currentPage, itemsPerPage])
 
-    // إعادة تعيين الصفحة عند تغيير الفلتر
-    useEffect(() => {
-        setCurrentPage(1)
-    }, [searchTerm, typeFilter, itemsPerPage])
+// إعادة تعيين الصفحة عند تغيير الفلتر
+useEffect(() => {
+    setCurrentPage(1)
+}, [searchTerm, typeFilter, itemsPerPage])
 
     // التعامل مع اختيار الملف للرفع
     const handleFileSelect = (e) => {
@@ -200,10 +230,15 @@ const Files = () => {
             const res = await uploadFile(formData)
             console.log("📊 Upload response:", res)
 
-            showSuccessToast("تم رفع الملف بنجاح")
-            setFileToUpload(null)
-            setIsDialogOpen(false)
-            fetchFiles()
+            // التحقق من الاستجابة بنجاح
+            if (res.data?.success) {
+                showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
+                setFileToUpload(null)
+                setIsDialogOpen(false)
+                fetchFiles()
+            } else {
+                throw new Error(res.data?.message || "فشل رفع الملف")
+            }
         } catch (err) {
             console.error("❌ Upload error:", err.response?.data || err)
             const errorMessage = err.response?.data?.message || "فشل رفع الملف"
@@ -213,12 +248,46 @@ const Files = () => {
         }
     }
 
+    // تعديل الملف
+    const handleUpdateFile = async (fileId, updatedData) => {
+        try {
+            const formData = new FormData()
+            
+            if (updatedData.file) {
+                formData.append('file', updatedData.file)
+            }
+            if (updatedData.courseLevelId) {
+                formData.append('courseLevelId', updatedData.courseLevelId)
+            }
+
+            const res = await updateFile(fileId, formData)
+            
+            if (res.data?.success) {
+                showSuccessToast(res.data.message || "تم تعديل الملف بنجاح")
+                fetchFiles()
+                return true
+            } else {
+                throw new Error(res.data?.message || "فشل تعديل الملف")
+            }
+        } catch (err) {
+            console.error("❌ Update error:", err.response?.data || err)
+            const errorMessage = err.response?.data?.message || "فشل تعديل الملف"
+            showErrorToast(errorMessage)
+            return false
+        }
+    }
+
     // حذف الملف
     const handleDelete = async (id) => {
         try {
-            await deleteFile(id)
-            showSuccessToast("تم حذف الملف بنجاح")
-            fetchFiles()
+            const res = await deleteFile(id)
+            
+            if (res.data?.success) {
+                showSuccessToast(res.data.message || "تم حذف الملف بنجاح")
+                fetchFiles()
+            } else {
+                throw new Error(res.data?.message || "فشل حذف الملف")
+            }
         } catch (err) {
             console.error("❌ Delete error:", err.response?.data || err)
             const errorMessage = err.response?.data?.message || "فشل حذف الملف"
@@ -494,6 +563,15 @@ const Files = () => {
                     >
                         <Eye className="w-4 h-4 ml-1" />
                         التفاصيل
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditDialog({ isOpen: true, file, newFile: null })}
+                        className="flex-1"
+                    >
+                        <Edit className="w-4 h-4 ml-1" />
+                        تعديل
                     </Button>
                     <Button
                         size="sm"
@@ -789,6 +867,14 @@ const Files = () => {
                                                 <Button
                                                     size="icon"
                                                     variant="ghost"
+                                                    onClick={() => setEditDialog({ isOpen: true, file, newFile: null })}
+                                                    title="تعديل الملف"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
                                                     onClick={() => window.open(getFileUrl(file.url), '_blank')}
                                                     title="تحميل الملف"
                                                 >
@@ -927,6 +1013,53 @@ const Files = () => {
                         <DialogTitle>تفاصيل الملف</DialogTitle>
                     </DialogHeader>
                     {renderFileDetails(detailDialog.file)}
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit File Dialog */}
+            <Dialog open={editDialog.isOpen} onOpenChange={(isOpen) => setEditDialog({ isOpen, file: null, newFile: null })}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>تعديل الملف</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-2">
+                        <div className="space-y-2">
+                            <Label>اختر ملف جديد (اختياري)</Label>
+                            <Input
+                                type="file"
+                                onChange={(e) => setEditDialog(prev => ({ ...prev, newFile: e.target.files?.[0] }))}
+                                accept="*/*"
+                            />
+                            {editDialog.newFile && (
+                                <div className="p-3 border rounded-lg bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        {getFileIcon(editDialog.newFile.type)}
+                                        <div>
+                                            <p className="font-medium">{editDialog.newFile.name}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {formatFileSize(editDialog.newFile.size)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <Button 
+                            onClick={async () => {
+                                const success = await handleUpdateFile(editDialog.file.id, {
+                                    file: editDialog.newFile,
+                                    courseLevelId: selectedLevel
+                                })
+                                if (success) {
+                                    setEditDialog({ isOpen: false, file: null, newFile: null })
+                                }
+                            }}
+                            className="w-full"
+                        >
+                            حفظ التعديلات
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </Card>
