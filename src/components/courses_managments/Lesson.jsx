@@ -10,21 +10,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2 } from "lucide-react"
 import { getLevelLessons, createLessonForLevel, updateLesson, deleteLesson, toggleLessonStatus, getInstructors } from "@/api/api"
 import { getCourses } from "@/api/api"
 import { getCourseLevels } from "@/api/api"
-import { getSpecializations } from "@/api/api" // ⬅️ استيراد دالة جلب الاختصاصات
+import { getSpecializations } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Lesson = () => {
     const [lessons, setLessons] = useState([])
     const [allLessons, setAllLessons] = useState([])
-    const [specializations, setSpecializations] = useState([]) // ⬅️ حالة الاختصاصات
+    const [specializations, setSpecializations] = useState([])
     const [courses, setCourses] = useState([])
     const [levels, setLevels] = useState([])
     const [instructors, setInstructors] = useState([])
-    const [selectedSpecialization, setSelectedSpecialization] = useState("") // ⬅️ اختصاص محدد
+    const [selectedSpecialization, setSelectedSpecialization] = useState("")
     const [selectedCourse, setSelectedCourse] = useState("")
     const [selectedLevel, setSelectedLevel] = useState("")
     const [loading, setLoading] = useState(false)
@@ -42,6 +42,14 @@ const Lesson = () => {
     const [editItem, setEditItem] = useState(null)
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, lesson: null })
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Search states for selects
+    const [specializationSearch, setSpecializationSearch] = useState("")
+    const [courseSearch, setCourseSearch] = useState("")
+    const [levelSearch, setLevelSearch] = useState("")
+    const [statusFilterSearch, setStatusFilterSearch] = useState("")
+    const [freePreviewFilterSearch, setFreePreviewFilterSearch] = useState("")
 
     // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1)
@@ -201,7 +209,7 @@ const Lesson = () => {
     }
 
     useEffect(() => {
-        fetchSpecializations() // ⬅️ جلب الاختصاصات أولاً
+        fetchSpecializations()
         fetchInstructors()
     }, [])
 
@@ -237,6 +245,29 @@ const Lesson = () => {
             setAllLessons([])
         }
     }, [selectedLevel])
+
+    // Filtered data for selects with search
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec => 
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
+
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return courses;
+        return courses.filter(course => 
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [courses, courseSearch]);
+
+    const filteredLevelsForSelect = useMemo(() => {
+        if (!levelSearch) return levels;
+        return levels.filter(level => 
+            level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+        );
+    }, [levels, levelSearch]);
 
     // فلترة وترتيب البيانات
     const filteredAndSortedLessons = useMemo(() => {
@@ -335,6 +366,7 @@ const Lesson = () => {
         if (!form.youtubeUrl) return showErrorToast("يرجى إدخال رابط YouTube")
         if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
 
+        setIsSubmitting(true);
         try {
             const lessonData = {
                 title: form.title,
@@ -374,6 +406,8 @@ const Lesson = () => {
         } catch (err) {
             console.error("❌ Save error:", err.response?.data || err)
             showErrorToast(err?.response?.data?.message || "فشل العملية")
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -467,6 +501,36 @@ const Lesson = () => {
         setCurrentPage(1)
     }
 
+    // Reset all selections
+    const resetAllSelections = () => {
+        setSelectedSpecialization("")
+        setSelectedCourse("")
+        setSelectedLevel("")
+        setAllLessons([])
+        setSearchTerm("")
+        setStatusFilter("all")
+        setFreePreviewFilter("all")
+        setCurrentPage(1)
+    }
+
+    // الحصول على اسم التخصص
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === specializationId);
+        return specialization ? (specialization.name || specialization.title) : "غير محدد";
+    };
+
+    // الحصول على اسم الكورس
+    const getCourseName = (courseId) => {
+        const course = courses.find(crs => crs.id === courseId);
+        return course ? course.title : "غير محدد";
+    };
+
+    // الحصول على اسم المستوى
+    const getLevelName = (levelId) => {
+        const level = levels.find(lvl => lvl.id === levelId);
+        return level ? level.name : "غير محدد";
+    };
+
     // عرض التفاصيل الكاملة للدرس
     const renderLessonDetails = (lesson) => {
         if (!lesson) return null;
@@ -512,14 +576,6 @@ const Lesson = () => {
                         <p className="mt-1">{getInstructorInfo(lesson)}</p>
                     </div>
                 </div>
-
-                {/* الوصف */}
-                {/* {lesson.description && (
-                    <div>
-                        <Label className="font-bold">الوصف:</Label>
-                        <p className="mt-1 p-2 bg-gray-50 rounded-md">{lesson.description}</p>
-                    </div>
-                )} */}
 
                 {/* الروابط */}
                 <div className="grid grid-cols-1 gap-4">
@@ -590,176 +646,246 @@ const Lesson = () => {
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <CardTitle>إدارة الدروس</CardTitle>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button
-                                size="sm"
-                                disabled={!selectedLevel}
-                                onClick={() => {
-                                    setEditItem(null)
-                                    setForm({
-                                        title: "",
-                                        description: "",
-                                        youtubeUrl: "",
-                                        youtubeId: "",
-                                        googleDriveUrl: "",
-                                        durationSec: "",
-                                        orderIndex: "",
-                                        isFreePreview: false
-                                    })
-                                }}
-                            >
-                                إضافة درس <Plus className="w-4 h-4 cursor-pointer" />
-                            </Button>
-                        </DialogTrigger>
-
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 mt-2">
-                                <div className="space-y-2">
-                                    <Label>عنوان الدرس *</Label>
-                                    <Input
-                                        value={form.title}
-                                        onChange={(e) => handleFormChange("title", e.target.value)}
-                                        placeholder="أدخل عنوان الدرس..."
-                                    />
-                                </div>
-
-                                {/* <div className="space-y-2">
-                                    <Label>وصف الدرس</Label>
-                                    <Textarea
-                                        value={form.description}
-                                        onChange={(e) => handleFormChange("description", e.target.value)}
-                                        rows={3}
-                                        placeholder="أدخل وصف الدرس..."
-                                    />
-                                </div> */}
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>ترتيب الدرس *</Label>
-                                        <Input
-                                            type="number"
-                                            value={form.orderIndex}
-                                            onChange={(e) => handleFormChange("orderIndex", e.target.value)}
-                                            placeholder="ترتيب الدرس"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>مدة الدرس (ثانية)</Label>
-                                        <Input
-                                            type="number"
-                                            value={form.durationSec}
-                                            onChange={(e) => handleFormChange("durationSec", e.target.value)}
-                                            placeholder="مدة الدرس بالثواني"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>رابط YouTube *</Label>
-                                    <Input
-                                        value={form.youtubeUrl}
-                                        onChange={(e) => handleYoutubeUrlChange(e.target.value)}
-                                        placeholder="https://www.youtube.com/watch?v=..."
-                                    />
-                                    {form.youtubeId && (
-                                        <div className="flex items-center gap-2 text-sm text-green-600">
-                                            <Youtube className="w-4 h-4" />
-                                            <span>تم التعرف على الفيديو: {form.youtubeId}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>رابط Google Drive</Label>
-                                    <Input
-                                        value={form.googleDriveUrl}
-                                        onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
-                                        placeholder="https://drive.google.com/..."
-                                    />
-                                </div>
-
-                                <div className="flex items-center space-x-2 space-x-reverse">
-                                    <Switch
-                                        checked={form.isFreePreview}
-                                        onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
-                                    />
-                                    <Label>معاينة مجانية</Label>
-                                </div>
-
-                                <Button onClick={handleSave}>
-                                    {editItem ? "حفظ التعديل" : "حفظ"}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                <CardTitle>إدارة الدروس</CardTitle>
 
                 {/* التصنيف الهرمي: اختصاص → كورس → مستوى */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* اختيار الاختصاص */}
-                    <div className="space-y-2">
-                        <Label>اختر الاختصاص</Label>
-                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="اختر الاختصاص" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {specializations.map((spec) => (
-                                    <SelectItem key={spec.id} value={spec.id}>
-                                        {spec.name || spec.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                <div className="space-y-4">
+                    {/* مسار الاختيار */}
+                    {(selectedSpecialization || selectedCourse || selectedLevel) && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                                <span>المسار المختار:</span>
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                </Badge>
+                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                </Badge>
+                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                </Badge>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={resetAllSelections}
+                                    className="mr-auto text-red-500 hover:text-red-700"
+                                >
+                                    إعادة تعيين
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* اختيار الاختصاص */}
+                        <div className="space-y-2">
+                            <Label>اختر الاختصاص</Label>
+                            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="اختر الاختصاص" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {/* Search input for specializations */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن اختصاص..."
+                                            value={specializationSearch}
+                                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredSpecializations.map((spec) => (
+                                        <SelectItem key={spec.id} value={spec.id}>
+                                            {spec.name || spec.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* اختيار الكورس */}
+                        <div className="space-y-2">
+                            <Label>اختر الكورس</Label>
+                            <Select 
+                                value={selectedCourse} 
+                                onValueChange={setSelectedCourse}
+                                disabled={!selectedSpecialization}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {/* Search input for courses */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن كورس..."
+                                            value={courseSearch}
+                                            onChange={(e) => setCourseSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredCoursesForSelect.map((course) => (
+                                        <SelectItem key={course.id} value={course.id}>
+                                            {course.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* اختيار المستوى */}
+                        <div className="space-y-2">
+                            <Label>اختر المستوى</Label>
+                            <Select 
+                                value={selectedLevel} 
+                                onValueChange={setSelectedLevel}
+                                disabled={!selectedCourse}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {/* Search input for levels */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مستوى..."
+                                            value={levelSearch}
+                                            onChange={(e) => setLevelSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredLevelsForSelect.map((level) => (
+                                        <SelectItem key={level.id} value={level.id}>
+                                            {level.name} (ترتيب: {level.order})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    {/* اختيار الكورس */}
-                    <div className="space-y-2">
-                        <Label>اختر الكورس</Label>
-                        <Select 
-                            value={selectedCourse} 
-                            onValueChange={setSelectedCourse}
-                            disabled={!selectedSpecialization}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {courses.map((course) => (
-                                    <SelectItem key={course.id} value={course.id}>
-                                        {course.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {/* زر الإضافة - تحت اختيار التخصص والكورس والمستوى */}
+                    <div className="flex justify-end">
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    disabled={!selectedLevel}
+                                    onClick={() => {
+                                        setEditItem(null)
+                                        setForm({
+                                            title: "",
+                                            description: "",
+                                            youtubeUrl: "",
+                                            youtubeId: "",
+                                            googleDriveUrl: "",
+                                            durationSec: "",
+                                            orderIndex: "",
+                                            isFreePreview: false
+                                        })
+                                    }}
+                                >
+                                    إضافة درس <Plus className="w-4 h-4 cursor-pointer" />
+                                </Button>
+                            </DialogTrigger>
 
-                    {/* اختيار المستوى */}
-                    <div className="space-y-2">
-                        <Label>اختر المستوى</Label>
-                        <Select 
-                            value={selectedLevel} 
-                            onValueChange={setSelectedLevel}
-                            disabled={!selectedCourse}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {levels.map((level) => (
-                                    <SelectItem key={level.id} value={level.id}>
-                                        {level.name} (ترتيب: {level.order})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-2">
+                                    <div className="space-y-2">
+                                        <Label>عنوان الدرس *</Label>
+                                        <Input
+                                            value={form.title}
+                                            onChange={(e) => handleFormChange("title", e.target.value)}
+                                            placeholder="أدخل عنوان الدرس..."
+                                        />
+                                    </div>
+
+                                    {/* <div className="space-y-2">
+                                        <Label>وصف الدرس</Label>
+                                        <Textarea
+                                            value={form.description}
+                                            onChange={(e) => handleFormChange("description", e.target.value)}
+                                            rows={3}
+                                            placeholder="أدخل وصف الدرس..."
+                                        />
+                                    </div> */}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>ترتيب الدرس *</Label>
+                                            <Input
+                                                type="number"
+                                                value={form.orderIndex}
+                                                onChange={(e) => handleFormChange("orderIndex", e.target.value)}
+                                                placeholder="ترتيب الدرس"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>مدة الدرس (ثانية)</Label>
+                                            <Input
+                                                type="number"
+                                                value={form.durationSec}
+                                                onChange={(e) => handleFormChange("durationSec", e.target.value)}
+                                                placeholder="مدة الدرس بالثواني"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>رابط YouTube *</Label>
+                                        <Input
+                                            value={form.youtubeUrl}
+                                            onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                        />
+                                        {form.youtubeId && (
+                                            <div className="flex items-center gap-2 text-sm text-green-600">
+                                                <Youtube className="w-4 h-4" />
+                                                <span>تم التعرف على الفيديو: {form.youtubeId}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>رابط Google Drive</Label>
+                                        <Input
+                                            value={form.googleDriveUrl}
+                                            onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
+                                            placeholder="https://drive.google.com/..."
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 space-x-reverse">
+                                        <Switch
+                                            checked={form.isFreePreview}
+                                            onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
+                                        />
+                                        <Label>معاينة مجانية</Label>
+                                    </div>
+
+                                    <Button 
+                                        onClick={handleSave}
+                                        disabled={isSubmitting}
+                                        className="w-full"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                                                {editItem ? "جارٍ التعديل..." : "جارٍ الإضافة..."}
+                                            </>
+                                        ) : (
+                                            editItem ? "حفظ التعديل" : "حفظ"
+                                        )}
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 
@@ -784,6 +910,15 @@ const Lesson = () => {
                                     <SelectValue placeholder="فلترة بالحالة" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for status filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في الحالات..."
+                                            value={statusFilterSearch}
+                                            onChange={(e) => setStatusFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع الحالات</SelectItem>
                                     <SelectItem value="active">نشط</SelectItem>
                                     <SelectItem value="inactive">معطل</SelectItem>
@@ -796,6 +931,15 @@ const Lesson = () => {
                                     <SelectValue placeholder="فلترة بالمعاينة" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for free preview filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في أنواع المعاينة..."
+                                            value={freePreviewFilterSearch}
+                                            onChange={(e) => setFreePreviewFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع الدروس</SelectItem>
                                     <SelectItem value="free">معاينة مجانية</SelectItem>
                                     <SelectItem value="paid">بدون معاينة</SelectItem>

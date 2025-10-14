@@ -720,10 +720,10 @@ const CodeCard = ({ item }) => {
                                                 <SelectValue placeholder="اختر المدة" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="1">1 شهر</SelectItem>
-                                                <SelectItem value="3">3 أشهر</SelectItem>
-                                                <SelectItem value="6">6 أشهر</SelectItem>
-                                                <SelectItem value="12">12 شهر</SelectItem>
+                                                <SelectItem value="1">شهر</SelectItem>
+                                                <SelectItem value="1.5">شهر ونصف</SelectItem>
+                                                <SelectItem value="2">شهرين</SelectItem>
+                                                <SelectItem value="3">ثلاثة أشهر</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

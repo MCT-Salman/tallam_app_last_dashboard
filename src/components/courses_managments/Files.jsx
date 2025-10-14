@@ -9,15 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Download, File, FileText, Image, Archive, Video, Music, FileQuestion } from "lucide-react"
-import { getFiles, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFilesPost } from "@/api/api"
+import { getFiles, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFilesPost, getSpecializations } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
 
 const Files = () => {
     const [files, setFiles] = useState([])
     const [allFiles, setAllFiles] = useState([])
+    const [specializations, setSpecializations] = useState([])
     const [courses, setCourses] = useState([])
     const [levels, setLevels] = useState([])
+    const [selectedSpecialization, setSelectedSpecialization] = useState("")
     const [selectedCourse, setSelectedCourse] = useState("")
     const [selectedLevel, setSelectedLevel] = useState("")
     const [loading, setLoading] = useState(false)
@@ -46,19 +48,46 @@ const Files = () => {
         return `${cleanBaseUrl}/${cleanFileUrl}`
     }
 
-    // جلب الكورسات
-    const fetchCourses = async () => {
+    // جلب الاختصاصات
+    const fetchSpecializations = async () => {
         try {
-            const res = await getCourses()
+            const res = await getSpecializations();
             const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
-                Array.isArray(res.data?.data?.data) ? res.data.data.data : []
-            console.log("Courses data:", data)
-            setCourses(data)
+                Array.isArray(res.data?.data?.data) ? res.data.data.data :
+                Array.isArray(res.data?.data) ? res.data.data : [];
+            console.log("Specializations data:", data);
+            setSpecializations(data);
         } catch (err) {
-            console.error(err)
-            showErrorToast("فشل تحميل الكورسات")
+            console.error("Error fetching specializations:", err);
+            showErrorToast("فشل تحميل الاختصاصات");
         }
-    }
+    };
+
+    // جلب الكورسات بناءً على الاختصاص المحدد
+    const fetchCourses = async (specializationId) => {
+        if (!specializationId) {
+            setCourses([]);
+            setSelectedCourse("");
+            return;
+        }
+
+        try {
+            const res = await getCourses();
+            let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+            
+            // فلترة الكورسات حسب الاختصاص المحدد
+            const filteredCourses = allCourses.filter(course => 
+                course.specializationId === parseInt(specializationId)
+            );
+            
+            console.log("Filtered courses:", filteredCourses);
+            setCourses(filteredCourses);
+        } catch (err) {
+            console.error(err);
+            showErrorToast("فشل تحميل الكورسات");
+        }
+    };
 
     // جلب مستويات الكورس المحدد
     const fetchCourseLevels = async (courseId) => {
@@ -70,117 +99,125 @@ const Files = () => {
 
         try {
             const res = await getCourseLevels(courseId)
-            console.log("Full levels response:", res)
+            console.log("Full levels response:", res);
             
-            let data = []
+            let data = [];
             if (Array.isArray(res.data?.data)) {
                 if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-                    data = res.data.data[0]
+                    data = res.data.data[0];
                 } else {
-                    data = res.data.data
+                    data = res.data.data;
                 }
             } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items
+                data = res.data.data.items;
             } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data
+                data = res.data.data.data;
             }
             
-            console.log("Levels data:", data)
-            setLevels(data || [])
+            console.log("Levels data:", data);
+            setLevels(data || []);
         } catch (err) {
-            console.error("Error fetching levels:", err)
-            showErrorToast("فشل تحميل مستويات الكورس")
-            setLevels([])
+            console.error("Error fetching levels:", err);
+            showErrorToast("فشل تحميل مستويات الكورس");
+            setLevels([]);
         }
     }
 
-   // جلب الملفات
-const fetchFiles = async () => {
-    if (!selectedLevel) {
-        setAllFiles([])
-        setTotalFiles(0)
-        return
-    }
-
-    setLoading(true)
-    try {
-        const requestBody = {
-            courseLevelId: Number(selectedLevel),
-            page: currentPage,
-            limit: itemsPerPage,
-            search: searchTerm || undefined
+    // جلب الملفات
+    const fetchFiles = async () => {
+        if (!selectedLevel) {
+            setAllFiles([])
+            setTotalFiles(0)
+            return
         }
 
-        // تنظيف البيانات - إزالة القيم undefined
-        Object.keys(requestBody).forEach(key => {
-            if (requestBody[key] === undefined) {
-                delete requestBody[key]
-            }
-        })
-
-        console.log("📤 Fetching files with body:", requestBody)
-
-        let res;
-        
-        // استخدام POST فقط لإرسال البيانات في body
+        setLoading(true)
         try {
-            res = await getFilesPost(requestBody);
-            console.log("✅ POST request successful:", res);
-        } catch (postError) {
-            console.log("❌ POST failed, trying GET without courseLevelId...");
-            // إذا فشل POST، جرب GET بدون courseLevelId في query
-            const params = {
+            const requestBody = {
+                courseLevelId: Number(selectedLevel),
                 page: currentPage,
                 limit: itemsPerPage,
-                q: searchTerm || undefined
+                search: searchTerm || undefined
             }
-            res = await getFiles(params);
-        }
 
-        console.log("📊 Files API response:", res)
-        
-        let data = []
-        let total = 0
-        let paginationData = {}
-        
-        // معالجة الاستجابة بجميع الأشكال المحتملة
-        if (res.data?.success) {
-            if (Array.isArray(res.data.data)) {
-                data = res.data.data
-                total = res.data.data.length
-            } else if (res.data.data?.data && Array.isArray(res.data.data.data)) {
-                data = res.data.data.data
-                total = res.data.data.pagination?.total || data.length
-                paginationData = res.data.data.pagination || {}
-            } else if (Array.isArray(res.data.data)) {
-                data = res.data.data
+            // تنظيف البيانات - إزالة القيم undefined
+            Object.keys(requestBody).forEach(key => {
+                if (requestBody[key] === undefined) {
+                    delete requestBody[key]
+                }
+            })
+
+            console.log("📤 Fetching files with body:", requestBody)
+
+            let res;
+            
+            try {
+                res = await getFilesPost(requestBody);
+                console.log("✅ POST request successful:", res);
+            } catch (postError) {
+                console.log("❌ POST failed, trying GET without courseLevelId...");
+                const params = {
+                    page: currentPage,
+                    limit: itemsPerPage,
+                    q: searchTerm || undefined
+                }
+                res = await getFiles(params);
+            }
+
+            console.log("📊 Files API response:", res)
+            
+            let data = []
+            let total = 0
+            let paginationData = {}
+            
+            if (res.data?.success) {
+                if (Array.isArray(res.data.data)) {
+                    data = res.data.data
+                    total = res.data.data.length
+                } else if (res.data.data?.data && Array.isArray(res.data.data.data)) {
+                    data = res.data.data.data
+                    total = res.data.data.pagination?.total || data.length
+                    paginationData = res.data.data.pagination || {}
+                } else if (Array.isArray(res.data.data)) {
+                    data = res.data.data
+                    total = data.length
+                }
+            } else if (Array.isArray(res.data)) {
+                data = res.data
                 total = data.length
             }
-        } else if (Array.isArray(res.data)) {
-            data = res.data
-            total = data.length
+            
+            setAllFiles(data || [])
+            setTotalFiles(total || 0)
+            setPagination(paginationData)
+        } catch (err) {
+            console.error("❌ Error fetching files:", err)
+            console.error("❌ Error response:", err.response?.data)
+            const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
+            showErrorToast(errorMessage)
+            setAllFiles([])
+            setTotalFiles(0)
+        } finally {
+            setLoading(false)
         }
-        
-        setAllFiles(data || [])
-        setTotalFiles(total || 0)
-        setPagination(paginationData)
-    } catch (err) {
-        console.error("❌ Error fetching files:", err)
-        console.error("❌ Error response:", err.response?.data)
-        const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
-        showErrorToast(errorMessage)
-        setAllFiles([])
-        setTotalFiles(0)
-    } finally {
-        setLoading(false)
     }
-}
 
     useEffect(() => {
-        fetchCourses()
+        fetchSpecializations()
     }, [])
 
-    // عند تغيير الكورس المحدد
+    useEffect(() => {
+        if (selectedSpecialization) {
+            fetchCourses(selectedSpecialization)
+            setSelectedCourse("")
+            setSelectedLevel("")
+        } else {
+            setCourses([])
+            setSelectedCourse("")
+            setSelectedLevel("")
+        }
+    }, [selectedSpecialization])
+
     useEffect(() => {
         if (selectedCourse) {
             fetchCourseLevels(selectedCourse)
@@ -191,20 +228,18 @@ const fetchFiles = async () => {
         }
     }, [selectedCourse])
 
-    // عند تغيير المستوى المحدد أو معاملات الصفحة
-useEffect(() => {
-    if (selectedLevel) {
-        fetchFiles()
-    } else {
-        setAllFiles([])
-        setTotalFiles(0)
-    }
-}, [selectedLevel, currentPage, itemsPerPage])
+    useEffect(() => {
+        if (selectedLevel) {
+            fetchFiles()
+        } else {
+            setAllFiles([])
+            setTotalFiles(0)
+        }
+    }, [selectedLevel, currentPage, itemsPerPage])
 
-// إعادة تعيين الصفحة عند تغيير الفلتر
-useEffect(() => {
-    setCurrentPage(1)
-}, [searchTerm, typeFilter, itemsPerPage])
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, typeFilter, itemsPerPage])
 
     // التعامل مع اختيار الملف للرفع
     const handleFileSelect = (e) => {
@@ -230,7 +265,6 @@ useEffect(() => {
             const res = await uploadFile(formData)
             console.log("📊 Upload response:", res)
 
-            // التحقق من الاستجابة بنجاح
             if (res.data?.success) {
                 showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
                 setFileToUpload(null)
@@ -359,97 +393,7 @@ useEffect(() => {
         return level ? level.name : "غير محدد"
     }
 
-    // فلترة وترتيب البيانات
-    const filteredAndSortedFiles = useMemo(() => {
-        let filtered = [...allFiles]
-
-        // البحث باسم الملف
-        if (searchTerm.trim()) {
-            filtered = filtered.filter(file =>
-                file.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                file.type?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
-        // فلترة بنوع الملف
-        if (typeFilter !== "all") {
-            filtered = filtered.filter(file => {
-                if (typeFilter === "image") return file.type?.startsWith('image/')
-                if (typeFilter === "video") return file.type?.startsWith('video/')
-                if (typeFilter === "audio") return file.type?.startsWith('audio/')
-                if (typeFilter === "document") return file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('word')
-                if (typeFilter === "archive") return file.type?.includes('zip') || file.type?.includes('rar')
-                return true
-            })
-        }
-
-        // الترتيب
-        filtered.sort((a, b) => {
-            let aValue, bValue
-
-            switch (sortBy) {
-                case "name":
-                    aValue = a.name?.toLowerCase() || ""
-                    bValue = b.name?.toLowerCase() || ""
-                    break
-                case "size":
-                    aValue = a.size || 0
-                    bValue = b.size || 0
-                    break
-                case "type":
-                    aValue = a.type?.toLowerCase() || ""
-                    bValue = b.type?.toLowerCase() || ""
-                    break
-                case "createdAt":
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-                    break
-                default:
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-            }
-
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-            return 0
-        })
-
-        return filtered
-    }, [allFiles, searchTerm, typeFilter, sortBy, sortOrder])
-
-    // Pagination calculations
-    const totalItems = filteredAndSortedFiles.length
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
-    const startItem = (currentPage - 1) * itemsPerPage + 1
-    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
-
-    // Handle page change
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page)
-        }
-    }
-
-    // Handle sort
-    const handleSort = (field) => {
-        if (sortBy === field) {
-            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-        } else {
-            setSortBy(field)
-            setSortOrder("asc")
-        }
-    }
-
-    // Reset filters
-    const resetFilters = () => {
-        setSearchTerm("")
-        setTypeFilter("all")
-        setSortBy("createdAt")
-        setSortOrder("desc")
-        setCurrentPage(1)
-    }
-
-    // عرض التفاصيل الكاملة للملف
+    // عرض التفاصيل الكاملة للملف - الدالة المفقودة
     const renderFileDetails = (file) => {
         if (!file) return null
 
@@ -520,7 +464,7 @@ useEffect(() => {
         )
     }
 
-    // مكون بطاقة الملف للعرض على الجوال
+    // مكون بطاقة الملف للعرض على الجوال - الدالة المفقودة
     const FileCard = ({ file }) => (
         <Card className="mb-4">
             <CardContent className="p-4">
@@ -600,6 +544,84 @@ useEffect(() => {
         </Card>
     )
 
+    // فلترة وترتيب البيانات
+    const filteredAndSortedFiles = useMemo(() => {
+        let filtered = [...allFiles]
+
+        if (searchTerm.trim()) {
+            filtered = filtered.filter(file =>
+                file.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                file.type?.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        }
+
+        if (typeFilter !== "all") {
+            filtered = filtered.filter(file => {
+                if (typeFilter === "image") return file.type?.startsWith('image/')
+                if (typeFilter === "video") return file.type?.startsWith('video/')
+                if (typeFilter === "audio") return file.type?.startsWith('audio/')
+                if (typeFilter === "document") return file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('word')
+                if (typeFilter === "archive") return file.type?.includes('zip') || file.type?.includes('rar')
+                return true
+            })
+        }
+
+        filtered.sort((a, b) => {
+            let aValue, bValue
+
+            switch (sortBy) {
+                case "name":
+                    aValue = a.name?.toLowerCase() || ""
+                    bValue = b.name?.toLowerCase() || ""
+                    break
+                case "size":
+                    aValue = a.size || 0
+                    bValue = b.size || 0
+                    break
+                case "type":
+                    aValue = a.type?.toLowerCase() || ""
+                    bValue = b.type?.toLowerCase() || ""
+                    break
+                case "createdAt":
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+                    break
+                default:
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+            return 0
+        })
+
+        return filtered
+    }, [allFiles, searchTerm, typeFilter, sortBy, sortOrder])
+
+    // Pagination calculations
+    const totalItems = filteredAndSortedFiles.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startItem = (currentPage - 1) * itemsPerPage + 1
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+
+    // Handle page change
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
+        }
+    }
+
+    // Handle sort
+    const handleSort = (field) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+        } else {
+            setSortBy(field)
+            setSortOrder("asc")
+        }
+    }
+
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
@@ -655,13 +677,35 @@ useEffect(() => {
                     </Dialog>
                 </div>
 
-                {/* Course and Level Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* التصنيف الهرمي: اختصاص → كورس → مستوى */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* اختيار الاختصاص */}
+                    <div className="space-y-2">
+                        <Label>اختر الاختصاص</Label>
+                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="اختر الاختصاص" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {specializations.map((spec) => (
+                                    <SelectItem key={spec.id} value={spec.id}>
+                                        {spec.name || spec.title}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* اختيار الكورس */}
                     <div className="space-y-2">
                         <Label>اختر الكورس</Label>
-                        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                        <Select 
+                            value={selectedCourse} 
+                            onValueChange={setSelectedCourse}
+                            disabled={!selectedSpecialization}
+                        >
                             <SelectTrigger>
-                                <SelectValue placeholder="اختر الكورس" />
+                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
                             </SelectTrigger>
                             <SelectContent>
                                 {courses.map((course) => (
@@ -673,6 +717,7 @@ useEffect(() => {
                         </Select>
                     </div>
 
+                    {/* اختيار المستوى */}
                     <div className="space-y-2">
                         <Label>اختر المستوى</Label>
                         <Select 
@@ -762,7 +807,11 @@ useEffect(() => {
                             </div>
 
                             {(searchTerm || typeFilter !== "all") && (
-                                <Button variant="outline" size="sm" onClick={resetFilters}>
+                                <Button variant="outline" size="sm" onClick={() => {
+                                    setSearchTerm("")
+                                    setTypeFilter("all")
+                                    setCurrentPage(1)
+                                }}>
                                     إعادة تعيين الفلترة
                                 </Button>
                             )}
@@ -774,7 +823,9 @@ useEffect(() => {
             <CardContent>
                 {!selectedLevel ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        {!selectedCourse ? "يرجى اختيار كورس أولاً" : "يرجى اختيار مستوى لعرض ملفاته"}
+                        {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
+                         !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+                         "يرجى اختيار مستوى لعرض ملفاته"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">

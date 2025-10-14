@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
 import { getCourseLevels, createCourseLevel, updateCourseLevel, deleteCourseLevel, toggleCourseLevelStatus, BASE_URL } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getInstructors } from "@/api/api";
@@ -44,6 +44,15 @@ const CourseLevel = () => {
     const [editItem, setEditItem] = useState(null);
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" });
     const [detailsDialog, setDetailsDialog] = useState({ isOpen: false, item: null });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Search states for selects
+    const [specializationSearch, setSpecializationSearch] = useState("");
+    const [courseSearch, setCourseSearch] = useState("");
+    const [instructorSearch, setInstructorSearch] = useState("");
+    const [instructorFilterSearch, setInstructorFilterSearch] = useState("");
+    const [statusFilterSearch, setStatusFilterSearch] = useState("");
+    const [freeFilterSearch, setFreeFilterSearch] = useState("");
 
     // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1);
@@ -283,6 +292,7 @@ const CourseLevel = () => {
         if (!selectedCourse) return showErrorToast("يرجى اختيار الكورس أولاً");
         if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة");
 
+        setIsSubmitting(true);
         try {
             let imageToSend = imageFile;
 
@@ -332,6 +342,8 @@ const CourseLevel = () => {
         } catch (err) {
             console.error(err.response?.data || err);
             showErrorToast(err?.response?.data?.message || "فشل العملية");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -447,6 +459,35 @@ const CourseLevel = () => {
         setFreeFilter("all");
         setCurrentPage(1);
     };
+
+    // Filtered data for selects with search
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec => 
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
+
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return filteredCourses;
+        return filteredCourses.filter(course => 
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [filteredCourses, courseSearch]);
+
+    const filteredInstructors = useMemo(() => {
+        if (!instructorSearch) return instructors;
+        return instructors.filter(instructor => 
+            instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+        );
+    }, [instructors, instructorSearch]);
+
+    const filteredInstructorsForFilter = useMemo(() => {
+        if (!instructorFilterSearch) return instructors;
+        return instructors.filter(instructor => 
+            instructor.name?.toLowerCase().includes(instructorFilterSearch.toLowerCase())
+        );
+    }, [instructors, instructorFilterSearch]);
 
     // مكون البطاقة للعنصر الواحد
     const LevelCard = ({ item }) => (
@@ -700,13 +741,13 @@ const CourseLevel = () => {
                     <div>
                         <Label className="font-medium">تاريخ الإنشاء:</Label>
                         <p className="text-gray-600 mt-1">
-                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('ar-SA') : "غير محدد"}
+                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
                         </p>
                     </div>
                     <div>
                         <Label className="font-medium">آخر تحديث:</Label>
                         <p className="text-gray-600 mt-1">
-                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ar-SA') : "غير محدد"}
+                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
                         </p>
                     </div>
                 </div>
@@ -717,172 +758,7 @@ const CourseLevel = () => {
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <CardTitle>إدارة مستويات الكورسات</CardTitle>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button
-                                size="sm"
-                                disabled={!selectedCourse}
-                                onClick={() => {
-                                    setEditItem(null);
-                                    setForm({
-                                        name: "",
-                                        description: "",
-                                        order: "",
-                                        priceUSD: "",
-                                        priceSAR: "",
-                                        isFree: false,
-                                        previewUrl: "",
-                                        downloadUrl: "",
-                                        instructorId: ""
-                                    });
-                                    setImageFile(null);
-                                    setImagePreview(null);
-                                }}
-                            >
-                                إضافة مستوى <Plus className="w-4 h-4 cursor-pointer" />
-                            </Button>
-                        </DialogTrigger>
-
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل المستوى" : "إضافة مستوى جديد"}</DialogTitle>
-                                <DialogDescription>
-                                    {editItem ? "قم بتعديل بيانات المستوى" : "أدخل بيانات المستوى الجديد"}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 mt-2">
-                                <div className="space-y-2">
-                                    <Label>العنوان *</Label>
-                                    <Input
-                                        value={form.name}
-                                        onChange={(e) => handleFormChange("name", e.target.value)}
-                                        placeholder="أدخل عنوان المستوى..."
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>الوصف</Label>
-                                    <Textarea
-                                        value={form.description}
-                                        onChange={(e) => handleFormChange("description", e.target.value)}
-                                        rows={3}
-                                        placeholder="أدخل وصف المستوى..."
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>الترتيب *</Label>
-                                        <Input
-                                            type="number"
-                                            value={form.order}
-                                            onChange={(e) => handleFormChange("order", e.target.value)}
-                                            placeholder="ترتيب المستوى"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>المدرب *</Label>
-                                        <Select
-                                            value={form.instructorId}
-                                            onValueChange={(value) => handleFormChange("instructorId", value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر المدرب" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {instructors.map((instructor) => (
-                                                    <SelectItem key={instructor.id} value={instructor.id}>
-                                                        {instructor.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center space-x-2 space-x-reverse">
-                                    <Switch
-                                        checked={form.isFree}
-                                        onCheckedChange={(checked) => handleFormChange("isFree", checked)}
-                                    />
-                                    <Label>مستوى مجاني</Label>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>السعر (USD)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={form.priceUSD}
-                                            onChange={(e) => handleFormChange("priceUSD", e.target.value)}
-                                            placeholder="0.00"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>السعر (SAR)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={form.priceSAR}
-                                            onChange={(e) => handleFormChange("priceSAR", e.target.value)}
-                                            placeholder="0.00"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>رابط المعاينة</Label>
-                                    <Input
-                                        value={form.previewUrl}
-                                        onChange={(e) => handleFormChange("previewUrl", e.target.value)}
-                                        placeholder="رابط فيديو المعاينة..."
-                                    />
-                                </div>
-
-                                {/* <div className="space-y-2">
-                                    <Label>رابط التحميل</Label>
-                                    <Input
-                                        value={form.downloadUrl}
-                                        onChange={(e) => handleFormChange("downloadUrl", e.target.value)}
-                                        placeholder="رابط تحميل الملفات..."
-                                    />
-                                </div> */}
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="level-image">صورة المستوى *</Label>
-                                    <Input
-                                        id="level-image"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={onImageChange}
-                                    />
-                                    {imagePreview && (
-                                        <div className="mt-2">
-                                            <img
-                                                src={imagePreview}
-                                                alt="معاينة"
-                                                className="max-h-40 rounded-md border"
-                                                {...imageConfig}
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = "/tallaam_logo2.png";
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                <Button onClick={handleSave}>
-                                    {editItem ? "حفظ التعديل" : "حفظ"}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                <CardTitle>إدارة مستويات الكورسات</CardTitle>
 
                 {/* Course Selection Path */}
                 <div className="space-y-4">
@@ -919,7 +795,16 @@ const CourseLevel = () => {
                                     <SelectValue placeholder="اختر التخصص" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {specializations.map((spec) => (
+                                    {/* Search input for specializations */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن تخصص..."
+                                            value={specializationSearch}
+                                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredSpecializations.map((spec) => (
                                         <SelectItem key={spec.id} value={spec.id}>
                                             {spec.name}
                                         </SelectItem>
@@ -940,7 +825,16 @@ const CourseLevel = () => {
                                     <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر التخصص أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {filteredCourses.map((course) => (
+                                    {/* Search input for courses */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن كورس..."
+                                            value={courseSearch}
+                                            onChange={(e) => setCourseSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredCoursesForSelect.map((course) => (
                                         <SelectItem key={course.id} value={course.id}>
                                             {course.title}
                                         </SelectItem>
@@ -948,6 +842,193 @@ const CourseLevel = () => {
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    {/* زر الإضافة - تحت اختيار التخصص والكورس */}
+                    <div className="flex justify-end">
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    disabled={!selectedCourse}
+                                    onClick={() => {
+                                        setEditItem(null);
+                                        setForm({
+                                            name: "",
+                                            description: "",
+                                            order: "",
+                                            priceUSD: "",
+                                            priceSAR: "",
+                                            isFree: false,
+                                            previewUrl: "",
+                                            downloadUrl: "",
+                                            instructorId: ""
+                                        });
+                                        setImageFile(null);
+                                        setImagePreview(null);
+                                    }}
+                                >
+                                    إضافة مستوى <Plus className="w-4 h-4 cursor-pointer" />
+                                </Button>
+                            </DialogTrigger>
+
+                            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{editItem ? "تعديل المستوى" : "إضافة مستوى جديد"}</DialogTitle>
+                                    <DialogDescription>
+                                        {editItem ? "قم بتعديل بيانات المستوى" : "أدخل بيانات المستوى الجديد"}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-2">
+                                    <div className="space-y-2">
+                                        <Label>العنوان *</Label>
+                                        <Input
+                                            value={form.name}
+                                            onChange={(e) => handleFormChange("name", e.target.value)}
+                                            placeholder="أدخل عنوان المستوى..."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>الوصف</Label>
+                                        <Textarea
+                                            value={form.description}
+                                            onChange={(e) => handleFormChange("description", e.target.value)}
+                                            rows={3}
+                                            placeholder="أدخل وصف المستوى..."
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>الترتيب *</Label>
+                                            <Input
+                                                type="number"
+                                                value={form.order}
+                                                onChange={(e) => handleFormChange("order", e.target.value)}
+                                                placeholder="ترتيب المستوى"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>المدرب *</Label>
+                                            <Select
+                                                value={form.instructorId}
+                                                onValueChange={(value) => handleFormChange("instructorId", value)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="اختر المدرب" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {/* Search input for instructors */}
+                                                    <div className="p-2">
+                                                        <Input
+                                                            placeholder="ابحث عن مدرب..."
+                                                            value={instructorSearch}
+                                                            onChange={(e) => setInstructorSearch(e.target.value)}
+                                                            className="mb-2"
+                                                        />
+                                                    </div>
+                                                    {filteredInstructors.map((instructor) => (
+                                                        <SelectItem key={instructor.id} value={instructor.id}>
+                                                            {instructor.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 space-x-reverse">
+                                        <Switch
+                                            checked={form.isFree}
+                                            onCheckedChange={(checked) => handleFormChange("isFree", checked)}
+                                        />
+                                        <Label>مستوى مجاني</Label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>السعر (USD)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={form.priceUSD}
+                                                onChange={(e) => handleFormChange("priceUSD", e.target.value)}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>السعر (SAR)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={form.priceSAR}
+                                                onChange={(e) => handleFormChange("priceSAR", e.target.value)}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>رابط المعاينة</Label>
+                                        <Input
+                                            value={form.previewUrl}
+                                            onChange={(e) => handleFormChange("previewUrl", e.target.value)}
+                                            placeholder="رابط فيديو المعاينة..."
+                                        />
+                                    </div>
+
+                                    {/* <div className="space-y-2">
+                                        <Label>رابط التحميل</Label>
+                                        <Input
+                                            value={form.downloadUrl}
+                                            onChange={(e) => handleFormChange("downloadUrl", e.target.value)}
+                                            placeholder="رابط تحميل الملفات..."
+                                        />
+                                    </div> */}
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="level-image">صورة المستوى *</Label>
+                                        <Input
+                                            id="level-image"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={onImageChange}
+                                        />
+                                        {imagePreview && (
+                                            <div className="mt-2">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="معاينة"
+                                                    className="max-h-40 rounded-md border"
+                                                    {...imageConfig}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "/tallaam_logo2.png";
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Button 
+                                        onClick={handleSave}
+                                        disabled={isSubmitting}
+                                        className="w-full"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                                                {editItem ? "جارٍ التعديل..." : "جارٍ الإضافة..."}
+                                            </>
+                                        ) : (
+                                            editItem ? "حفظ التعديل" : "حفظ"
+                                        )}
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 
@@ -972,6 +1053,15 @@ const CourseLevel = () => {
                                     <SelectValue placeholder="فلترة بالحالة" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for status filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في الحالات..."
+                                            value={statusFilterSearch}
+                                            onChange={(e) => setStatusFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع الحالات</SelectItem>
                                     <SelectItem value="active">نشط</SelectItem>
                                     <SelectItem value="inactive">معطل</SelectItem>
@@ -984,8 +1074,17 @@ const CourseLevel = () => {
                                     <SelectValue placeholder="فلترة بالمدرب" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for instructor filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مدرب..."
+                                            value={instructorFilterSearch}
+                                            onChange={(e) => setInstructorFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع المدرسين</SelectItem>
-                                    {instructors.map((instructor) => (
+                                    {filteredInstructorsForFilter.map((instructor) => (
                                         <SelectItem key={instructor.id} value={instructor.id}>
                                             {instructor.name}
                                         </SelectItem>
@@ -999,6 +1098,15 @@ const CourseLevel = () => {
                                     <SelectValue placeholder="فلترة بالنوع" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for free filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في الأنواع..."
+                                            value={freeFilterSearch}
+                                            onChange={(e) => setFreeFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع المستويات</SelectItem>
                                     <SelectItem value="free">مجاني</SelectItem>
                                     <SelectItem value="paid">مدفوع</SelectItem>

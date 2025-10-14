@@ -11,14 +11,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, BookOpen, HelpCircle, ListOrdered, CheckCircle, XCircle } from "lucide-react"
-import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, updateOption, deleteOption, deleteQuiz, getCourses, getCourseLevels } from "@/api/api"
+import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, updateOption, deleteOption, deleteQuiz, getCourses, getCourseLevels, getSpecializations } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Quizzes = () => {
   const [questions, setQuestions] = useState([])
   const [allQuestions, setAllQuestions] = useState([])
+  const [specializations, setSpecializations] = useState([])
   const [courses, setCourses] = useState([])
   const [levels, setLevels] = useState([])
+  const [selectedSpecialization, setSelectedSpecialization] = useState("")
   const [selectedCourse, setSelectedCourse] = useState("")
   const [selectedLevel, setSelectedLevel] = useState("")
   const [loading, setLoading] = useState(false)
@@ -45,14 +47,41 @@ const Quizzes = () => {
   const [sortBy, setSortBy] = useState("order")
   const [sortOrder, setSortOrder] = useState("asc")
 
-  // جلب الكورسات
-  const fetchCourses = async () => {
+  // جلب الاختصاصات
+  const fetchSpecializations = async () => {
+    try {
+      const res = await getSpecializations()
+      const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+        Array.isArray(res.data?.data?.data) ? res.data.data.data :
+        Array.isArray(res.data?.data) ? res.data.data : []
+      console.log("Specializations data:", data)
+      setSpecializations(data)
+    } catch (err) {
+      console.error("Error fetching specializations:", err)
+      showErrorToast("فشل تحميل الاختصاصات")
+    }
+  }
+
+  // جلب الكورسات بناءً على الاختصاص المحدد
+  const fetchCourses = async (specializationId) => {
+    if (!specializationId) {
+      setCourses([])
+      setSelectedCourse("")
+      return
+    }
+
     try {
       const res = await getCourses()
-      const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+      let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
         Array.isArray(res.data?.data?.data) ? res.data.data.data : []
-      console.log("Courses data:", data)
-      setCourses(data)
+      
+      // فلترة الكورسات حسب الاختصاص المحدد
+      const filteredCourses = allCourses.filter(course => 
+        course.specializationId === parseInt(specializationId)
+      )
+      
+      console.log("Filtered courses:", filteredCourses)
+      setCourses(filteredCourses)
     } catch (err) {
       console.error(err)
       showErrorToast("فشل تحميل الكورسات")
@@ -160,8 +189,21 @@ const Quizzes = () => {
   }
 
   useEffect(() => {
-    fetchCourses()
+    fetchSpecializations()
   }, [])
+
+  // عند تغيير الاختصاص المحدد
+  useEffect(() => {
+    if (selectedSpecialization) {
+      fetchCourses(selectedSpecialization)
+      setSelectedCourse("")
+      setSelectedLevel("")
+    } else {
+      setCourses([])
+      setSelectedCourse("")
+      setSelectedLevel("")
+    }
+  }, [selectedSpecialization])
 
   // عند تغيير الكورس المحدد
   useEffect(() => {
@@ -377,6 +419,12 @@ const Quizzes = () => {
     }
   }
 
+  // الحصول على اسم الاختصاص
+  const getSpecializationName = (specializationId) => {
+    const specialization = specializations.find(spec => spec.id === specializationId)
+    return specialization ? (specialization.name || specialization.title) : "غير محدد"
+  }
+
   // الحصول على اسم الكورس
   const getCourseName = (courseId) => {
     const course = courses.find(crs => crs.id === courseId)
@@ -471,18 +519,6 @@ const Quizzes = () => {
                         الإجابة الصحيحة
                       </Badge>
                     )}
-                    {/* <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setOptionEditDialog({
-                        isOpen: true,
-                        option: option,
-                        question: question
-                      })}
-                    >
-                      <Edit className="w-4 h-4 ml-1" />
-                      تعديل
-                    </Button> */}
                   </div>
                 </div>
               </div>
@@ -717,13 +753,35 @@ const Quizzes = () => {
           </div>
         </div>
 
-        {/* Course and Level Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* التدرج الهرمي: اختصاص → كورس → مستوى */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* اختيار الاختصاص */}
+          <div className="space-y-2">
+            <Label>اختر الاختصاص</Label>
+            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر الاختصاص" />
+              </SelectTrigger>
+              <SelectContent>
+                {specializations.map((spec) => (
+                  <SelectItem key={spec.id} value={spec.id}>
+                    {spec.name || spec.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* اختيار الكورس */}
           <div className="space-y-2">
             <Label>اختر الكورس</Label>
-            <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+            <Select 
+              value={selectedCourse} 
+              onValueChange={setSelectedCourse}
+              disabled={!selectedSpecialization}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="اختر الكورس" />
+                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
@@ -735,6 +793,7 @@ const Quizzes = () => {
             </Select>
           </div>
 
+          {/* اختيار المستوى */}
           <div className="space-y-2">
             <Label>اختر المستوى</Label>
             <Select
@@ -755,6 +814,30 @@ const Quizzes = () => {
             </Select>
           </div>
         </div>
+
+        {/* معلومات التحديد الحالي */}
+        {selectedSpecialization && (
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-bold">الاختصاص:</span>
+                <Badge variant="secondary">{getSpecializationName(selectedSpecialization)}</Badge>
+              </div>
+              {selectedCourse && (
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">الكورس:</span>
+                  <Badge variant="secondary">{getCourseName(selectedCourse)}</Badge>
+                </div>
+              )}
+              {selectedLevel && (
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">المستوى:</span>
+                  <Badge variant="secondary">{getLevelName(selectedLevel)}</Badge>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filters Section - Only show when a level is selected */}
         {selectedLevel && (
@@ -819,7 +902,9 @@ const Quizzes = () => {
       <CardContent>
         {!selectedLevel ? (
           <div className="text-center py-8 text-muted-foreground">
-            {!selectedCourse ? "يرجى اختيار كورس أولاً" : "يرجى اختيار مستوى لعرض أسئلته"}
+            {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
+             !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+             "يرجى اختيار مستوى لعرض أسئلته"}
           </div>
         ) : loading ? (
           <div className="flex justify-center py-8">
