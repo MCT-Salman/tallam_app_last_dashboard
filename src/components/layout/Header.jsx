@@ -72,9 +72,9 @@ export function Header({ sidebarCollapsed = false }) {
                 ? 'md:mr-24 lg:mr-24'
                 : 'md:mr-64 lg:mr-64'
             }`}>
-            <div className="flex items-center justify-between max-w-full">
+            <div className="flex items-center justify-end max-w-full">
                 {/* Search */}
-                <div className="flex-1 max-w-md">
+                {/* <div className="flex-1 max-w-md">
                     <div className="relative">
                         <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
@@ -82,17 +82,17 @@ export function Header({ sidebarCollapsed = false }) {
                             className="pr-10 bg-muted/50 border-0 focus:ring-2 focus:ring-primary/20"
                         />
                     </div>
-                </div>
+                </div> */}
 
                 {/* Right side */}
                 <div className="flex items-center gap-4">
                     {/* Notifications */}
-                    <Button variant="ghost" size="icon" className="relative hover:bg-accent">
+                    {/* <Button variant="ghost" size="icon" className="relative hover:bg-accent">
                         <Bell className="w-5 h-5" />
                         <span className="absolute -top-1 -right-1 bg-secondary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                             3
                         </span>
-                    </Button>
+                    </Button> */}
 
                     {/* User Menu */}
                     <DropdownMenu dir="rtl">
