@@ -491,7 +491,7 @@ const CourseLevel = () => {
 
     // مكون البطاقة للعنصر الواحد
     const LevelCard = ({ item }) => (
-        <Card className="mb-4 overflow-hidden" key={item.id}>
+        <Card className="mb-4 overflow-hidden" key={item.id} dir="rtl">
             {/* الصورة تأخذ رأس البطاقة كامل */}
             <div className="relative h-48 bg-gray-100">
                 <img
@@ -611,7 +611,7 @@ const CourseLevel = () => {
 
     // مكون عرض التفاصيل
     const LevelDetails = ({ item }) => (
-        <div className="space-y-6">
+        <div className="space-y-6" dir="rtl">
             {/* الصورة */}
             <div className="flex justify-center">
                 <img
@@ -756,12 +756,12 @@ const CourseLevel = () => {
     );
 
     return (
-        <Card>
-            <CardHeader className="flex flex-col gap-4">
+        <Card dir="rtl">
+            <CardHeader className="flex flex-col gap-4" dir="rtl">
                 <CardTitle>إدارة مستويات الكورسات</CardTitle>
 
                 {/* Course Selection Path */}
-                <div className="space-y-4">
+                <div className="space-y-4" dir="rtl">
                     {/* مسار الاختيار */}
                     {(selectedSpecialization || selectedCourse) && (
                         <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -786,13 +786,13 @@ const CourseLevel = () => {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" dir="rtl">
                         {/* اختيار التخصص أولاً */}
-                        <div className="space-y-2">
+                        <div className="space-y-2" dir="rtl">
                             <Label>اختر التخصص أولاً</Label>
                             <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="اختر التخصص" />
+                                    <SelectValue placeholder="اختر التخصص" dir="rtl" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {/* Search input for specializations */}
