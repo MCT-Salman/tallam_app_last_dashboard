@@ -10,18 +10,20 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, BookOpen, HelpCircle, ListOrdered, CheckCircle, XCircle } from "lucide-react"
-import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, updateOption, deleteOption, deleteQuiz, getCourses, getCourseLevels, getSpecializations } from "@/api/api"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, BookOpen, HelpCircle, ListOrdered, CheckCircle, XCircle, Filter } from "lucide-react"
+import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, updateOption, deleteOption, deleteQuiz, getCourses, getCourseLevels, getSpecializations, getInstructorsByCourse } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Quizzes = () => {
   const [questions, setQuestions] = useState([])
   const [allQuestions, setAllQuestions] = useState([])
   const [specializations, setSpecializations] = useState([])
+  const [instructors, setInstructors] = useState([])
   const [courses, setCourses] = useState([])
   const [levels, setLevels] = useState([])
   const [selectedSpecialization, setSelectedSpecialization] = useState("")
   const [selectedCourse, setSelectedCourse] = useState("")
+  const [selectedInstructor, setSelectedInstructor] = useState("")
   const [selectedLevel, setSelectedLevel] = useState("")
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -39,6 +41,12 @@ const Quizzes = () => {
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
   const [optionEditDialog, setOptionEditDialog] = useState({ isOpen: false, option: null, question: null })
   const [detailDialog, setDetailDialog] = useState({ isOpen: false, question: null })
+
+  // Search states for selects
+  const [specializationSearch, setSpecializationSearch] = useState("")
+  const [courseSearch, setCourseSearch] = useState("")
+  const [instructorSearch, setInstructorSearch] = useState("")
+  const [levelSearch, setLevelSearch] = useState("")
 
   // Pagination & Filtering states
   const [currentPage, setCurrentPage] = useState(1)
@@ -65,60 +73,107 @@ const Quizzes = () => {
   // جلب الكورسات بناءً على الاختصاص المحدد
   const fetchCourses = async (specializationId) => {
     if (!specializationId) {
-      setCourses([])
-      setSelectedCourse("")
-      return
+      setCourses([]);
+      setSelectedCourse("");
+      return;
     }
 
     try {
-      const res = await getCourses()
+      const res = await getCourses();
       let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
-        Array.isArray(res.data?.data?.data) ? res.data.data.data : []
+        Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
       
-      // فلترة الكورسات حسب الاختصاص المحدد
+      // ✅ فلترة الكورسات حسب الاختصاص المحدد
       const filteredCourses = allCourses.filter(course => 
         course.specializationId === parseInt(specializationId)
-      )
+      );
       
-      console.log("Filtered courses:", filteredCourses)
-      setCourses(filteredCourses)
+      console.log("Filtered courses by specialization:", filteredCourses);
+      setCourses(filteredCourses);
     } catch (err) {
-      console.error(err)
-      showErrorToast("فشل تحميل الكورسات")
+      console.error(err);
+      showErrorToast("فشل تحميل الكورسات");
     }
-  }
+  };
 
-  // جلب مستويات الكورس المحدد
-  const fetchCourseLevels = async (courseId) => {
+  // ✅ جلب المدرسين بناءً على الكورس المحدد
+  const fetchInstructorsByCourse = async (courseId) => {
     if (!courseId) {
-      setLevels([])
-      setSelectedLevel("")
-      return
+      setInstructors([]);
+      setSelectedInstructor("");
+      return;
     }
 
     try {
-      const res = await getCourseLevels(courseId)
-      console.log("Full levels response:", res)
-
-      let data = []
-      if (Array.isArray(res.data?.data)) {
-        if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-          data = res.data.data[0]
-        } else {
-          data = res.data.data
-        }
-      } else if (Array.isArray(res.data?.data?.items)) {
-        data = res.data.data.items
+      console.log("🔄 Fetching instructors for course:", courseId);
+      const res = await getInstructorsByCourse(courseId);
+      console.log("📊 Instructors API full response:", res);
+      
+      let data = [];
+      if (Array.isArray(res.data?.data?.instructors)) {
+        data = res.data.data.instructors;
       } else if (Array.isArray(res.data?.data?.data)) {
-        data = res.data.data.data
+        data = res.data.data.data;
+      } else if (Array.isArray(res.data?.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        data = res.data;
+      }
+      
+      console.log("✅ Extracted instructors for course:", data);
+      setInstructors(data || []);
+    } catch (err) {
+      console.error("❌ Error fetching instructors:", err);
+      showErrorToast("فشل تحميل المدرسين");
+      setInstructors([]);
+    }
+  };
+
+  // ✅ جلب المستويات بناءً على المدرس المحدد
+  const fetchLevelsByInstructor = async (instructorId) => {
+    if (!instructorId) {
+      setLevels([]);
+      setSelectedLevel("");
+      return;
+    }
+
+    try {
+      // البحث عن المدرس المحدد للحصول على levelIds
+      const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
+      
+      if (!selectedInstructorData || !selectedInstructorData.levelIds) {
+        setLevels([]);
+        return;
       }
 
-      console.log("Levels data:", data)
-      setLevels(data || [])
+      // جلب كل المستويات للكورس أولاً
+      const res = await getCourseLevels(selectedCourse);
+      console.log("Full levels response:", res);
+
+      let allLevels = [];
+      if (Array.isArray(res.data?.data)) {
+        if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+          allLevels = res.data.data[0];
+        } else {
+          allLevels = res.data.data;
+        }
+      } else if (Array.isArray(res.data?.data?.items)) {
+        allLevels = res.data.data.items;
+      } else if (Array.isArray(res.data?.data?.data)) {
+        allLevels = res.data.data.data;
+      }
+
+      // ✅ فلترة المستويات حسب levelIds الخاص بالمدرس
+      const filteredLevels = allLevels.filter(level => 
+        selectedInstructorData.levelIds.includes(level.id)
+      );
+
+      console.log("Filtered levels by instructor:", filteredLevels);
+      setLevels(filteredLevels || []);
     } catch (err) {
-      console.error("Error fetching levels:", err)
-      showErrorToast("فشل تحميل مستويات الكورس")
-      setLevels([])
+      console.error("Error fetching levels:", err);
+      showErrorToast("فشل تحميل مستويات المدرس");
+      setLevels([]);
     }
   }
 
@@ -157,7 +212,7 @@ const Quizzes = () => {
 
       // إذا كانت المصفوفة فارغة، عرض رسالة
       if (data.length === 0) {
-        showErrorToast("لا توجد أسئلة لهذا المستوى")
+        showSuccessToast("لا توجد أسئلة لهذا المستوى")
       }
 
     } catch (err) {
@@ -192,31 +247,46 @@ const Quizzes = () => {
     fetchSpecializations()
   }, [])
 
-  // عند تغيير الاختصاص المحدد
+  // ✅ عند تغيير الاختصاص المحدد
   useEffect(() => {
     if (selectedSpecialization) {
-      fetchCourses(selectedSpecialization)
-      setSelectedCourse("")
-      setSelectedLevel("")
+      fetchCourses(selectedSpecialization);
+      setSelectedCourse("");
+      setSelectedInstructor("");
+      setSelectedLevel("");
     } else {
-      setCourses([])
-      setSelectedCourse("")
-      setSelectedLevel("")
+      setCourses([]);
+      setSelectedCourse("");
+      setSelectedInstructor("");
+      setSelectedLevel("");
     }
   }, [selectedSpecialization])
 
-  // عند تغيير الكورس المحدد
+  // ✅ عند تغيير الكورس المحدد
   useEffect(() => {
     if (selectedCourse) {
-      fetchCourseLevels(selectedCourse)
-      setSelectedLevel("")
+      fetchInstructorsByCourse(selectedCourse);
+      setSelectedInstructor("");
+      setSelectedLevel("");
     } else {
-      setLevels([])
-      setSelectedLevel("")
+      setInstructors([]);
+      setSelectedInstructor("");
+      setSelectedLevel("");
     }
   }, [selectedCourse])
 
-  // عند تغيير المستوى المحدد
+  // ✅ عند تغيير المدرس المحدد
+  useEffect(() => {
+    if (selectedInstructor) {
+      fetchLevelsByInstructor(selectedInstructor);
+      setSelectedLevel("");
+    } else {
+      setLevels([]);
+      setSelectedLevel("");
+    }
+  }, [selectedInstructor, selectedCourse])
+
+  // ✅ عند تغيير المستوى المحدد
   useEffect(() => {
     if (selectedLevel) {
       fetchLevelQuestions(selectedLevel)
@@ -224,6 +294,36 @@ const Quizzes = () => {
       setAllQuestions([])
     }
   }, [selectedLevel])
+
+  // Filtered data for selects with search
+  const filteredSpecializations = useMemo(() => {
+    if (!specializationSearch) return specializations;
+    return specializations.filter(spec => 
+      spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+      spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+    );
+  }, [specializations, specializationSearch]);
+
+  const filteredCoursesForSelect = useMemo(() => {
+    if (!courseSearch) return courses;
+    return courses.filter(course => 
+      course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+    );
+  }, [courses, courseSearch]);
+
+  const filteredInstructorsForSelect = useMemo(() => {
+    if (!instructorSearch) return instructors;
+    return instructors.filter(instructor => 
+      instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+    );
+  }, [instructors, instructorSearch]);
+
+  const filteredLevelsForSelect = useMemo(() => {
+    if (!levelSearch) return levels;
+    return levels.filter(level => 
+      level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+    );
+  }, [levels, levelSearch]);
 
   // فلترة وترتيب البيانات
   const filteredAndSortedQuestions = useMemo(() => {
@@ -421,20 +521,41 @@ const Quizzes = () => {
 
   // الحصول على اسم الاختصاص
   const getSpecializationName = (specializationId) => {
-    const specialization = specializations.find(spec => spec.id === specializationId)
+    const specialization = specializations.find(spec => spec.id === parseInt(specializationId))
     return specialization ? (specialization.name || specialization.title) : "غير محدد"
   }
 
   // الحصول على اسم الكورس
   const getCourseName = (courseId) => {
-    const course = courses.find(crs => crs.id === courseId)
+    const course = courses.find(crs => crs.id === parseInt(courseId))
     return course ? course.title : "غير محدد"
   }
 
+  // الحصول على اسم المدرس
+  const getInstructorName = (instructorId) => {
+    const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
+    return instructor ? instructor.name : "غير محدد";
+  };
+
   // الحصول على اسم المستوى
   const getLevelName = (levelId) => {
-    const level = levels.find(lvl => lvl.id === levelId)
+    const level = levels.find(lvl => lvl.id === parseInt(levelId))
     return level ? level.name : "غير محدد"
+  }
+
+  // Reset all selections
+  const resetAllSelections = () => {
+    setSelectedSpecialization("")
+    setSelectedCourse("")
+    setSelectedInstructor("")
+    setSelectedLevel("")
+    setAllQuestions([])
+    setSearchTerm("")
+    setCurrentPage(1)
+    setSpecializationSearch("")
+    setCourseSearch("")
+    setInstructorSearch("")
+    setLevelSearch("")
   }
 
   // Pagination calculations
@@ -753,91 +874,161 @@ const Quizzes = () => {
           </div>
         </div>
 
-        {/* التدرج الهرمي: اختصاص → كورس → مستوى */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* اختيار الاختصاص */}
-          <div className="space-y-2">
-            <Label>اختر الاختصاص</Label>
-            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-              <SelectTrigger>
-                <SelectValue placeholder="اختر الاختصاص" />
-              </SelectTrigger>
-              <SelectContent>
-                {specializations.map((spec) => (
-                  <SelectItem key={spec.id} value={spec.id}>
-                    {spec.name || spec.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* اختيار الكورس */}
-          <div className="space-y-2">
-            <Label>اختر الكورس</Label>
-            <Select 
-              value={selectedCourse} 
-              onValueChange={setSelectedCourse}
-              disabled={!selectedSpecialization}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* اختيار المستوى */}
-          <div className="space-y-2">
-            <Label>اختر المستوى</Label>
-            <Select
-              value={selectedLevel}
-              onValueChange={setSelectedLevel}
-              disabled={!selectedCourse}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
-              </SelectTrigger>
-              <SelectContent>
-                {levels.map((level) => (
-                  <SelectItem key={level.id} value={level.id}>
-                    {level.name} (ترتيب: {level.order})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* معلومات التحديد الحالي */}
-        {selectedSpecialization && (
-          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-bold">الاختصاص:</span>
-                <Badge variant="secondary">{getSpecializationName(selectedSpecialization)}</Badge>
+        {/* ✅ التصنيف الهرمي الجديد: اختصاص → كورس → مدرس → مستوى */}
+        <div className="space-y-4">
+          {/* مسار الاختيار */}
+          {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+                <span className="text-blue-700">المسار المختار:</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="bg-white">
+                    {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-blue-500" />
+                  <Badge variant="outline" className="bg-white">
+                    {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-blue-500" />
+                  <Badge variant="outline" className="bg-white">
+                    {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-blue-500" />
+                  <Badge variant="outline" className="bg-white">
+                    {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetAllSelections}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    إعادة تعيين الكل
+                  </Button>
+                </div>
               </div>
-              {selectedCourse && (
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">الكورس:</span>
-                  <Badge variant="secondary">{getCourseName(selectedCourse)}</Badge>
-                </div>
-              )}
-              {selectedLevel && (
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">المستوى:</span>
-                  <Badge variant="secondary">{getLevelName(selectedLevel)}</Badge>
-                </div>
-              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* ✅ اختيار الاختصاص */}
+            <div className="space-y-2">
+              <Label>الاختصاص</Label>
+              <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الاختصاص" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="ابحث عن اختصاص..."
+                      value={specializationSearch}
+                      onChange={(e) => setSpecializationSearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {filteredSpecializations.map((spec) => (
+                    <SelectItem key={spec.id} value={spec.id.toString()}>
+                      {spec.name || spec.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* ✅ اختيار الكورس */}
+            <div className="space-y-2">
+              <Label>الكورس</Label>
+              <Select 
+                value={selectedCourse} 
+                onValueChange={setSelectedCourse}
+                disabled={!selectedSpecialization}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="ابحث عن كورس..."
+                      value={courseSearch}
+                      onChange={(e) => setCourseSearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {filteredCoursesForSelect.map((course) => (
+                    <SelectItem key={course.id} value={course.id.toString()}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* ✅ اختيار المدرس */}
+            <div className="space-y-2">
+              <Label>المدرس</Label>
+              <Select 
+                value={selectedInstructor} 
+                onValueChange={setSelectedInstructor}
+                disabled={!selectedCourse}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="ابحث عن مدرس..."
+                      value={instructorSearch}
+                      onChange={(e) => setInstructorSearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {filteredInstructorsForSelect.map((instructor) => (
+                    <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.name}
+                    </SelectItem>
+                  ))}
+                  {filteredInstructorsForSelect.length === 0 && selectedCourse && (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      لا توجد مدرسين لهذا الكورس
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* ✅ اختيار المستوى */}
+            <div className="space-y-2">
+              <Label>المستوى</Label>
+              <Select
+                value={selectedLevel}
+                onValueChange={setSelectedLevel}
+                disabled={!selectedInstructor}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="ابحث عن مستوى..."
+                      value={levelSearch}
+                      onChange={(e) => setLevelSearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {filteredLevelsForSelect.map((level) => (
+                    <SelectItem key={level.id} value={level.id.toString()}>
+                      {level.name} (ترتيب: {level.order})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Filters Section - Only show when a level is selected */}
         {selectedLevel && (
@@ -889,8 +1080,9 @@ const Quizzes = () => {
                 {searchTerm && ` (مفلتر)`}
               </div>
 
-              {searchTerm && (
+              {(searchTerm || sortBy !== "order" || sortOrder !== "asc") && (
                 <Button variant="outline" size="sm" onClick={resetFilters}>
+                  <Filter className="w-4 h-4 ml-1" />
                   إعادة تعيين الفلترة
                 </Button>
               )}
@@ -904,6 +1096,7 @@ const Quizzes = () => {
           <div className="text-center py-8 text-muted-foreground">
             {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
              !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+             !selectedInstructor ? "يرجى اختيار مدرس أولاً" : 
              "يرجى اختيار مستوى لعرض أسئلته"}
           </div>
         ) : loading ? (

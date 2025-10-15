@@ -247,6 +247,9 @@ export const toggleInstructorStatus = (id, isActive) =>
 export const deleteInstructor = (id) =>
     api.delete(`/catalog/admin/instructors/${id}`);
 
+export const getInstructorsByCourse = (courseId) =>
+    api.get(`/catalog/admin/courses/${courseId}/instructors`);
+
 // --- إدارة الكورسات ---
 // إنشاء دورة جديدة
 export const createCourse = (data) => {
