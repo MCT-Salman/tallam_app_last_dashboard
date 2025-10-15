@@ -1,6 +1,6 @@
 // src\data\sidebarItems.js
 // src\data\sidebarItems.js
-import { Home, BookOpen, Users, Settings, User, BarChart3, Bell, DollarSign, Megaphone,Ticket, Percent, UserCheck, MessageSquare, Link as LinkIcon, Image, FolderOpen, Star} from "lucide-react"
+import { Home, BookOpen, Users, Settings, User, BarChart3, Bell, DollarSign, Megaphone,Ticket, Percent, UserCheck, MessageSquare, Link as LinkIcon, Image, FolderOpen, Star, User2} from "lucide-react"
 
 export const sidebarItems = [
   {
@@ -11,6 +11,11 @@ export const sidebarItems = [
     {
     title: "إدارة الحسابات",
     href: "/accounts",
+    icon: User2
+  },
+    {
+    title: "إدارة حسابات المدراء",
+    href: "/admin-accounts",
     icon: Users
   },
   {

@@ -32,6 +32,7 @@ import Notifications from "@/components/notifications/Notifications"
 import SettingsComp from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
 import Review from "@/components/review/Review"
+import Admins_Accounts from "@/components/account/Admins_Accounts"
 
 const App = () => {
   return (
@@ -62,6 +63,13 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Account />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin-accounts" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Admins_Accounts />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

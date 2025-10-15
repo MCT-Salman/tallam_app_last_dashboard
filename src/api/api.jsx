@@ -1013,4 +1013,26 @@ export const addSetting = (data) =>
 export const updateAllSettings = (data) =>
     api.put('/settings/', data);
 
+
+//   لإدارة المدراء
+export const createAdmin = (data) =>
+    api.post('/admin/create-admin', data);
+
+export const getAdminsList = () =>
+    api.get('/admin/list');
+
+export const updateAdmin = (adminId, data) =>
+    api.put(`/admin/${adminId}`, data);
+
+export const deleteAdmin = (adminId) =>
+    api.delete(`/admin/${adminId}`);
+
+export const toggleAdminStatus = (adminId, isActive) =>
+    api.patch(`/admin/${adminId}/status`, { isActive });
+
+
+//   لإدارة التقييمات
+export const getReviews = (courseLevelId) =>
+    api.get(`/api/reviews/all?courseLevelId=${courseLevelId}`);
+
 export { api, BASE_URL };
