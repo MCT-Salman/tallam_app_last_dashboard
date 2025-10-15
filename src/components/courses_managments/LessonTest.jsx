@@ -10,482 +10,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2, CheckCircle, XCircle, Clock, BookOpen, File, Upload } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
 import { getLevelLessons, createLessonForLevel, updateLesson, deleteLesson, toggleLessonStatus, getInstructors } from "@/api/api"
 import { getCourses } from "@/api/api"
 import { getCourseLevels } from "@/api/api"
 import { getSpecializations } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
-// مكون إدارة الاختبارات المصغر للديالوج
-const QuizzesManager = ({ specializationId, courseId, levelId, onClose }) => {
-  const [questions, setQuestions] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [newQuestion, setNewQuestion] = useState({ 
-    text: "", 
-    options: ["", "", "", ""], 
-    correctAnswer: 0 
-  })
-
-  useEffect(() => {
-    if (levelId) {
-      setLoading(true)
-      setTimeout(() => {
-        setQuestions([
-          { 
-            id: 1, 
-            text: "ما هو مفهوم الـ API؟", 
-            order: 1,
-            options: [
-              { text: "واجهة برمجة التطبيقات", isCorrect: true },
-              { text: "لغة برمجة", isCorrect: false },
-              { text: "إطار عمل", isCorrect: false },
-              { text: "قاعدة بيانات", isCorrect: false }
-            ]
-          },
-          { 
-            id: 2, 
-            text: "ما هي فوائد استخدام React؟", 
-            order: 2,
-            options: [
-              { text: "المكونات القابلة لإعادة الاستخدام", isCorrect: true },
-              { text: "معالجة البيانات الضخمة", isCorrect: false },
-              { text: "تصميم الواجهات الرسومية", isCorrect: false },
-              { text: "إدارة الخوادم", isCorrect: false }
-            ]
-          }
-        ])
-        setLoading(false)
-      }, 1000)
-    }
-  }, [levelId])
-
-  const handleAddQuestion = () => {
-    if (!newQuestion.text.trim()) {
-      showErrorToast("يرجى إدخال نص السؤال")
-      return
-    }
-    
-    if (newQuestion.options.filter(opt => opt.trim()).length < 2) {
-      showErrorToast("يرجى إدخال خيارين على الأقل")
-      return
-    }
-    
-    const question = {
-      id: Date.now(),
-      text: newQuestion.text,
-      order: questions.length + 1,
-      options: newQuestion.options
-        .filter(opt => opt.trim())
-        .map((opt, index) => ({
-          text: opt,
-          isCorrect: index === newQuestion.correctAnswer
-        }))
-    }
-    
-    setQuestions([...questions, question])
-    setNewQuestion({ text: "", options: ["", "", "", ""], correctAnswer: 0 })
-    showSuccessToast("تم إضافة السؤال بنجاح")
-  }
-
-  const handleDeleteQuestion = (questionId) => {
-    setQuestions(questions.filter(q => q.id !== questionId))
-    showSuccessToast("تم حذف السؤال بنجاح")
-  }
-
-  const handleOptionChange = (index, value) => {
-    const newOptions = [...newQuestion.options]
-    newOptions[index] = value
-    setNewQuestion(prev => ({ ...prev, options: newOptions }))
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">إدارة أسئلة الاختبار</h3>
-        <Button variant="outline" onClick={onClose}>
-          رجوع
-        </Button>
-      </div>
-
-      {/* نموذج إضافة سؤال جديد */}
-      <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-        <h4 className="font-medium">إضافة سؤال جديد</h4>
-        
-        <div className="space-y-2">
-          <Label>نص السؤال *</Label>
-          <Textarea
-            value={newQuestion.text}
-            onChange={(e) => setNewQuestion(prev => ({ ...prev, text: e.target.value }))}
-            placeholder="أدخل نص السؤال..."
-            rows={3}
-          />
-        </div>
-
-        <div className="space-y-3">
-          <Label>خيارات الإجابة *</Label>
-          {newQuestion.options.map((option, index) => (
-            <div key={index} className="flex items-center gap-3 p-2 border rounded">
-              <input
-                type="radio"
-                name="correctAnswer"
-                checked={newQuestion.correctAnswer === index}
-                onChange={() => setNewQuestion(prev => ({ ...prev, correctAnswer: index }))}
-                className="w-4 h-4 text-blue-600"
-              />
-              <Input
-                value={option}
-                onChange={(e) => handleOptionChange(index, e.target.value)}
-                placeholder={`الخيار ${index + 1}...`}
-                className="flex-1"
-              />
-              {newQuestion.options.length > 2 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    const newOptions = newQuestion.options.filter((_, i) => i !== index)
-                    setNewQuestion(prev => ({ 
-                      ...prev, 
-                      options: newOptions,
-                      correctAnswer: prev.correctAnswer >= index ? Math.max(0, prev.correctAnswer - 1) : prev.correctAnswer
-                    }))
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
-              )}
-            </div>
-          ))}
-          
-          {newQuestion.options.length < 6 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setNewQuestion(prev => ({ 
-                ...prev, 
-                options: [...prev.options, ""] 
-              }))}
-            >
-              <Plus className="w-4 h-4 ml-1" />
-              إضافة خيار
-            </Button>
-          )}
-        </div>
-
-        <Button onClick={handleAddQuestion} className="w-full" disabled={!newQuestion.text.trim()}>
-          <Plus className="w-4 h-4 ml-1" />
-          إضافة السؤال
-        </Button>
-      </div>
-
-      {/* قائمة الأسئلة الحالية */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium">الأسئلة الحالية ({questions.length})</h4>
-          <Badge variant="secondary">المستوى: {levelId}</Badge>
-        </div>
-        
-        {loading ? (
-          <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p>جاري تحميل الأسئلة...</p>
-          </div>
-        ) : questions.length === 0 ? (
-          <div className="text-center py-8 border rounded-lg">
-            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-muted-foreground">لا توجد أسئلة لهذا المستوى</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {questions.map(question => (
-              <div key={question.id} className="border rounded-lg p-4 bg-white">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">ترتيب: {question.order}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {question.options.length} خيارات
-                      </span>
-                    </div>
-                    <p className="font-medium text-lg">{question.text}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  {question.options.map((option, index) => (
-                    <div 
-                      key={index}
-                      className={`flex items-center gap-2 p-2 rounded ${
-                        option.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
-                      }`}
-                    >
-                      {option.isCorrect ? (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-gray-400" />
-                      )}
-                      <span className={option.isCorrect ? 'font-medium text-green-800' : 'text-gray-700'}>
-                        {option.text}
-                      </span>
-                      {option.isCorrect && (
-                        <Badge variant="default" className="bg-green-600 text-xs">
-                          الإجابة الصحيحة
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// مكون إدارة الملفات المصغر للديالوج
-const FilesManager = ({ specializationId, courseId, levelId, onClose }) => {
-  const [files, setFiles] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [fileToUpload, setFileToUpload] = useState(null)
-
-  useEffect(() => {
-    if (levelId) {
-      setLoading(true)
-      setTimeout(() => {
-        setFiles([
-          { 
-            id: 1, 
-            name: "ملف الشرح.pdf", 
-            size: "2.5 MB", 
-            type: "document",
-            uploadDate: "2024-01-15"
-          },
-          { 
-            id: 2, 
-            name: "تمارين عملية.zip", 
-            size: "1.8 MB", 
-            type: "archive",
-            uploadDate: "2024-01-14"
-          },
-          { 
-            id: 3, 
-            name: "صورة الشرح.png", 
-            size: "850 KB", 
-            type: "image",
-            uploadDate: "2024-01-13"
-          }
-        ])
-        setLoading(false)
-      }, 1000)
-    }
-  }, [levelId])
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setFileToUpload(file)
-  }
-
-  const handleFileUpload = () => {
-    if (!fileToUpload) {
-      showErrorToast("يرجى اختيار ملف للرفع")
-      return
-    }
-
-    setUploading(true)
-    
-    // محاكاة رفع الملف
-    setTimeout(() => {
-      const newFile = {
-        id: Date.now(),
-        name: fileToUpload.name,
-        size: `${(fileToUpload.size / 1024 / 1024).toFixed(1)} MB`,
-        type: fileToUpload.type.includes('image') ? 'image' : 
-              fileToUpload.type.includes('pdf') ? 'document' : 
-              fileToUpload.type.includes('zip') ? 'archive' : 'file',
-        uploadDate: new Date().toISOString().split('T')[0]
-      }
-      
-      setFiles([...files, newFile])
-      setFileToUpload(null)
-      setUploading(false)
-      showSuccessToast("تم رفع الملف بنجاح")
-      
-      // إعادة تعيين حقل الرفع
-      const fileInput = document.getElementById('file-upload')
-      if (fileInput) fileInput.value = ''
-    }, 1500)
-  }
-
-  const handleDeleteFile = (fileId) => {
-    setFiles(files.filter(file => file.id !== fileId))
-    showSuccessToast("تم حذف الملف بنجاح")
-  }
-
-  const getFileIcon = (fileType) => {
-    switch (fileType) {
-      case 'document':
-        return <File className="w-5 h-5 text-red-500" />
-      case 'image':
-        return <File className="w-5 h-5 text-blue-500" />
-      case 'archive':
-        return <File className="w-5 h-5 text-yellow-500" />
-      default:
-        return <File className="w-5 h-5 text-gray-500" />
-    }
-  }
-
-  const getFileTypeText = (fileType) => {
-    switch (fileType) {
-      case 'document': return 'مستند'
-      case 'image': return 'صورة'
-      case 'archive': return 'ملف مضغوط'
-      default: return 'ملف'
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">إدارة ملفات المستوى</h3>
-        <Button variant="outline" onClick={onClose}>
-          رجوع
-        </Button>
-      </div>
-
-      {/* رفع ملف جديد */}
-      <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-        <h4 className="font-medium">رفع ملف جديد</h4>
-        
-        <div className="space-y-3">
-          <Label>اختر الملف</Label>
-          <Input
-            id="file-upload"
-            type="file"
-            onChange={handleFileSelect}
-            disabled={uploading}
-          />
-          
-          {fileToUpload && (
-            <div className="p-3 border rounded bg-white">
-              <div className="flex items-center gap-3">
-                <File className="w-8 h-8 text-blue-500" />
-                <div className="flex-1">
-                  <p className="font-medium">{fileToUpload.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {`${(fileToUpload.size / 1024 / 1024).toFixed(1)} MB`}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <Button 
-            onClick={handleFileUpload}
-            disabled={!fileToUpload || uploading}
-            className="w-full"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin ml-1" />
-                جاري الرفع...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4 ml-1" />
-                رفع الملف
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          <p>📁 الأنواع المدعومة: PDF, Word, Excel, PowerPoint, Images, ZIP, RAR</p>
-          <p>💾 الحجم الأقصى: 50 MB</p>
-        </div>
-      </div>
-
-      {/* قائمة الملفات الحالية */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium">الملفات المرفوعة ({files.length})</h4>
-          <Badge variant="secondary">المستوى: {levelId}</Badge>
-        </div>
-        
-        {loading ? (
-          <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p>جاري تحميل الملفات...</p>
-          </div>
-        ) : files.length === 0 ? (
-          <div className="text-center py-8 border rounded-lg">
-            <File className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-muted-foreground">لا توجد ملفات مرفوعة</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {files.map(file => (
-              <div key={file.id} className="border rounded-lg p-4 bg-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    {getFileIcon(file.type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium truncate">{file.name}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {getFileTypeText(file.type)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{file.size}</span>
-                        <span>تم الرفع: {file.uploadDate}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" title="تحميل الملف">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      title="حذف الملف"
-                      onClick={() => handleDeleteFile(file.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 const Lesson = () => {
-    // الحالات الأساسية
     const [lessons, setLessons] = useState([])
     const [allLessons, setAllLessons] = useState([])
     const [specializations, setSpecializations] = useState([])
@@ -506,12 +38,7 @@ const Lesson = () => {
         orderIndex: "",
         isFreePreview: false
     })
-    
-    // حالات الديالوجات
-    const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false)
-    const [isQuizDialogOpen, setIsQuizDialogOpen] = useState(false)
-    const [isFileDialogOpen, setIsFileDialogOpen] = useState(false)
-    
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editItem, setEditItem] = useState(null)
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, lesson: null })
@@ -523,142 +50,28 @@ const Lesson = () => {
         googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
     })
 
-    // البحث والترتيب
-    const [searchTerm, setSearchTerm] = useState("")
+    // Search states for selects
+    const [specializationSearch, setSpecializationSearch] = useState("")
+    const [courseSearch, setCourseSearch] = useState("")
+    const [levelSearch, setLevelSearch] = useState("")
+    const [statusFilterSearch, setStatusFilterSearch] = useState("")
+    const [freePreviewFilterSearch, setFreePreviewFilterSearch] = useState("")
+
+    // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [freePreviewFilter, setFreePreviewFilter] = useState("all")
     const [sortBy, setSortBy] = useState("orderIndex")
     const [sortOrder, setSortOrder] = useState("asc")
 
-    // دوال فتح الديالوجات
-    const openQuizDialog = () => {
-        if (!selectedLevel) {
-            showErrorToast("يرجى اختيار المستوى أولاً")
-            return
-        }
-        setIsQuizDialogOpen(true)
-    }
-
-    const openFileDialog = () => {
-        if (!selectedLevel) {
-            showErrorToast("يرجى اختيار المستوى أولاً")
-            return
-        }
-        setIsFileDialogOpen(true)
-    }
-
-    // دوال جلب البيانات
-    const fetchSpecializations = async () => {
-        try {
-            const res = await getSpecializations();
-            console.log("🔍 استجابة الاختصاصات:", res);
-            
-            let data = [];
-            if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
-            } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data;
-            } else if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            } else if (Array.isArray(res.data)) {
-                data = res.data;
-            }
-            
-            console.log("✅ بيانات الاختصاصات:", data);
-            setSpecializations(data);
-        } catch (err) {
-            console.error("Error fetching specializations:", err);
-            showErrorToast("فشل تحميل الاختصاصات");
-        }
-    };
-
-    const fetchCourses = async (specializationId) => {
-        if (!specializationId) {
-            setCourses([]);
-            setSelectedCourse("");
-            return;
-        }
-        try {
-            const res = await getCourses();
-            let allCourses = [];
-            if (Array.isArray(res.data?.data?.items)) {
-                allCourses = res.data.data.items;
-            } else if (Array.isArray(res.data?.data?.data)) {
-                allCourses = res.data.data.data;
-            } else if (Array.isArray(res.data?.data)) {
-                allCourses = res.data.data;
-            }
-            
-            const filteredCourses = allCourses.filter(course => 
-                course.specializationId === parseInt(specializationId)
-            );
-            setCourses(filteredCourses);
-        } catch (err) {
-            console.error(err);
-            showErrorToast("فشل تحميل الكورسات");
-        }
-    };
-
-    const fetchCourseLevels = async (courseId) => {
-        if (!courseId) {
-            setLevels([])
-            setSelectedLevel("")
-            return
-        }
-        try {
-            const res = await getCourseLevels(courseId)
-            console.log("📊 استجابة المستويات:", res);
-            
-            let data = [];
-            if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data;
-            } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
-            }
-            
-            console.log("✅ بيانات المستويات:", data);
-            setLevels(data || []);
-        } catch (err) {
-            console.error("Error fetching levels:", err);
-            showErrorToast("فشل تحميل مستويات الكورس");
-            setLevels([]);
-        }
-    }
-
-    const fetchLevelLessons = async (levelId) => {
-        if (!levelId) {
-            setAllLessons([])
-            return
-        }
-        setLoading(true)
-        try {
-            const res = await getLevelLessons(levelId)
-            let data = [];
-            if (Array.isArray(res.data?.data?.data?.data)) {
-                data = res.data.data.data.data;
-            } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data;
-            } else if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            }
-            setAllLessons(data || []);
-        } catch (err) {
-            console.error("❌ Error fetching lessons:", err);
-            showErrorToast("فشل تحميل الدروس");
-            setAllLessons([]);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    // دوال التحقق من الروابط
+    // دالة للتحقق من صحة رابط YouTube
     const validateYouTubeUrl = (url) => {
         if (!url) return { isValid: false, message: "يرجى إدخال رابط YouTube", exists: false };
+        
         try {
+            // التحقق من أن الرابط يحتوي على بروتوكول
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 return { 
                     isValid: false, 
@@ -666,7 +79,10 @@ const Lesson = () => {
                     exists: false
                 };
             }
+            
             const urlObj = new URL(url);
+            
+            // التحقق من أن الرابط خاص بـ YouTube
             if (!urlObj.hostname.includes('youtube.com') && !urlObj.hostname.includes('youtu.be')) {
                 return { 
                     isValid: false, 
@@ -674,6 +90,8 @@ const Lesson = () => {
                     exists: false
                 };
             }
+
+            // استخراج YouTube ID والتحقق منه
             const youtubeId = extractYouTubeId(url);
             if (!youtubeId) {
                 return { 
@@ -682,6 +100,8 @@ const Lesson = () => {
                     exists: false
                 };
             }
+
+            // التحقق من أن معرف الفيديو بطول 11 حرف (معيار YouTube)
             if (youtubeId.length !== 11) {
                 return { 
                     isValid: false, 
@@ -689,6 +109,7 @@ const Lesson = () => {
                     exists: false
                 };
             }
+            
             return { 
                 isValid: true, 
                 message: "جاري التحقق من وجود الفيديو...",
@@ -704,165 +125,450 @@ const Lesson = () => {
         }
     };
 
-    const extractYouTubeId = (url) => {
-        if (!url) return ""
-        const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
-        return match ? match[1] : ""
-    }
-
-    const handleYoutubeUrlChange = async (url) => {
-        handleFormChange("youtubeUrl", url);
-        if (!url) {
-            setLinkValidation(prev => ({
-                ...prev,
-                youtubeUrl: { isValid: false, message: "", checking: false, exists: false }
-            }));
-            return;
-        }
-        const validation = await validateUrlWithDelay(url, 'youtube');
-        setLinkValidation(prev => ({
-            ...prev,
-            youtubeUrl: { ...validation, checking: false }
-        }));
-        if (validation.isValid && validation.youtubeId) {
-            setForm(prev => ({
-                ...prev,
-                youtubeId: validation.youtubeId
-            }));
+    // دالة للتحقق من صحة رابط Google Drive
+    const validateGoogleDriveUrl = (url) => {
+        if (!url) return { isValid: true, message: "", exists: true };
+        
+        try {
+            // التحقق من أن الرابط يحتوي على بروتوكول
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يبدأ الرابط بـ http:// أو https://",
+                    exists: false
+                };
+            }
+            
+            const urlObj = new URL(url);
+            
+            // التحقق من أن الرابط خاص بـ Google Drive
+            if (!urlObj.hostname.includes('drive.google.com')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يكون الرابط من drive.google.com",
+                    exists: false
+                };
+            }
+            
+            return { 
+                isValid: true, 
+                message: "جاري التحقق من وجود الملف...",
+                exists: false
+            };
+        } catch (error) {
+            return { 
+                isValid: false, 
+                message: "صيغة الرابط غير صحيحة",
+                exists: false
+            };
         }
     };
 
+    // دالة للتحقق الفعلي من وجود الرابط
+   // استبدال دالة checkUrlExists بهذه النسخة المحسنة
+const checkUrlExists = async (url, type) => {
+    if (!url) {
+        return { 
+            isValid: false, 
+            message: "", 
+            exists: false 
+        };
+    }
+
+    try {
+        if (type === 'youtube') {
+            const youtubeId = extractYouTubeId(url);
+            if (!youtubeId) {
+                return { 
+                    isValid: false, 
+                    message: "لم يتم العثور على معرف فيديو صحيح",
+                    exists: false 
+                };
+            }
+
+            // التحقق من وجود الفيديو عبر الصورة المصغرة
+            const thumbResponse = await fetch(`https://img.youtube.com/vi/${youtubeId}/0.jpg`);
+            
+            if (thumbResponse.status === 200) {
+                return { 
+                    isValid: true, 
+                    message: "✅ الفيديو متوفر على YouTube",
+                    exists: true 
+                };
+            } else if (thumbResponse.status === 404) {
+                return { 
+                    isValid: true, 
+                    message: "⚠️ الرابط صحيح ولكن الفيديو غير متوفر أو محذوف",
+                    exists: false 
+                };
+            } else {
+                return { 
+                    isValid: true, 
+                    message: "🔶 الرابط صحيح - تعذر التحقق من وجود الفيديو",
+                    exists: true // نفترض أنه متاح
+                };
+            }
+        }
+
+       if (type === 'googleDrive') {
+            return await checkGoogleDriveUrl(url); 
+        }
+
+    } catch (error) {
+        return { 
+            isValid: true,
+            message: "🔶 تم التحقق من صيغة الرابط - تعذر التأكد من الوجود",
+            exists: true 
+        };
+    }
+};
+
+// دالة مساعدة لاستخراج File ID
+const extractGoogleDriveFileId = (url) => {
+    const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/,
+        /\/open\?id=([a-zA-Z0-9_-]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+    return null;
+};
+
+const checkGoogleDriveUrl = async (url) => {
+    try {
+        const fileId = extractGoogleDriveFileId(url);
+        if (!fileId) {
+            return { 
+                isValid: false, 
+                message: "❌ صيغة رابط Google Drive غير صحيحة",
+                exists: false 
+            };
+        }
+
+        // محاولة متعددة بطرق مختلفة
+        const checkMethods = [
+            // الطريقة 1: الصورة المصغرة
+            `https://drive.google.com/thumbnail?id=${fileId}&sz=w100`,
+            // الطريقة 2: رابط preview
+            `https://drive.google.com/file/d/${fileId}/preview`,
+            // الطريقة 3: رابط مباشر (للملفات المتاحة للعامة)
+            `https://drive.google.com/uc?id=${fileId}`
+        ];
+
+        for (const checkUrl of checkMethods) {
+            try {
+                const response = await fetch(checkUrl, { 
+                    method: 'HEAD',
+                    redirect: 'follow',
+                    timeout: 5000
+                });
+
+                console.log(`Checked ${checkUrl}:`, response.status);
+                
+                // أي استجابة غير 404 تعني أن الملف موجود
+                if (response.status !== 404) {
+                    return { 
+                        isValid: true, 
+                        message: "✅ الملف متوفر على Google Drive",
+                        exists: true 
+                    };
+                }
+            } catch (methodError) {
+                // تجربة الطريقة التالية
+                continue;
+            }
+        }
+
+        // إذا وصلنا هنا، فجميع المحاولات فشلت أو أعطت 404
+        return { 
+            isValid: true, 
+            message: "❌ الرابط صحيح ولكن الملف غير موجود أو محذوف",
+            exists: false 
+        };
+
+    } catch (error) {
+        console.error('Google Drive comprehensive check failed:', error);
+        return { 
+            isValid: true,
+            message: "🔶 رابط Google Drive صحيح - تعذر التحقق من وجود الملف",
+            exists: true 
+        };
+    }
+};
+
+    // دالة للتحقق من الروابط مع تأخير
     const validateUrlWithDelay = async (url, type) => {
-        const formatValidation = type === 'youtube' ? validateYouTubeUrl(url) : { isValid: true, message: "" };
+        // أولاً: التحقق من الصيغة
+        const formatValidation = type === 'youtube' ? validateYouTubeUrl(url) : validateGoogleDriveUrl(url);
+        
         if (!formatValidation.isValid) {
             return formatValidation;
         }
+
+        // إذا كانت الصيغة صحيحة، نبدأ التحقق من الوجود
         setLinkValidation(prev => ({
             ...prev,
             [type + 'Url']: { ...formatValidation, checking: true }
         }));
+
+        // تأخير لمحاكاة عملية التحقق
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-            ...formatValidation,
-            exists: true
-        };
+
+        try {
+            const existenceCheck = await checkUrlExists(url, type);
+            return {
+                ...existenceCheck,
+                youtubeId: formatValidation.youtubeId
+            };
+        } catch (error) {
+            return {
+                isValid: false,
+                message: "فشل التحقق من الرابط",
+                exists: false
+            };
+        }
     };
 
-    // دوال النموذج
-    const handleFormChange = (key, value) => {
-        setForm(prev => ({ ...prev, [key]: value }))
-    }
+    // جلب الاختصاصات
+    const fetchSpecializations = async () => {
+        try {
+            const res = await getSpecializations();
+            const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                Array.isArray(res.data?.data?.data) ? res.data.data.data :
+                Array.isArray(res.data?.data) ? res.data.data : [];
+            console.log("Specializations data:", data);
+            setSpecializations(data);
+        } catch (err) {
+            console.error("Error fetching specializations:", err);
+            showErrorToast("فشل تحميل الاختصاصات");
+        }
+    };
 
-    const canSave = useMemo(() => {
-        if (!form.title.trim() || !form.orderIndex || !form.youtubeUrl) {
-            return false;
-        }
-        if (!linkValidation.youtubeUrl.isValid || !linkValidation.youtubeUrl.exists) {
-            return false;
-        }
-        if (form.googleDriveUrl && (!linkValidation.googleDriveUrl.isValid || !linkValidation.googleDriveUrl.exists)) {
-            return false;
-        }
-        return true;
-    }, [form, linkValidation]);
-
-    const handleSave = async () => {
-        if (!canSave) {
-            showErrorToast("يرجى التحقق من صحة جميع البيانات والروابط");
+    // جلب الكورسات بناءً على الاختصاص المحدد
+    const fetchCourses = async (specializationId) => {
+        if (!specializationId) {
+            setCourses([]);
+            setSelectedCourse("");
             return;
         }
-        setIsSubmitting(true);
+
         try {
-            const lessonData = {
-                title: form.title,
-                description: form.description || '',
-                youtubeUrl: form.youtubeUrl,
-                youtubeId: form.youtubeId,
-                googleDriveUrl: form.googleDriveUrl || '',
-                durationSec: parseInt(form.durationSec) || 0,
-                orderIndex: parseInt(form.orderIndex),
-                isFreePreview: Boolean(form.isFreePreview)
-            }
-            if (editItem) {
-                await updateLesson(editItem.id, lessonData)
-                showSuccessToast("تم تعديل الدرس بنجاح")
-                setEditItem(null)
-            } else {
-                await createLessonForLevel(selectedLevel, lessonData)
-                showSuccessToast("تم إنشاء الدرس بنجاح")
-            }
-            setForm({
-                title: "",
-                description: "",
-                youtubeUrl: "",
-                youtubeId: "",
-                googleDriveUrl: "",
-                durationSec: "",
-                orderIndex: "",
-                isFreePreview: false
-            });
-            setLinkValidation({
-                youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
-                googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
-            });
-            setIsLessonDialogOpen(false);
-            fetchLevelLessons(selectedLevel);
+            const res = await getCourses();
+            let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+            
+            // فلترة الكورسات حسب الاختصاص المحدد
+            const filteredCourses = allCourses.filter(course => 
+                course.specializationId === parseInt(specializationId)
+            );
+            
+            console.log("Filtered courses:", filteredCourses);
+            setCourses(filteredCourses);
         } catch (err) {
-            console.error("❌ Save error:", err.response?.data || err);
-            showErrorToast(err?.response?.data?.message || "فشل العملية");
+            console.error(err);
+            showErrorToast("فشل تحميل الكورسات");
+        }
+    };
+
+    // جلب المدرسين
+    const fetchInstructors = async () => {
+        try {
+            console.log("🔄 Fetching instructors...");
+            const res = await getInstructors();
+            console.log("📊 Instructors API full response:", res);
+            
+            let data = [];
+            if (Array.isArray(res.data?.data?.data)) {
+                data = res.data.data.data;
+            } else if (Array.isArray(res.data?.data?.items)) {
+                data = res.data.data.items;
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data;
+            } else if (Array.isArray(res.data)) {
+                data = res.data;
+            }
+            
+            console.log("✅ Extracted instructors:", data);
+            setInstructors(data);
+        } catch (err) {
+            console.error("❌ Error fetching instructors:", err);
+            const fallbackInstructors = [
+                { id: 1, name: "د. أحمد محمد" },
+                { id: 2, name: "د. علي حسن" }
+            ];
+            setInstructors(fallbackInstructors);
+        }
+    };
+
+    // جلب مستويات الكورس المحدد
+    const fetchCourseLevels = async (courseId) => {
+        if (!courseId) {
+            setLevels([])
+            setSelectedLevel("")
+            return
+        }
+
+        try {
+            const res = await getCourseLevels(courseId)
+            console.log("Full levels response:", res);
+            
+            let data = [];
+            if (Array.isArray(res.data?.data)) {
+                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                    data = res.data.data[0];
+                } else {
+                    data = res.data.data;
+                }
+            } else if (Array.isArray(res.data?.data?.items)) {
+                data = res.data.data.items;
+            } else if (Array.isArray(res.data?.data?.data)) {
+                data = res.data.data.data;
+            }
+            
+            console.log("Levels data:", data);
+            setLevels(data || []);
+        } catch (err) {
+            console.error("Error fetching levels:", err);
+            showErrorToast("فشل تحميل مستويات الكورس");
+            setLevels([]);
+        }
+    }
+
+    // جلب دروس المستوى المحدد
+    const fetchLevelLessons = async (levelId) => {
+        if (!levelId) {
+            setAllLessons([])
+            return
+        }
+
+        setLoading(true)
+        try {
+            const res = await getLevelLessons(levelId)
+            console.log("📚 Lessons API full response:", res);
+            
+            let data = [];
+            
+            if (res.data?.data?.success && res.data.data.data?.data) {
+                data = res.data.data.data.data;
+                console.log("✅ Using res.data.data.data.data");
+            } else if (Array.isArray(res.data?.data?.data?.data)) {
+                data = res.data.data.data.data;
+                console.log("✅ Using res.data.data.data.data (direct)");
+            } else if (Array.isArray(res.data?.data?.data)) {
+                data = res.data.data.data;
+                console.log("✅ Using res.data.data.data");
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data;
+                console.log("✅ Using res.data.data");
+            } else if (Array.isArray(res.data)) {
+                data = res.data;
+                console.log("✅ Using res.data");
+            }
+            
+            console.log("🎯 Final lessons data:", data);
+            setAllLessons(data || []);
+        } catch (err) {
+            console.error("❌ Error fetching lessons:", err);
+            console.error("Error details:", err.response?.data);
+            showErrorToast("فشل تحميل الدروس");
+            setAllLessons([]);
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
     }
 
-    const handleToggleActive = async (id, isActive) => {
-        try {
-            await toggleLessonStatus(id, !isActive)
-            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} الدرس بنجاح`)
+    useEffect(() => {
+        fetchSpecializations()
+        fetchInstructors()
+    }, [])
+
+    // عند تغيير الاختصاص المحدد
+    useEffect(() => {
+        if (selectedSpecialization) {
+            fetchCourses(selectedSpecialization)
+            setSelectedCourse("")
+            setSelectedLevel("")
+        } else {
+            setCourses([])
+            setSelectedCourse("")
+            setSelectedLevel("")
+        }
+    }, [selectedSpecialization])
+
+    // عند تغيير الكورس المحدد
+    useEffect(() => {
+        if (selectedCourse) {
+            fetchCourseLevels(selectedCourse)
+            setSelectedLevel("")
+        } else {
+            setLevels([])
+            setSelectedLevel("")
+        }
+    }, [selectedCourse])
+
+    // عند تغيير المستوى المحدد
+    useEffect(() => {
+        if (selectedLevel) {
             fetchLevelLessons(selectedLevel)
-        } catch (err) {
-            showErrorToast(err?.response?.data?.message || "فشل تغيير الحالة")
+        } else {
+            setAllLessons([])
         }
-    }
+    }, [selectedLevel])
 
-    const handleDelete = async (id) => {
-        try {
-            await deleteLesson(id)
-            fetchLevelLessons(selectedLevel)
-            showSuccessToast("تم الحذف بنجاح")
-        } catch (err) {
-            showErrorToast(err?.response?.data?.message || "فشل الحذف")
-        }
-    }
+    // Filtered data for selects with search
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec => 
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
 
-    const formatDuration = (seconds) => {
-        if (!seconds) return "00:00"
-        const mins = Math.floor(seconds / 60)
-        const secs = seconds % 60
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-    }
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return courses;
+        return courses.filter(course => 
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [courses, courseSearch]);
 
-    // دوال التصفية والترتيب
+    const filteredLevelsForSelect = useMemo(() => {
+        if (!levelSearch) return levels;
+        return levels.filter(level => 
+            level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+        );
+    }, [levels, levelSearch]);
+
+    // فلترة وترتيب البيانات
     const filteredAndSortedLessons = useMemo(() => {
         let filtered = [...allLessons]
+
         if (searchTerm.trim()) {
             filtered = filtered.filter(item =>
                 item?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item?.description?.toLowerCase().includes(searchTerm.toLowerCase())
             )
         }
+
         if (statusFilter !== "all") {
             filtered = filtered.filter(item =>
                 statusFilter === "active" ? item?.isActive : !item?.isActive
             )
         }
+
         if (freePreviewFilter !== "all") {
             filtered = filtered.filter(item =>
                 freePreviewFilter === "free" ? item?.isFreePreview : !item?.isFreePreview
             )
         }
+
         filtered.sort((a, b) => {
             let aValue, bValue
+
             switch (sortBy) {
                 case "title":
                     aValue = a?.title?.toLowerCase() || ""
@@ -884,30 +590,241 @@ const Lesson = () => {
                     aValue = parseInt(a?.orderIndex) || 0
                     bValue = parseInt(b?.orderIndex) || 0
             }
+
             if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
             if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
             return 0
         })
+
         return filtered
     }, [allLessons, searchTerm, statusFilter, freePreviewFilter, sortBy, sortOrder])
 
+    // حساب البيانات المعروضة في الصفحة الحالية
     const paginatedLessons = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
         const endIndex = startIndex + itemsPerPage
         return filteredAndSortedLessons.slice(startIndex, endIndex)
     }, [filteredAndSortedLessons, currentPage, itemsPerPage])
 
+    // إعادة تعيين الصفحة عند تغيير الفلتر
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, statusFilter, freePreviewFilter, itemsPerPage])
+
+    // التعامل مع تغييرات النموذج
+    const handleFormChange = (key, value) => {
+        setForm(prev => ({ ...prev, [key]: value }))
+    }
+
+    // استخراج YouTube ID من الرابط
+    const extractYouTubeId = (url) => {
+        if (!url) return ""
+        const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
+        return match ? match[1] : ""
+    }
+
+    // عند تغيير رابط YouTube
+    const handleYoutubeUrlChange = async (url) => {
+        handleFormChange("youtubeUrl", url);
+        
+        // إذا كان الرابط فارغاً، نعيد تعيين الحالة
+        if (!url) {
+            setLinkValidation(prev => ({
+                ...prev,
+                youtubeUrl: { isValid: false, message: "", checking: false, exists: false }
+            }));
+            return;
+        }
+
+        // التحقق من الرابط
+        const validation = await validateUrlWithDelay(url, 'youtube');
+        
+        setLinkValidation(prev => ({
+            ...prev,
+            youtubeUrl: { ...validation, checking: false }
+        }));
+
+        // إذا كان الرابط صالحاً وبه YouTube ID، نضيفه للنموذج
+        if (validation.isValid && validation.youtubeId) {
+            setForm(prev => ({
+                ...prev,
+                youtubeId: validation.youtubeId
+            }));
+        }
+    };
+
+    // عند تغيير رابط Google Drive
+    const handleGoogleDriveUrlChange = async (url) => {
+        handleFormChange("googleDriveUrl", url);
+        
+        // إذا كان الرابط فارغاً، نعيد تعيين الحالة
+        if (!url) {
+            setLinkValidation(prev => ({
+                ...prev,
+                googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+            }));
+            return;
+        }
+
+        // التحقق من الرابط
+        const validation = await validateUrlWithDelay(url, 'googleDrive');
+        
+        setLinkValidation(prev => ({
+            ...prev,
+            googleDriveUrl: { ...validation, checking: false }
+        }));
+    };
+
+    // التحقق من إمكانية الحفظ
+    const canSave = useMemo(() => {
+        // التحقق من الحقول الإلزامية
+        if (!form.title.trim() || !form.orderIndex || !form.youtubeUrl) {
+            return false;
+        }
+
+        // التحقق من أن رابط YouTube صالح ومتوفر
+        if (!linkValidation.youtubeUrl.isValid || !linkValidation.youtubeUrl.exists) {
+            return false;
+        }
+
+        // إذا كان هناك رابط Google Drive، يجب أن يكون صالحاً ومتوفراً
+        if (form.googleDriveUrl && (!linkValidation.googleDriveUrl.isValid || !linkValidation.googleDriveUrl.exists)) {
+            return false;
+        }
+
+        return true;
+    }, [form, linkValidation]);
+
+    // حفظ الدرس (إضافة أو تعديل)
+    const handleSave = async () => {
+        if (!canSave) {
+            showErrorToast("يرجى التحقق من صحة جميع البيانات والروابط");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const lessonData = {
+                title: form.title,
+                description: form.description || '',
+                youtubeUrl: form.youtubeUrl,
+                youtubeId: form.youtubeId,
+                googleDriveUrl: form.googleDriveUrl || '',
+                durationSec: parseInt(form.durationSec) || 0,
+                orderIndex: parseInt(form.orderIndex),
+                isFreePreview: Boolean(form.isFreePreview)
+            }
+
+            console.log("📤 Sending lesson data:", lessonData);
+
+            if (editItem) {
+                await updateLesson(editItem.id, lessonData)
+                showSuccessToast("تم تعديل الدرس بنجاح")
+                setEditItem(null)
+            } else {
+                await createLessonForLevel(selectedLevel, lessonData)
+                showSuccessToast("تم إنشاء الدرس بنجاح")
+            }
+
+            // إعادة تعيين النموذج
+            setForm({
+                title: "",
+                description: "",
+                youtubeUrl: "",
+                youtubeId: "",
+                googleDriveUrl: "",
+                durationSec: "",
+                orderIndex: "",
+                isFreePreview: false
+            });
+            
+            // إعادة تعيين التحقق
+            setLinkValidation({
+                youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+                googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+            });
+            
+            setIsDialogOpen(false);
+            fetchLevelLessons(selectedLevel);
+        } catch (err) {
+            console.error("❌ Save error:", err.response?.data || err);
+            showErrorToast(err?.response?.data?.message || "فشل العملية");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    // تبديل حالة الدرس
+    const handleToggleActive = async (id, isActive) => {
+        try {
+            await toggleLessonStatus(id, !isActive)
+            showSuccessToast(`تم ${!isActive ? 'تفعيل' : 'تعطيل'} الدرس بنجاح`)
+            fetchLevelLessons(selectedLevel)
+        } catch (err) {
+            showErrorToast(err?.response?.data?.message || "فشل تغيير الحالة")
+        }
+    }
+
+    // حذف الدرس
+    const handleDelete = async (id) => {
+        try {
+            await deleteLesson(id)
+            fetchLevelLessons(selectedLevel)
+            showSuccessToast("تم الحذف بنجاح")
+        } catch (err) {
+            showErrorToast(err?.response?.data?.message || "فشل الحذف")
+        }
+    }
+
+    // تحويل الثواني إلى تنسيق وقت
+    const formatDuration = (seconds) => {
+        if (!seconds) return "00:00"
+        const mins = Math.floor(seconds / 60)
+        const secs = seconds % 60
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
+
+    // الحصول على معلومات الكورس من الدرس
+    const getCourseInfo = (lesson) => {
+        if (!lesson) return "غير محدد";
+        return lesson.courseLevel?.course?.title || 
+               lesson.course?.title || 
+               "غير محدد";
+    }
+
+    // الحصول على معلومات المدرس من الدرس
+    const getInstructorInfo = (lesson) => {
+        if (!lesson) return "غير محدد";
+        
+        const instructorId = lesson.courseLevel?.instructorId;
+        console.log("🔍 Instructor search:", {
+            lessonId: lesson.id,
+            instructorId: instructorId,
+            instructorsCount: instructors.length
+        });
+        
+        if (!instructorId) return "غير محدد";
+        
+        const instructor = instructors.find(inst => inst.id === instructorId);
+        console.log("🔍 Found instructor:", instructor);
+        
+        return instructor?.name || `المدرس ID: ${instructorId}`;
+    };
+
+    // Pagination calculations
     const totalItems = filteredAndSortedLessons.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
+    // Handle page change
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page)
         }
     }
 
+    // Handle sort
     const handleSort = (field) => {
         if (sortBy === field) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc")
@@ -917,6 +834,7 @@ const Lesson = () => {
         }
     }
 
+    // Reset filters
     const resetFilters = () => {
         setSearchTerm("")
         setStatusFilter("all")
@@ -926,23 +844,43 @@ const Lesson = () => {
         setCurrentPage(1)
     }
 
-    // دوال المساعدة
-    const getCourseInfo = (lesson) => {
-        if (!lesson) return "غير محدد";
-        return lesson.courseLevel?.course?.title || "غير محدد";
+    // Reset all selections
+    const resetAllSelections = () => {
+        setSelectedSpecialization("")
+        setSelectedCourse("")
+        setSelectedLevel("")
+        setAllLessons([])
+        setSearchTerm("")
+        setStatusFilter("all")
+        setFreePreviewFilter("all")
+        setCurrentPage(1)
     }
 
-    const getInstructorInfo = (lesson) => {
-        if (!lesson) return "غير محدد";
-        const instructorId = lesson.courseLevel?.instructorId;
-        if (!instructorId) return "غير محدد";
-        const instructor = instructors.find(inst => inst.id === instructorId);
-        return instructor?.name || `المدرس ID: ${instructorId}`;
+    // الحصول على اسم التخصص
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === specializationId);
+        return specialization ? (specialization.name || specialization.title) : "غير محدد";
     };
 
+    // الحصول على اسم الكورس
+    const getCourseName = (courseId) => {
+        const course = courses.find(crs => crs.id === courseId);
+        return course ? course.title : "غير محدد";
+    };
+
+    // الحصول على اسم المستوى
+    const getLevelName = (levelId) => {
+        const level = levels.find(lvl => lvl.id === levelId);
+        return level ? level.name : "غير محدد";
+    };
+
+    // مكون عرض حالة الرابط
     const LinkStatus = ({ validation, type }) => {
         if (!validation.message) return null;
-        let icon, color;
+
+        let icon;
+        let color;
+
         if (validation.checking) {
             icon = <Clock className="w-3 h-3 animate-spin" />;
             color = "text-blue-600";
@@ -956,6 +894,7 @@ const Lesson = () => {
             icon = <XCircle className="w-3 h-3" />;
             color = "text-red-600";
         }
+
         return (
             <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
                 {icon}
@@ -964,52 +903,153 @@ const Lesson = () => {
         );
     };
 
-    // useEffect hooks
-    useEffect(() => {
-        fetchSpecializations()
-    }, [])
+    // عرض التفاصيل الكاملة للدرس
+    const renderLessonDetails = (lesson) => {
+        if (!lesson) return null;
 
-    useEffect(() => {
-        if (selectedSpecialization) {
-            fetchCourses(selectedSpecialization)
-            setSelectedCourse("")
-            setSelectedLevel("")
-        } else {
-            setCourses([])
-            setSelectedCourse("")
-            setSelectedLevel("")
-        }
-    }, [selectedSpecialization])
+        return (
+            <div className="space-y-4 text-right">
+                {/* المعلومات الأساسية */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label className="font-bold">عنوان الدرس:</Label>
+                        <p className="mt-1">{lesson.title || "غير محدد"}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">ترتيب الدرس:</Label>
+                        <p className="mt-1">{lesson.orderIndex || "غير محدد"}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">المدة:</Label>
+                        <p className="mt-1">{formatDuration(lesson.durationSec)}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">الحالة:</Label>
+                        <div className="mt-1">
+                            <Badge variant={lesson.isActive ? "default" : "secondary"}>
+                                {lesson.isActive ? "نشط" : "معطل"}
+                            </Badge>
+                        </div>
+                    </div>
+                    <div>
+                        <Label className="font-bold">المعاينة المجانية:</Label>
+                        <div className="mt-1">
+                            <Badge variant={lesson.isFreePreview ? "default" : "secondary"}>
+                                {lesson.isFreePreview ? "مجاني" : "مدفوع"}
+                            </Badge>
+                        </div>
+                    </div>
+                    <div>
+                        <Label className="font-bold">الكورس:</Label>
+                        <p className="mt-1">{getCourseInfo(lesson)}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">المدرس:</Label>
+                        <p className="mt-1">{getInstructorInfo(lesson)}</p>
+                    </div>
+                </div>
 
-    useEffect(() => {
-        if (selectedCourse) {
-            fetchCourseLevels(selectedCourse)
-            setSelectedLevel("")
-        } else {
-            setLevels([])
-            setSelectedLevel("")
-        }
-    }, [selectedCourse])
+                {/* الروابط */}
+                <div className="grid grid-cols-1 gap-4">
+                    <div>
+                        <Label className="font-bold">رابط YouTube:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Youtube className="w-4 h-4 text-red-600" />
+                            {lesson.youtubeUrl ? (
+                                <a 
+                                    href={lesson.youtubeUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline break-all"
+                                >
+                                    {lesson.youtubeUrl}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500">غير متوفر</span>
+                            )}
+                        </div>
+                    </div>
+                    <div>
+                        <Label className="font-bold">رابط Google Drive:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Download className="w-4 h-4 text-green-600" />
+                            {lesson.googleDriveUrl ? (
+                                <a 
+                                    href={lesson.googleDriveUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline break-all"
+                                >
+                                    {lesson.googleDriveUrl}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500">غير متوفر</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
-    useEffect(() => {
-        if (selectedLevel) {
-            fetchLevelLessons(selectedLevel)
-        } else {
-            setAllLessons([])
-        }
-    }, [selectedLevel])
-
-    useEffect(() => {
-        setCurrentPage(1)
-    }, [searchTerm, statusFilter, freePreviewFilter, itemsPerPage])
+                {/* معلومات إضافية */}
+                <div className="border-t pt-4">
+                    <h3 className="font-bold mb-2">معلومات إضافية:</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <Label className="font-medium">YouTube ID:</Label>
+                            <p>{lesson.youtubeId || "غير محدد"}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">تاريخ الإنشاء:</Label>
+                            <p>{lesson.createdAt || "غير محدد"}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">آخر تحديث:</Label>
+                            <p>{lesson.updatedAt || "غير محدد"}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">معرف الدرس:</Label>
+                            <p>{lesson.id || "غير محدد"}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <CardTitle>إدارة الدروس</CardTitle>
 
-                {/* التصنيف الهرمي */}
+                {/* التصنيف الهرمي: اختصاص → كورس → مستوى */}
                 <div className="space-y-4">
+                    {/* مسار الاختيار */}
+                    {(selectedSpecialization || selectedCourse || selectedLevel) && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                                <span>المسار المختار:</span>
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                </Badge>
+                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                </Badge>
+                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                <Badge variant="outline" className="bg-white">
+                                    {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                </Badge>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={resetAllSelections}
+                                    className="mr-auto text-red-500 hover:text-red-700"
+                                >
+                                    إعادة تعيين
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* اختيار الاختصاص */}
                         <div className="space-y-2">
@@ -1019,7 +1059,16 @@ const Lesson = () => {
                                     <SelectValue placeholder="اختر الاختصاص" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {specializations.map((spec) => (
+                                    {/* Search input for specializations */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن اختصاص..."
+                                            value={specializationSearch}
+                                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredSpecializations.map((spec) => (
                                         <SelectItem key={spec.id} value={spec.id}>
                                             {spec.name || spec.title}
                                         </SelectItem>
@@ -1040,7 +1089,16 @@ const Lesson = () => {
                                     <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {courses.map((course) => (
+                                    {/* Search input for courses */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن كورس..."
+                                            value={courseSearch}
+                                            onChange={(e) => setCourseSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredCoursesForSelect.map((course) => (
                                         <SelectItem key={course.id} value={course.id}>
                                             {course.title}
                                         </SelectItem>
@@ -1061,7 +1119,16 @@ const Lesson = () => {
                                     <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {levels.map((level) => (
+                                    {/* Search input for levels */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مستوى..."
+                                            value={levelSearch}
+                                            onChange={(e) => setLevelSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredLevelsForSelect.map((level) => (
                                         <SelectItem key={level.id} value={level.id}>
                                             {level.name} (ترتيب: {level.order})
                                         </SelectItem>
@@ -1071,62 +1138,146 @@ const Lesson = () => {
                         </div>
                     </div>
 
-                    {/* أزرار الإدارة */}
-                    <div className="flex justify-end gap-2">
-                        {/* زر إضافة اختبار */}
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!selectedLevel}
-                            onClick={openQuizDialog}
-                            title="إضافة اختبار لهذا المستوى"
-                        >
-                            إضافة اختبار <BookOpen className="w-4 h-4 mr-1" />
-                        </Button>
+                    {/* زر الإضافة - تحت اختيار التخصص والكورس والمستوى */}
+                    <div className="flex justify-end">
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    disabled={!selectedLevel}
+                                    onClick={() => {
+                                        setEditItem(null)
+                                        setForm({
+                                            title: "",
+                                            description: "",
+                                            youtubeUrl: "",
+                                            youtubeId: "",
+                                            googleDriveUrl: "",
+                                            durationSec: "",
+                                            orderIndex: "",
+                                            isFreePreview: false
+                                        });
+                                        setLinkValidation({
+                                            youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+                                            googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+                                        });
+                                    }}
+                                >
+                                    إضافة درس <Plus className="w-4 h-4 cursor-pointer" />
+                                </Button>
+                            </DialogTrigger>
 
-                        {/* زر إضافة ملف */}
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!selectedLevel}
-                            onClick={openFileDialog}
-                            title="إضافة ملف لهذا المستوى"
-                        >
-                            إضافة ملف <File className="w-4 h-4 mr-1" />
-                        </Button>
+                            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-2">
+                                    <div className="space-y-2">
+                                        <Label>عنوان الدرس *</Label>
+                                        <Input
+                                            value={form.title}
+                                            onChange={(e) => handleFormChange("title", e.target.value)}
+                                            placeholder="أدخل عنوان الدرس..."
+                                        />
+                                    </div>
 
-                        {/* زر إضافة درس */}
-                        <Button
-                            size="sm"
-                            disabled={!selectedLevel}
-                            onClick={() => {
-                                setEditItem(null)
-                                setForm({
-                                    title: "",
-                                    description: "",
-                                    youtubeUrl: "",
-                                    youtubeId: "",
-                                    googleDriveUrl: "",
-                                    durationSec: "",
-                                    orderIndex: "",
-                                    isFreePreview: false
-                                });
-                                setLinkValidation({
-                                    youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
-                                    googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
-                                });
-                                setIsLessonDialogOpen(true)
-                            }}
-                        >
-                            إضافة درس <Plus className="w-4 h-4 mr-1" />
-                        </Button>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>ترتيب الدرس *</Label>
+                                            <Input
+                                                type="number"
+                                                value={form.orderIndex}
+                                                onChange={(e) => handleFormChange("orderIndex", e.target.value)}
+                                                placeholder="ترتيب الدرس"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>مدة الدرس (ثانية)</Label>
+                                            <Input
+                                                type="number"
+                                                value={form.durationSec}
+                                                onChange={(e) => handleFormChange("durationSec", e.target.value)}
+                                                placeholder="مدة الدرس بالثواني"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>رابط YouTube *</Label>
+                                        <Input
+                                            value={form.youtubeUrl}
+                                            onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            className={linkValidation.youtubeUrl.isValid && linkValidation.youtubeUrl.exists ? "border-green-500" : 
+                                                     linkValidation.youtubeUrl.isValid && !linkValidation.youtubeUrl.exists ? "border-yellow-500" : 
+                                                     !linkValidation.youtubeUrl.isValid && form.youtubeUrl ? "border-red-500" : ""}
+                                        />
+                                        <LinkStatus validation={linkValidation.youtubeUrl} type="youtube" />
+                                        {!form.youtubeUrl && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                أدخل رابط فيديو YouTube (يجب أن يبدأ بـ http:// أو https://)
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>رابط Google Drive</Label>
+                                        <Input
+                                            value={form.googleDriveUrl}
+                                            onChange={(e) => handleGoogleDriveUrlChange(e.target.value)}
+                                            placeholder="https://drive.google.com/..."
+                                            className={linkValidation.googleDriveUrl.isValid && linkValidation.googleDriveUrl.exists ? "border-green-500" : 
+                                                     linkValidation.googleDriveUrl.isValid && !linkValidation.googleDriveUrl.exists ? "border-yellow-500" : 
+                                                     !linkValidation.googleDriveUrl.isValid && form.googleDriveUrl ? "border-red-500" : ""}
+                                        />
+                                        <LinkStatus validation={linkValidation.googleDriveUrl} type="googleDrive" />
+                                        {!form.googleDriveUrl && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                أدخل رابط Google Drive (يجب أن يبدأ بـ http:// أو https://)
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 space-x-reverse">
+                                        <Switch
+                                            checked={form.isFreePreview}
+                                            onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
+                                        />
+                                        <Label>معاينة مجانية</Label>
+                                    </div>
+
+                                    <Button 
+                                        onClick={handleSave}
+                                        disabled={!canSave || isSubmitting}
+                                        className="w-full"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                                                {editItem ? "جارٍ التعديل..." : "جارٍ الإضافة..."}
+                                            </>
+                                        ) : (
+                                            editItem ? "حفظ التعديل" : "حفظ"
+                                        )}
+                                    </Button>
+
+                                    {!canSave && (
+                                        <div className="text-xs text-yellow-600 text-center">
+                                            ⚠️ يرجى التحقق من صحة جميع البيانات والروابط قبل الحفظ
+                                        </div>
+                                    )}
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 
-                {/* Filters Section */}
+                {/* Filters Section - Only show when a level is selected */}
                 {selectedLevel && (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Search */}
                             <div className="relative">
                                 <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -1137,28 +1288,49 @@ const Lesson = () => {
                                 />
                             </div>
 
+                            {/* Status Filter */}
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="فلترة بالحالة" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for status filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في الحالات..."
+                                            value={statusFilterSearch}
+                                            onChange={(e) => setStatusFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع الحالات</SelectItem>
                                     <SelectItem value="active">نشط</SelectItem>
                                     <SelectItem value="inactive">معطل</SelectItem>
                                 </SelectContent>
                             </Select>
 
+                            {/* Free Preview Filter */}
                             <Select value={freePreviewFilter} onValueChange={setFreePreviewFilter}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="فلترة بالمعاينة" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* Search input for free preview filter */}
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث في أنواع المعاينة..."
+                                            value={freePreviewFilterSearch}
+                                            onChange={(e) => setFreePreviewFilterSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
                                     <SelectItem value="all">جميع الدروس</SelectItem>
                                     <SelectItem value="free">معاينة مجانية</SelectItem>
                                     <SelectItem value="paid">بدون معاينة</SelectItem>
                                 </SelectContent>
                             </Select>
 
+                            {/* Items Per Page */}
                             <Select 
                                 value={itemsPerPage.toString()} 
                                 onValueChange={(value) => setItemsPerPage(Number(value))}
@@ -1175,6 +1347,7 @@ const Lesson = () => {
                             </Select>
                         </div>
 
+                        {/* Reset Filters & Results Count */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div className="text-sm text-muted-foreground">
                                 عرض {filteredAndSortedLessons.length} من أصل {allLessons.length} درس
@@ -1204,7 +1377,7 @@ const Lesson = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Table View */}
+                        {/* Table View - for medium screens and up */}
                         <div className="hidden md:block">
                             <Table className="direction-rtl">
                                 <TableHeader>
@@ -1328,7 +1501,7 @@ const Lesson = () => {
                                                             orderIndex: item.orderIndex || "",
                                                             isFreePreview: Boolean(item.isFreePreview)
                                                         })
-                                                        setIsLessonDialogOpen(true)
+                                                        setIsDialogOpen(true)
                                                     }}
                                                     title="تعديل"
                                                 >
@@ -1355,7 +1528,7 @@ const Lesson = () => {
                             </Table>
                         </div>
 
-                        {/* Card View */}
+                        {/* Card View - for mobile screens */}
                         <div className="md:hidden space-y-4">
                             {paginatedLessons.length > 0 ? paginatedLessons.map(item => (
                                 <Card key={item.id} className="p-4">
@@ -1436,7 +1609,7 @@ const Lesson = () => {
                                                             orderIndex: item.orderIndex || "",
                                                             isFreePreview: Boolean(item.isFreePreview)
                                                         })
-                                                        setIsLessonDialogOpen(true)
+                                                        setIsDialogOpen(true)
                                                     }}
                                                 >
                                                     <Edit className="w-4 h-4" />
@@ -1512,139 +1685,6 @@ const Lesson = () => {
                     </>
                 )}
 
-                {/* ديالوج إضافة وتعديل الدرس */}
-                <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
-                    <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 mt-2">
-                            <div className="space-y-2">
-                                <Label>عنوان الدرس *</Label>
-                                <Input
-                                    value={form.title}
-                                    onChange={(e) => handleFormChange("title", e.target.value)}
-                                    placeholder="أدخل عنوان الدرس..."
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>وصف الدرس</Label>
-                                <Textarea
-                                    value={form.description}
-                                    onChange={(e) => handleFormChange("description", e.target.value)}
-                                    placeholder="أدخل وصف الدرس (اختياري)..."
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>ترتيب الدرس *</Label>
-                                    <Input
-                                        type="number"
-                                        value={form.orderIndex}
-                                        onChange={(e) => handleFormChange("orderIndex", e.target.value)}
-                                        placeholder="ترتيب الدرس"
-                                        min="1"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>مدة الدرس (ثانية)</Label>
-                                    <Input
-                                        type="number"
-                                        value={form.durationSec}
-                                        onChange={(e) => handleFormChange("durationSec", e.target.value)}
-                                        placeholder="مدة الدرس بالثواني"
-                                        min="0"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>رابط YouTube *</Label>
-                                <Input
-                                    value={form.youtubeUrl}
-                                    onChange={(e) => handleYoutubeUrlChange(e.target.value)}
-                                    placeholder="https://www.youtube.com/watch?v=..."
-                                    className={linkValidation.youtubeUrl.isValid && linkValidation.youtubeUrl.exists ? "border-green-500" : 
-                                             linkValidation.youtubeUrl.isValid && !linkValidation.youtubeUrl.exists ? "border-yellow-500" : 
-                                             !linkValidation.youtubeUrl.isValid && form.youtubeUrl ? "border-red-500" : ""}
-                                />
-                                <LinkStatus validation={linkValidation.youtubeUrl} type="youtube" />
-                                {!form.youtubeUrl && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                        أدخل رابط فيديو YouTube (يجب أن يبدأ بـ http:// أو https://)
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>رابط Google Drive</Label>
-                                <Input
-                                    value={form.googleDriveUrl}
-                                    onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
-                                    placeholder="https://drive.google.com/..."
-                                />
-                            </div>
-
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                                <Switch
-                                    checked={form.isFreePreview}
-                                    onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
-                                />
-                                <Label>معاينة مجانية</Label>
-                            </div>
-
-                            <Button 
-                                onClick={handleSave}
-                                disabled={!canSave || isSubmitting}
-                                className="w-full"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                                        {editItem ? "جارٍ التعديل..." : "جارٍ الإضافة..."}
-                                    </>
-                                ) : (
-                                    editItem ? "حفظ التعديل" : "حفظ"
-                                )}
-                            </Button>
-
-                            {!canSave && (
-                                <div className="text-xs text-yellow-600 text-center">
-                                    ⚠️ يرجى التحقق من صحة جميع البيانات والروابط قبل الحفظ
-                                </div>
-                            )}
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-                {/* ديالوج إدارة الاختبارات */}
-                <Dialog open={isQuizDialogOpen} onOpenChange={setIsQuizDialogOpen}>
-                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <QuizzesManager 
-                            specializationId={selectedSpecialization}
-                            courseId={selectedCourse}
-                            levelId={selectedLevel}
-                            onClose={() => setIsQuizDialogOpen(false)}
-                        />
-                    </DialogContent>
-                </Dialog>
-
-                {/* ديالوج إدارة الملفات */}
-                <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
-                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <FilesManager 
-                            specializationId={selectedSpecialization}
-                            courseId={selectedCourse}
-                            levelId={selectedLevel}
-                            onClose={() => setIsFileDialogOpen(false)}
-                        />
-                    </DialogContent>
-                </Dialog>
-
                 {/* Delete Confirmation Dialog */}
                 <AlertDialog open={deleteDialog.isOpen} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, isOpen: open })}>
                     <AlertDialogContent>
@@ -1672,48 +1712,7 @@ const Lesson = () => {
                         <DialogHeader>
                             <DialogTitle>تفاصيل الدرس</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4 text-right">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="font-bold">عنوان الدرس:</Label>
-                                    <p className="mt-1">{detailDialog.lesson?.title || "غير محدد"}</p>
-                                </div>
-                                <div>
-                                    <Label className="font-bold">ترتيب الدرس:</Label>
-                                    <p className="mt-1">{detailDialog.lesson?.orderIndex || "غير محدد"}</p>
-                                </div>
-                                <div>
-                                    <Label className="font-bold">المدة:</Label>
-                                    <p className="mt-1">{formatDuration(detailDialog.lesson?.durationSec)}</p>
-                                </div>
-                                <div>
-                                    <Label className="font-bold">الحالة:</Label>
-                                    <div className="mt-1">
-                                        <Badge variant={detailDialog.lesson?.isActive ? "default" : "secondary"}>
-                                            {detailDialog.lesson?.isActive ? "نشط" : "معطل"}
-                                        </Badge>
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="font-bold">المعاينة المجانية:</Label>
-                                    <div className="mt-1">
-                                        <Badge variant={detailDialog.lesson?.isFreePreview ? "default" : "secondary"}>
-                                            {detailDialog.lesson?.isFreePreview ? "مجاني" : "مدفوع"}
-                                        </Badge>
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="font-bold">معرف YouTube:</Label>
-                                    <p className="mt-1">{detailDialog.lesson?.youtubeId || "غير محدد"}</p>
-                                </div>
-                            </div>
-                            {detailDialog.lesson?.description && (
-                                <div>
-                                    <Label className="font-bold">الوصف:</Label>
-                                    <p className="mt-1 p-3 bg-gray-50 rounded-lg">{detailDialog.lesson.description}</p>
-                                </div>
-                            )}
-                        </div>
+                        {renderLessonDetails(detailDialog.lesson)}
                     </DialogContent>
                 </Dialog>
             </CardContent>
