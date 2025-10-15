@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Download, File, FileText, Image, Archive, Video, Music, FileQuestion } from "lucide-react"
-import { getFiles, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFilesPost, getSpecializations } from "@/api/api"
+import { getFilesByLevel, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFileDetails, getSpecializations } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
 
@@ -89,116 +89,123 @@ const Files = () => {
         }
     };
 
-    // جلب مستويات الكورس المحدد
-    const fetchCourseLevels = async (courseId) => {
-        if (!courseId) {
-            setLevels([])
-            setSelectedLevel("")
-            return
-        }
-
-        try {
-            const res = await getCourseLevels(courseId)
-            console.log("Full levels response:", res);
-            
-            let data = [];
-            if (Array.isArray(res.data?.data)) {
-                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-                    data = res.data.data[0];
-                } else {
-                    data = res.data.data;
-                }
-            } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
-            } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data;
-            }
-            
-            console.log("Levels data:", data);
-            setLevels(data || []);
-        } catch (err) {
-            console.error("Error fetching levels:", err);
-            showErrorToast("فشل تحميل مستويات الكورس");
-            setLevels([]);
-        }
+  // جلب مستويات الكورس المحدد
+const fetchCourseLevels = async (courseId) => {
+    if (!courseId) {
+        setLevels([])
+        setSelectedLevel("")
+        return
     }
 
-    // جلب الملفات
-    const fetchFiles = async () => {
-        if (!selectedLevel) {
-            setAllFiles([])
-            setTotalFiles(0)
-            return
+    try {
+        const res = await getCourseLevels(courseId)
+        console.log("Full levels response:", res);
+        
+        let data = [];
+        if (Array.isArray(res.data?.data)) {
+            if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                data = res.data.data[0];
+            } else {
+                data = res.data.data;
+            }
+        } else if (Array.isArray(res.data?.data?.items)) {
+            data = res.data.data.items;
+        } else if (Array.isArray(res.data?.data?.data)) {
+            data = res.data.data.data;
+        }
+        
+        // ✅ تأكد من أن كل مستوى يحتوي على courseId
+        const levelsWithCourseId = data.map(level => ({
+            ...level,
+            courseId: level.courseId || parseInt(courseId) // استخدم courseId من المستوى أو من المعلمة
+        }));
+        
+        console.log("Levels data with courseId:", levelsWithCourseId);
+        setLevels(levelsWithCourseId || []);
+    } catch (err) {
+        console.error("Error fetching levels:", err);
+        showErrorToast("فشل تحميل مستويات الكورس");
+        setLevels([]);
+    }
+}
+
+ // جلب الملفات حسب المستوى - التعديل الرئيسي هنا
+const fetchFiles = async () => {
+    if (!selectedLevel) {
+        setAllFiles([])
+        setTotalFiles(0)
+        return
+    }
+
+    setLoading(true)
+    try {
+        const params = {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchTerm || undefined
         }
 
-        setLoading(true)
+        // تنظيف البيانات - إزالة القيم undefined
+        Object.keys(params).forEach(key => {
+            if (params[key] === undefined) {
+                delete params[key]
+            }
+        })
+
+        console.log("📤 Fetching files for level:", selectedLevel, "with params:", params)
+
+        const res = await getFilesByLevel(selectedLevel, params);
+        console.log("📊 Files API response:", res)
+        
+        let data = []
+        let total = 0
+        let paginationData = {}
+        
+        if (res.data?.success) {
+            // الهيكل الجديد بناءً على التوثيق
+            if (Array.isArray(res.data.data)) {
+                data = res.data.data
+                total = res.data.data.length
+                paginationData = res.data.pagination || {}
+            } else {
+                data = []
+                total = 0
+            }
+        }
+        
+        // ✅ تأكد من أن الملفات تعود للمستوى المحدد فقط
+        const filteredFiles = data.filter(file => 
+            file.courseLevelId === parseInt(selectedLevel)
+        );
+        
+        console.log("✅ Filtered files for level:", selectedLevel, filteredFiles);
+        
+        setAllFiles(filteredFiles)
+        setTotalFiles(filteredFiles.length)
+        setPagination(paginationData)
+    } catch (err) {
+        console.error("❌ Error fetching files:", err)
+        console.error("❌ Error response:", err.response?.data)
+        const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
+        showErrorToast(errorMessage)
+        setAllFiles([])
+        setTotalFiles(0)
+    } finally {
+        setLoading(false)
+    }
+}
+
+    // جلب تفاصيل ملف معين
+    const fetchFileDetails = async (fileId) => {
         try {
-            const requestBody = {
-                courseLevelId: Number(selectedLevel),
-                page: currentPage,
-                limit: itemsPerPage,
-                search: searchTerm || undefined
-            }
-
-            // تنظيف البيانات - إزالة القيم undefined
-            Object.keys(requestBody).forEach(key => {
-                if (requestBody[key] === undefined) {
-                    delete requestBody[key]
-                }
-            })
-
-            console.log("📤 Fetching files with body:", requestBody)
-
-            let res;
-            
-            try {
-                res = await getFilesPost(requestBody);
-                console.log("✅ POST request successful:", res);
-            } catch (postError) {
-                console.log("❌ POST failed, trying GET without courseLevelId...");
-                const params = {
-                    page: currentPage,
-                    limit: itemsPerPage,
-                    q: searchTerm || undefined
-                }
-                res = await getFiles(params);
-            }
-
-            console.log("📊 Files API response:", res)
-            
-            let data = []
-            let total = 0
-            let paginationData = {}
-            
+            const res = await getFileDetails(fileId)
             if (res.data?.success) {
-                if (Array.isArray(res.data.data)) {
-                    data = res.data.data
-                    total = res.data.data.length
-                } else if (res.data.data?.data && Array.isArray(res.data.data.data)) {
-                    data = res.data.data.data
-                    total = res.data.data.pagination?.total || data.length
-                    paginationData = res.data.data.pagination || {}
-                } else if (Array.isArray(res.data.data)) {
-                    data = res.data.data
-                    total = data.length
-                }
-            } else if (Array.isArray(res.data)) {
-                data = res.data
-                total = data.length
+                return res.data.data
             }
-            
-            setAllFiles(data || [])
-            setTotalFiles(total || 0)
-            setPagination(paginationData)
+            return null
         } catch (err) {
-            console.error("❌ Error fetching files:", err)
-            console.error("❌ Error response:", err.response?.data)
-            const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
-            showErrorToast(errorMessage)
-            setAllFiles([])
-            setTotalFiles(0)
-        } finally {
-            setLoading(false)
+            console.error("Error fetching file details:", err)
+            return null
         }
     }
 
@@ -235,11 +242,11 @@ const Files = () => {
             setAllFiles([])
             setTotalFiles(0)
         }
-    }, [selectedLevel, currentPage, itemsPerPage])
+    }, [selectedLevel, currentPage, itemsPerPage, searchTerm])
 
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, typeFilter, itemsPerPage])
+    }, [searchTerm, typeFilter, itemsPerPage, selectedLevel])
 
     // التعامل مع اختيار الملف للرفع
     const handleFileSelect = (e) => {
@@ -249,38 +256,45 @@ const Files = () => {
         }
     }
 
-    // رفع الملف
-    const handleUpload = async () => {
-        if (!fileToUpload) return showErrorToast("يرجى اختيار ملف للرفع")
-        if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
+   // رفع الملف
+const handleUpload = async () => {
+    if (!fileToUpload) return showErrorToast("يرجى اختيار ملف للرفع")
+    if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
 
-        setUploading(true)
-        try {
-            const formData = new FormData()
-            formData.append('file', fileToUpload)
-            formData.append('courseLevelId', selectedLevel)
+    setUploading(true)
+    try {
+        const formData = new FormData()
+        formData.append('file', fileToUpload)
+        formData.append('courseLevelId', selectedLevel)
 
-            console.log("📤 Uploading file:", fileToUpload.name)
+        // ✅ التأكد من البيانات المرسلة
+        console.log("📤 Uploading file data:", {
+            fileName: fileToUpload.name,
+            fileSize: fileToUpload.size,
+            fileType: fileToUpload.type,
+            courseLevelId: selectedLevel,
+            formData: formData
+        })
 
-            const res = await uploadFile(formData)
-            console.log("📊 Upload response:", res)
+        const res = await uploadFile(formData)
+        console.log("📊 Upload response:", res)
 
-            if (res.data?.success) {
-                showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
-                setFileToUpload(null)
-                setIsDialogOpen(false)
-                fetchFiles()
-            } else {
-                throw new Error(res.data?.message || "فشل رفع الملف")
-            }
-        } catch (err) {
-            console.error("❌ Upload error:", err.response?.data || err)
-            const errorMessage = err.response?.data?.message || "فشل رفع الملف"
-            showErrorToast(errorMessage)
-        } finally {
-            setUploading(false)
+        if (res.data?.success) {
+            showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
+            setFileToUpload(null)
+            setIsDialogOpen(false)
+            fetchFiles()
+        } else {
+            throw new Error(res.data?.message || "فشل رفع الملف")
         }
+    } catch (err) {
+        console.error("❌ Upload error:", err.response?.data || err)
+        const errorMessage = err.response?.data?.message || "فشل رفع الملف"
+        showErrorToast(errorMessage)
+    } finally {
+        setUploading(false)
     }
+}
 
     // تعديل الملف
     const handleUpdateFile = async (fileId, updatedData) => {
@@ -393,78 +407,109 @@ const Files = () => {
         return level ? level.name : "غير محدد"
     }
 
-    // عرض التفاصيل الكاملة للملف - الدالة المفقودة
-    const renderFileDetails = (file) => {
-        if (!file) return null
+   // عرض التفاصيل الكاملة للملف
+const renderFileDetails = (file) => {
+    if (!file) return null
 
-        return (
-            <div className="space-y-6 text-right">
-                {/* المعلومات الأساسية */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="font-bold">اسم الملف:</Label>
-                        <p className="mt-1 text-lg">{file.name}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">نوع الملف:</Label>
-                        <p className="mt-1">
-                            <Badge variant="outline">
-                                {getFileTypeText(file.type)}
-                            </Badge>
-                        </p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">حجم الملف:</Label>
-                        <p className="mt-1">{formatFileSize(file.size)}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">تاريخ الرفع:</Label>
-                        <p className="mt-1">{formatDate(file.createdAt)}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الكورس:</Label>
-                        <p className="mt-1">{getCourseName(file.courseLevel?.courseId)}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">المستوى:</Label>
-                        <p className="mt-1">{getLevelName(file.courseLevelId)}</p>
-                    </div>
+    // الحصول على معلومات الكورس والمستوى
+    const currentLevel = levels.find(level => level.id === parseInt(file.courseLevelId));
+    const currentCourse = currentLevel ? courses.find(course => course.id === currentLevel.courseId) : null;
+
+    return (
+        <div className="space-y-6 text-right">
+            {/* المعلومات الأساسية */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label className="font-bold">اسم الملف:</Label>
+                    <p className="mt-1 text-lg">{file.name}</p>
                 </div>
-
-                {/* رابط التحميل */}
-                <div className="border-t pt-4">
-                    <Label className="font-bold">رابط التحميل:</Label>
-                    <div className="mt-2">
-                        <a 
-                            href={getFileUrl(file.url)} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline break-all"
-                        >
-                            {getFileUrl(file.url)}
-                        </a>
-                    </div>
+                <div>
+                    <Label className="font-bold">نوع الملف:</Label>
+                    <p className="mt-1">
+                        <Badge variant="outline">
+                            {getFileTypeText(file.type)}
+                        </Badge>
+                    </p>
                 </div>
+                <div>
+                    <Label className="font-bold">حجم الملف:</Label>
+                    <p className="mt-1">{formatFileSize(file.size)}</p>
+                </div>
+                <div>
+                    <Label className="font-bold">تاريخ الرفع:</Label>
+                    <p className="mt-1">{formatDate(file.createdAt)}</p>
+                </div>
+                <div>
+                    <Label className="font-bold">الكورس:</Label>
+                    <p className="mt-1">
+                        {currentCourse ? currentCourse.title : "غير محدد"}
+                        {currentCourse && (
+                            <span className="text-sm text-muted-foreground block">
+                                (ID: {currentCourse.id})
+                            </span>
+                        )}
+                    </p>
+                </div>
+                <div>
+                    <Label className="font-bold">المستوى:</Label>
+                    <p className="mt-1">
+                        {currentLevel ? currentLevel.name : "غير محدد"}
+                        {currentLevel && (
+                            <span className="text-sm text-muted-foreground block">
+                                (ترتيب: {currentLevel.order}, ID: {currentLevel.id})
+                            </span>
+                        )}
+                    </p>
+                </div>
+            </div>
 
-                {/* معلومات إضافية */}
-                <div className="border-t pt-4">
-                    <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label className="font-medium">معرف الملف:</Label>
-                            <p>{file.id || "غير محدد"}</p>
-                        </div>
-                        <div>
-                            <Label className="font-medium">المفتاح:</Label>
-                            <p className="font-mono text-sm">{file.key}</p>
-                        </div>
+            {/* معلومات إضافية */}
+            <div className="border-t pt-4">
+                <h3 className="font-bold mb-2">معلومات إضافية:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <Label className="font-medium">معرف الملف:</Label>
+                        <p>{file.id || "غير محدد"}</p>
+                    </div>
+                    <div>
+                        <Label className="font-medium">معرف المستوى:</Label>
+                        <p>{file.courseLevelId || "غير محدد"}</p>
+                    </div>
+                    <div>
+                        <Label className="font-medium">المفتاح:</Label>
+                        <p className="font-mono text-sm break-all">{file.key}</p>
                     </div>
                 </div>
             </div>
-        )
-    }
 
-    // مكون بطاقة الملف للعرض على الجوال - الدالة المفقودة
+            {/* رابط التحميل */}
+            <div className="border-t pt-4">
+                <Label className="font-bold">رابط التحميل:</Label>
+                <div className="mt-2">
+                    <a 
+                        href={getFileUrl(file.url)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                    >
+                        {getFileUrl(file.url)}
+                    </a>
+                </div>
+                <div className="mt-2">
+                    <Button
+                        size="sm"
+                        onClick={() => window.open(getFileUrl(file.url), '_blank')}
+                    >
+                        <Download className="w-4 h-4 ml-1" />
+                        تحميل الملف
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+    // مكون بطاقة الملف للعرض على الجوال
     const FileCard = ({ file }) => (
         <Card className="mb-4">
             <CardContent className="p-4">

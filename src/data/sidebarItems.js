@@ -89,11 +89,11 @@ export const sidebarItems = [
   //   href: "/settings",
   //   icon: Settings
   // },
-  {
-    title: "الملف الشخصي",
-    href: "/profile",
-    icon: User
-  },
+  // {
+  //   title: "الملف الشخصي",
+  //   href: "/profile",
+  //   icon: User
+  // },
   {
     title: "الإعدادات",
     href: "/settings",

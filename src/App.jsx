@@ -28,7 +28,7 @@ import Financial from "@/components/financial/Financial"
 import Stories from "@/components/stories/Stories"
 import Notifications from "@/components/notifications/Notifications"
 // import Suggestions from "@/components/suggestions/Suggestions"
-import Profile from "@/components/profile/Profile"
+// import Profile from "@/components/profile/Profile"
 import Settings from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
 import Review from "./components/review/Review"
@@ -149,13 +149,13 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } /> */}
-              <Route path="/profile" element={
+              {/* <Route path="/profile" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Profile />
                   </DashboardLayout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <DashboardLayout>

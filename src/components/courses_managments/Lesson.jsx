@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2 } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
 import { getLevelLessons, createLessonForLevel, updateLesson, deleteLesson, toggleLessonStatus, getInstructors } from "@/api/api"
 import { getCourses } from "@/api/api"
 import { getCourseLevels } from "@/api/api"
@@ -44,6 +44,12 @@ const Lesson = () => {
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, lesson: null })
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    // حالات التحقق من الروابط
+    const [linkValidation, setLinkValidation] = useState({
+        youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+        googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
+    })
+
     // Search states for selects
     const [specializationSearch, setSpecializationSearch] = useState("")
     const [courseSearch, setCourseSearch] = useState("")
@@ -59,6 +65,274 @@ const Lesson = () => {
     const [freePreviewFilter, setFreePreviewFilter] = useState("all")
     const [sortBy, setSortBy] = useState("orderIndex")
     const [sortOrder, setSortOrder] = useState("asc")
+
+    // دالة للتحقق من صحة رابط YouTube
+    const validateYouTubeUrl = (url) => {
+        if (!url) return { isValid: false, message: "يرجى إدخال رابط YouTube", exists: false };
+        
+        try {
+            // التحقق من أن الرابط يحتوي على بروتوكول
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يبدأ الرابط بـ http:// أو https://",
+                    exists: false
+                };
+            }
+            
+            const urlObj = new URL(url);
+            
+            // التحقق من أن الرابط خاص بـ YouTube
+            if (!urlObj.hostname.includes('youtube.com') && !urlObj.hostname.includes('youtu.be')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يكون الرابط من youtube.com أو youtu.be",
+                    exists: false
+                };
+            }
+
+            // استخراج YouTube ID والتحقق منه
+            const youtubeId = extractYouTubeId(url);
+            if (!youtubeId) {
+                return { 
+                    isValid: false, 
+                    message: "لم يتم العثور على معرف فيديو YouTube صحيح",
+                    exists: false
+                };
+            }
+
+            // التحقق من أن معرف الفيديو بطول 11 حرف (معيار YouTube)
+            if (youtubeId.length !== 11) {
+                return { 
+                    isValid: false, 
+                    message: "معرف فيديو YouTube يجب أن يكون 11 حرفاً",
+                    exists: false
+                };
+            }
+            
+            return { 
+                isValid: true, 
+                message: "جاري التحقق من وجود الفيديو...",
+                exists: false,
+                youtubeId: youtubeId
+            };
+        } catch (error) {
+            return { 
+                isValid: false, 
+                message: "صيغة الرابط غير صحيحة",
+                exists: false
+            };
+        }
+    };
+
+    // دالة للتحقق من صحة رابط Google Drive
+    const validateGoogleDriveUrl = (url) => {
+        if (!url) return { isValid: true, message: "", exists: true };
+        
+        try {
+            // التحقق من أن الرابط يحتوي على بروتوكول
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يبدأ الرابط بـ http:// أو https://",
+                    exists: false
+                };
+            }
+            
+            const urlObj = new URL(url);
+            
+            // التحقق من أن الرابط خاص بـ Google Drive
+            if (!urlObj.hostname.includes('drive.google.com')) {
+                return { 
+                    isValid: false, 
+                    message: "يجب أن يكون الرابط من drive.google.com",
+                    exists: false
+                };
+            }
+            
+            return { 
+                isValid: true, 
+                message: "جاري التحقق من وجود الملف...",
+                exists: false
+            };
+        } catch (error) {
+            return { 
+                isValid: false, 
+                message: "صيغة الرابط غير صحيحة",
+                exists: false
+            };
+        }
+    };
+
+    // دالة للتحقق الفعلي من وجود الرابط
+   // استبدال دالة checkUrlExists بهذه النسخة المحسنة
+const checkUrlExists = async (url, type) => {
+    if (!url) {
+        return { 
+            isValid: false, 
+            message: "", 
+            exists: false 
+        };
+    }
+
+    try {
+        if (type === 'youtube') {
+            const youtubeId = extractYouTubeId(url);
+            if (!youtubeId) {
+                return { 
+                    isValid: false, 
+                    message: "لم يتم العثور على معرف فيديو صحيح",
+                    exists: false 
+                };
+            }
+
+            // التحقق من وجود الفيديو عبر الصورة المصغرة
+            const thumbResponse = await fetch(`https://img.youtube.com/vi/${youtubeId}/0.jpg`);
+            
+            if (thumbResponse.status === 200) {
+                return { 
+                    isValid: true, 
+                    message: "✅ الفيديو متوفر على YouTube",
+                    exists: true 
+                };
+            } else if (thumbResponse.status === 404) {
+                return { 
+                    isValid: true, 
+                    message: "⚠️ الرابط صحيح ولكن الفيديو غير متوفر أو محذوف",
+                    exists: false 
+                };
+            } else {
+                return { 
+                    isValid: true, 
+                    message: "🔶 الرابط صحيح - تعذر التحقق من وجود الفيديو",
+                    exists: true // نفترض أنه متاح
+                };
+            }
+        }
+
+       if (type === 'googleDrive') {
+            return await checkGoogleDriveUrl(url); 
+        }
+
+    } catch (error) {
+        return { 
+            isValid: true,
+            message: "🔶 تم التحقق من صيغة الرابط - تعذر التأكد من الوجود",
+            exists: true 
+        };
+    }
+};
+
+// دالة مساعدة لاستخراج File ID
+const extractGoogleDriveFileId = (url) => {
+    const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/,
+        /\/open\?id=([a-zA-Z0-9_-]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+    return null;
+};
+
+const checkGoogleDriveUrl = async (url) => {
+    try {
+        const fileId = extractGoogleDriveFileId(url);
+        if (!fileId) {
+            return { 
+                isValid: false, 
+                message: "❌ صيغة رابط Google Drive غير صحيحة",
+                exists: false 
+            };
+        }
+
+        // محاولة متعددة بطرق مختلفة
+        const checkMethods = [
+            // الطريقة 1: الصورة المصغرة
+            `https://drive.google.com/thumbnail?id=${fileId}&sz=w100`,
+            // الطريقة 2: رابط preview
+            `https://drive.google.com/file/d/${fileId}/preview`,
+            // الطريقة 3: رابط مباشر (للملفات المتاحة للعامة)
+            `https://drive.google.com/uc?id=${fileId}`
+        ];
+
+        for (const checkUrl of checkMethods) {
+            try {
+                const response = await fetch(checkUrl, { 
+                    method: 'HEAD',
+                    redirect: 'follow',
+                    timeout: 5000
+                });
+
+                console.log(`Checked ${checkUrl}:`, response.status);
+                
+                // أي استجابة غير 404 تعني أن الملف موجود
+                if (response.status !== 404) {
+                    return { 
+                        isValid: true, 
+                        message: "✅ الملف متوفر على Google Drive",
+                        exists: true 
+                    };
+                }
+            } catch (methodError) {
+                // تجربة الطريقة التالية
+                continue;
+            }
+        }
+
+        // إذا وصلنا هنا، فجميع المحاولات فشلت أو أعطت 404
+        return { 
+            isValid: true, 
+            message: "❌ الرابط صحيح ولكن الملف غير موجود أو محذوف",
+            exists: false 
+        };
+
+    } catch (error) {
+        console.error('Google Drive comprehensive check failed:', error);
+        return { 
+            isValid: true,
+            message: "🔶 رابط Google Drive صحيح - تعذر التحقق من وجود الملف",
+            exists: true 
+        };
+    }
+};
+
+    // دالة للتحقق من الروابط مع تأخير
+    const validateUrlWithDelay = async (url, type) => {
+        // أولاً: التحقق من الصيغة
+        const formatValidation = type === 'youtube' ? validateYouTubeUrl(url) : validateGoogleDriveUrl(url);
+        
+        if (!formatValidation.isValid) {
+            return formatValidation;
+        }
+
+        // إذا كانت الصيغة صحيحة، نبدأ التحقق من الوجود
+        setLinkValidation(prev => ({
+            ...prev,
+            [type + 'Url']: { ...formatValidation, checking: true }
+        }));
+
+        // تأخير لمحاكاة عملية التحقق
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        try {
+            const existenceCheck = await checkUrlExists(url, type);
+            return {
+                ...existenceCheck,
+                youtubeId: formatValidation.youtubeId
+            };
+        } catch (error) {
+            return {
+                isValid: false,
+                message: "فشل التحقق من الرابط",
+                exists: false
+            };
+        }
+    };
 
     // جلب الاختصاصات
     const fetchSpecializations = async () => {
@@ -350,21 +624,83 @@ const Lesson = () => {
     }
 
     // عند تغيير رابط YouTube
-    const handleYoutubeUrlChange = (url) => {
-        const youtubeId = extractYouTubeId(url)
-        setForm(prev => ({
+    const handleYoutubeUrlChange = async (url) => {
+        handleFormChange("youtubeUrl", url);
+        
+        // إذا كان الرابط فارغاً، نعيد تعيين الحالة
+        if (!url) {
+            setLinkValidation(prev => ({
+                ...prev,
+                youtubeUrl: { isValid: false, message: "", checking: false, exists: false }
+            }));
+            return;
+        }
+
+        // التحقق من الرابط
+        const validation = await validateUrlWithDelay(url, 'youtube');
+        
+        setLinkValidation(prev => ({
             ...prev,
-            youtubeUrl: url,
-            youtubeId: youtubeId
-        }))
-    }
+            youtubeUrl: { ...validation, checking: false }
+        }));
+
+        // إذا كان الرابط صالحاً وبه YouTube ID، نضيفه للنموذج
+        if (validation.isValid && validation.youtubeId) {
+            setForm(prev => ({
+                ...prev,
+                youtubeId: validation.youtubeId
+            }));
+        }
+    };
+
+    // عند تغيير رابط Google Drive
+    const handleGoogleDriveUrlChange = async (url) => {
+        handleFormChange("googleDriveUrl", url);
+        
+        // إذا كان الرابط فارغاً، نعيد تعيين الحالة
+        if (!url) {
+            setLinkValidation(prev => ({
+                ...prev,
+                googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+            }));
+            return;
+        }
+
+        // التحقق من الرابط
+        const validation = await validateUrlWithDelay(url, 'googleDrive');
+        
+        setLinkValidation(prev => ({
+            ...prev,
+            googleDriveUrl: { ...validation, checking: false }
+        }));
+    };
+
+    // التحقق من إمكانية الحفظ
+    const canSave = useMemo(() => {
+        // التحقق من الحقول الإلزامية
+        if (!form.title.trim() || !form.orderIndex || !form.youtubeUrl) {
+            return false;
+        }
+
+        // التحقق من أن رابط YouTube صالح ومتوفر
+        if (!linkValidation.youtubeUrl.isValid || !linkValidation.youtubeUrl.exists) {
+            return false;
+        }
+
+        // إذا كان هناك رابط Google Drive، يجب أن يكون صالحاً ومتوفراً
+        if (form.googleDriveUrl && (!linkValidation.googleDriveUrl.isValid || !linkValidation.googleDriveUrl.exists)) {
+            return false;
+        }
+
+        return true;
+    }, [form, linkValidation]);
 
     // حفظ الدرس (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان الدرس")
-        if (!form.orderIndex) return showErrorToast("يرجى إدخال ترتيب الدرس")
-        if (!form.youtubeUrl) return showErrorToast("يرجى إدخال رابط YouTube")
-        if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
+        if (!canSave) {
+            showErrorToast("يرجى التحقق من صحة جميع البيانات والروابط");
+            return;
+        }
 
         setIsSubmitting(true);
         try {
@@ -400,12 +736,19 @@ const Lesson = () => {
                 durationSec: "",
                 orderIndex: "",
                 isFreePreview: false
-            })
-            setIsDialogOpen(false)
-            fetchLevelLessons(selectedLevel)
+            });
+            
+            // إعادة تعيين التحقق
+            setLinkValidation({
+                youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+                googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+            });
+            
+            setIsDialogOpen(false);
+            fetchLevelLessons(selectedLevel);
         } catch (err) {
-            console.error("❌ Save error:", err.response?.data || err)
-            showErrorToast(err?.response?.data?.message || "فشل العملية")
+            console.error("❌ Save error:", err.response?.data || err);
+            showErrorToast(err?.response?.data?.message || "فشل العملية");
         } finally {
             setIsSubmitting(false);
         }
@@ -529,6 +872,35 @@ const Lesson = () => {
     const getLevelName = (levelId) => {
         const level = levels.find(lvl => lvl.id === levelId);
         return level ? level.name : "غير محدد";
+    };
+
+    // مكون عرض حالة الرابط
+    const LinkStatus = ({ validation, type }) => {
+        if (!validation.message) return null;
+
+        let icon;
+        let color;
+
+        if (validation.checking) {
+            icon = <Clock className="w-3 h-3 animate-spin" />;
+            color = "text-blue-600";
+        } else if (validation.isValid && validation.exists) {
+            icon = <CheckCircle className="w-3 h-3" />;
+            color = "text-green-600";
+        } else if (validation.isValid && !validation.exists) {
+            icon = <Clock className="w-3 h-3" />;
+            color = "text-yellow-600";
+        } else {
+            icon = <XCircle className="w-3 h-3" />;
+            color = "text-red-600";
+        }
+
+        return (
+            <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
+                {icon}
+                <span>{validation.message}</span>
+            </div>
+        );
     };
 
     // عرض التفاصيل الكاملة للدرس
@@ -784,7 +1156,11 @@ const Lesson = () => {
                                             durationSec: "",
                                             orderIndex: "",
                                             isFreePreview: false
-                                        })
+                                        });
+                                        setLinkValidation({
+                                            youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+                                            googleDriveUrl: { isValid: true, message: "", checking: false, exists: true }
+                                        });
                                     }}
                                 >
                                     إضافة درس <Plus className="w-4 h-4 cursor-pointer" />
@@ -804,16 +1180,6 @@ const Lesson = () => {
                                             placeholder="أدخل عنوان الدرس..."
                                         />
                                     </div>
-
-                                    {/* <div className="space-y-2">
-                                        <Label>وصف الدرس</Label>
-                                        <Textarea
-                                            value={form.description}
-                                            onChange={(e) => handleFormChange("description", e.target.value)}
-                                            rows={3}
-                                            placeholder="أدخل وصف الدرس..."
-                                        />
-                                    </div> */}
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
@@ -843,11 +1209,14 @@ const Lesson = () => {
                                             value={form.youtubeUrl}
                                             onChange={(e) => handleYoutubeUrlChange(e.target.value)}
                                             placeholder="https://www.youtube.com/watch?v=..."
+                                            className={linkValidation.youtubeUrl.isValid && linkValidation.youtubeUrl.exists ? "border-green-500" : 
+                                                     linkValidation.youtubeUrl.isValid && !linkValidation.youtubeUrl.exists ? "border-yellow-500" : 
+                                                     !linkValidation.youtubeUrl.isValid && form.youtubeUrl ? "border-red-500" : ""}
                                         />
-                                        {form.youtubeId && (
-                                            <div className="flex items-center gap-2 text-sm text-green-600">
-                                                <Youtube className="w-4 h-4" />
-                                                <span>تم التعرف على الفيديو: {form.youtubeId}</span>
+                                        <LinkStatus validation={linkValidation.youtubeUrl} type="youtube" />
+                                        {!form.youtubeUrl && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                أدخل رابط فيديو YouTube (يجب أن يبدأ بـ http:// أو https://)
                                             </div>
                                         )}
                                     </div>
@@ -856,9 +1225,18 @@ const Lesson = () => {
                                         <Label>رابط Google Drive</Label>
                                         <Input
                                             value={form.googleDriveUrl}
-                                            onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
+                                            onChange={(e) => handleGoogleDriveUrlChange(e.target.value)}
                                             placeholder="https://drive.google.com/..."
+                                            className={linkValidation.googleDriveUrl.isValid && linkValidation.googleDriveUrl.exists ? "border-green-500" : 
+                                                     linkValidation.googleDriveUrl.isValid && !linkValidation.googleDriveUrl.exists ? "border-yellow-500" : 
+                                                     !linkValidation.googleDriveUrl.isValid && form.googleDriveUrl ? "border-red-500" : ""}
                                         />
+                                        <LinkStatus validation={linkValidation.googleDriveUrl} type="googleDrive" />
+                                        {!form.googleDriveUrl && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                أدخل رابط Google Drive (يجب أن يبدأ بـ http:// أو https://)
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center space-x-2 space-x-reverse">
@@ -871,7 +1249,7 @@ const Lesson = () => {
 
                                     <Button 
                                         onClick={handleSave}
-                                        disabled={isSubmitting}
+                                        disabled={!canSave || isSubmitting}
                                         className="w-full"
                                     >
                                         {isSubmitting ? (
@@ -883,6 +1261,12 @@ const Lesson = () => {
                                             editItem ? "حفظ التعديل" : "حفظ"
                                         )}
                                     </Button>
+
+                                    {!canSave && (
+                                        <div className="text-xs text-yellow-600 text-center">
+                                            ⚠️ يرجى التحقق من صحة جميع البيانات والروابط قبل الحفظ
+                                        </div>
+                                    )}
                                 </div>
                             </DialogContent>
                         </Dialog>

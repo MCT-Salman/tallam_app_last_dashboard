@@ -534,40 +534,103 @@ export const deleteCoupon = (id) => api.delete(`/coupons/admin/${id}`);
 export const toggleCouponActive = (id, isActive) =>
     api.put(`/coupons/admin/${id}`, { isActive });
 
+// // --- إدارة الملفات ---
+
+// // GET - جلب قائمة الملفات (يحتاج تأكيد الـ endpoint الصحيح)
+// export const getFiles = (params) => api.get('/files/admin/files', { params });
+
+// // POST - رفع ملف جديد
+// export const uploadFile = (data) => api.post('/files/admin/files', data, {
+//     headers: { 'Content-Type': 'multipart/form-data' },
+// });
+
+// // PUT - تعديل ملف
+// export const updateFile = (id, data) => api.put(`/files/admin/files/${id}`, data, {
+//     headers: { 'Content-Type': 'multipart/form-data' },
+// });
+
+// // DELETE - حذف ملف
+// export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
+
+// // GET - جلب تفاصيل ملف معين
+// export const getFileDetails = (id) => api.get(`/files/admin/files/${id}`);
+
+// // --- إذا لم يعمل GET أعلاه، جرب هذه الـ endpoints البديلة ---
+
+// // البديل 1: استخدام POST لجلب الملفات
+// export const getFilesPost = (data) => api.post('/files/admin/files/list', data, {
+//     headers: { 'Content-Type': 'application/json' },
+// });
+
+// // البديل 2: endpoint مختلف
+// export const getFilesAlt = (params) => api.get('/files/admin', { params });
+
+// // البديل 3: endpoint مختلف آخر
+// export const getFilesAlt2 = (params) => api.get('/files/admin/list', { params });
+
+
+
+
 // --- إدارة الملفات ---
 
-// GET - جلب قائمة الملفات (يحتاج تأكيد الـ endpoint الصحيح)
-export const getFiles = (params) => api.get('/files/admin/files', { params });
+// GET - جلب الملفات حسب المستوى (للمسؤول)
+export const getFilesByLevel = (levelId, params) => api.get(`/files/admin/courselevel/${levelId}/files`, { params });
+
+// GET - جلب الملفات حسب المستوى (للمستخدمين العاديين)
+export const getFilesByLevelPublic = (levelId) => api.get(`/files/levels/${levelId}`);
+
+// GET - جلب تفاصيل ملف معين
+export const getFileDetails = (fileId) => api.get(`/files/file/${fileId}`);
 
 // POST - رفع ملف جديد
 export const uploadFile = (data) => api.post('/files/admin/files', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
 });
 
-// PUT - تعديل ملف
-export const updateFile = (id, data) => api.put(`/files/admin/files/${id}`, data, {
+// PUT - تعديل ملف (إذا كان مدعوماً)
+export const updateFile = (id, data) => {
+  // إذا كان الـ API يدعم التعديل
+  return api.put(`/files/admin/files/${id}`, data, {
     headers: { 'Content-Type': 'multipart/form-data' },
-});
+  });
+};
 
-// DELETE - حذف ملف
+// DELETE - حذف ملف (إذا كان مدعوماً)
 export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
 
-// GET - جلب تفاصيل ملف معين
-export const getFileDetails = (id) => api.get(`/files/admin/files/${id}`);
+// --- الدوال السابقة (للتوافق مع الكود الحالي) ---
 
-// --- إذا لم يعمل GET أعلاه، جرب هذه الـ endpoints البديلة ---
+// GET - جلب قائمة الملفات (دالة مساعدة)
+export const getFiles = (params) => {
+  // إذا كان هناك levelId في params، استخدم endpoint المستوى
+  if (params?.courseLevelId) {
+    return getFilesByLevel(params.courseLevelId, params);
+  }
+  // وإلا استخدم endpoint عام إذا كان متوفراً
+  return api.get('/files/admin/files', { params });
+};
 
-// البديل 1: استخدام POST لجلب الملفات
-export const getFilesPost = (data) => api.post('/files/admin/files/list', data, {
-    headers: { 'Content-Type': 'application/json' },
-});
+// POST - جلب الملفات (للتوافق مع الكود الحالي)
+export const getFilesPost = (data) => {
+  // إذا كان هناك courseLevelId في data، استخدم endpoint المستوى
+  if (data?.courseLevelId) {
+    return getFilesByLevel(data.courseLevelId, { 
+      page: data.page, 
+      limit: data.limit,
+      search: data.search 
+    });
+  }
+  // رجع الرفض إذا لم يكن هناك مستوى محدد
+  return Promise.reject(new Error('يجب تحديد courseLevelId'));
+};
 
-// البديل 2: endpoint مختلف
-export const getFilesAlt = (params) => api.get('/files/admin', { params });
 
-// البديل 3: endpoint مختلف آخر
-export const getFilesAlt2 = (params) => api.get('/files/admin/list', { params });
+
+
+
+
 // --- إدارة الإعلانات ---
+
 // export const getAdvertisements = (params) => api.get('/ads/admin', { params });
 // export const createAdvertisement = (data) => api.post('/ads/admin', data, {
 //     headers: { 'Content-Type': 'multipart/form-data' },
@@ -701,18 +764,52 @@ export const getSuggestions = async (params = {}) => {
 
 // --- Notifications API ---
 
+
+
+// --- إدارة الإشعارات ---
+
+// GET - جلب جميع الإشعارات (للمسؤول)
+export const getNotifications = (params) => api.get('/notifications/admin', { params });
+
+// POST - إنشاء إشعار لمستخدمين محددين
+export const createNotificationForUsers = (data) => api.post('/notifications/admin/users', data);
+
+// POST - إنشاء إشعار بث لجميع المستخدمين (إذا كان مدعوماً)
+export const createBroadcastNotification = (data) => {
+  // إذا كان هناك endpoint منفصل للبث
+  return api.post('/notifications/admin/broadcast', data);
+};
+
+// DELETE - حذف إشعار
+export const deleteNotification = (id) => api.delete(`/notifications/admin/${id}`);
+
+// --- الدوال السابقة (للتوافق مع الكود الحالي) ---
+
+// POST - إنشاء إشعار لمستخدم واحد (للتوافق مع الكود الحالي)
+export const createNotification = (data) => {
+  // استخدام نفس endpoint المستخدمين المتعددين ولكن بمستخدم واحد
+  return createNotificationForUsers({
+    ...data,
+    userIds: [data.userId] // تحويل userId إلى مصفوفة userIds
+  });
+};
+
+
+
+
+
 // في ملف api.js - أضف هذه الدوال
 
 // الإشعارات
-export const getNotifications = async (params = {}) => {
-    try {
-        const response = await api.get('/notifications/admin', { params });
-        return response;
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        throw error;
-    }
-};
+// export const getNotifications = async (params = {}) => {
+//     try {
+//         const response = await api.get('/notifications/admin', { params });
+//         return response;
+//     } catch (error) {
+//         console.error('Error fetching notifications:', error);
+//         throw error;
+//     }
+// };
 
 // export const createNotification = async (notificationData) => {
 //     try {
@@ -792,57 +889,57 @@ export const getNotifications = async (params = {}) => {
 // };
 
 // الإشعارات
-export const createNotification = async (formData) => {
-    try {
-        const response = await api.post('/notifications/admin', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response;
-    } catch (error) {
-        console.error('Error creating notification:', error);
-        throw error;
-    }
-};
+// export const createNotification = async (formData) => {
+//     try {
+//         const response = await api.post('/notifications/admin', formData, {
+//             headers: {
+//                 'Content-Type': 'multipart/form-data'
+//             }
+//         });
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating notification:', error);
+//         throw error;
+//     }
+// };
 
-export const createBroadcastNotification = async (formData) => {
-    try {
-        const response = await api.post('/notifications/admin/broadcast', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response;
-    } catch (error) {
-        console.error('Error creating broadcast notification:', error);
-        throw error;
-    }
-};
+// export const createBroadcastNotification = async (formData) => {
+//     try {
+//         const response = await api.post('/notifications/admin/broadcast', formData, {
+//             headers: {
+//                 'Content-Type': 'multipart/form-data'
+//             }
+//         });
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating broadcast notification:', error);
+//         throw error;
+//     }
+// };
 
-export const createNotificationForUsers = async (formData) => {
-    try {
-        const response = await api.post('/notifications/admin/users', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response;
-    } catch (error) {
-        console.error('Error creating notification for users:', error);
-        throw error;
-    }
-};
+// export const createNotificationForUsers = async (formData) => {
+//     try {
+//         const response = await api.post('/notifications/admin/users', formData, {
+//             headers: {
+//                 'Content-Type': 'multipart/form-data'
+//             }
+//         });
+//         return response;
+//     } catch (error) {
+//         console.error('Error creating notification for users:', error);
+//         throw error;
+//     }
+// };
 
-export const deleteNotification = async (notificationId) => {
-    try {
-        const response = await api.delete(`/notifications/admin/${notificationId}`);
-        return response;
-    } catch (error) {
-        console.error('Error deleting notification:', error);
-        throw error;
-    }
-};
+// export const deleteNotification = async (notificationId) => {
+//     try {
+//         const response = await api.delete(`/notifications/admin/${notificationId}`);
+//         return response;
+//     } catch (error) {
+//         console.error('Error deleting notification:', error);
+//         throw error;
+//     }
+// };
 
 // جلب جميع الإشعارات
 // export const getNotifications = async (params = {}) => {
@@ -873,5 +970,23 @@ export const deleteNotification = async (notificationId) => {
 //   const response = await api.delete(`/notifications/admin/${notificationId}`);
 //   return response;
 // };
+
+// --- إدارة التحويلات المالية والفواتير ---
+
+// جلب جميع المعاملات مع التصفية والترتيب
+export const getTransactions = (params) => 
+    api.get('/transactions/admin', { params });
+
+// جلب معاملة محددة بالرقم
+export const getTransactionById = (id) => 
+    api.get(`/transactions/admin/${id}`);
+
+// جلب إحصائيات المعاملات
+export const getTransactionStats = (params) => 
+    api.get('/transactions/admin/stats/overview', { params });
+
+// جلب تحليلات المعاملات حسب التاريخ
+export const getTransactionsByDate = (params) => 
+    api.get('/transactions/admin/analytics/date', { params });
 
 export { api, BASE_URL };
