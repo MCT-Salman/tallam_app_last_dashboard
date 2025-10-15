@@ -1033,6 +1033,6 @@ export const toggleAdminStatus = (adminId, isActive) =>
 
 //   لإدارة التقييمات
 export const getReviews = (courseLevelId) =>
-    api.get(`/api/reviews/all?courseLevelId=${courseLevelId}`);
+    api.get(`/reviews/all?courseLevelId=${courseLevelId}`);
 
 export { api, BASE_URL };
