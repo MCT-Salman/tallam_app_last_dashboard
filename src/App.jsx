@@ -29,9 +29,9 @@ import Stories from "@/components/stories/Stories"
 import Notifications from "@/components/notifications/Notifications"
 // import Suggestions from "@/components/suggestions/Suggestions"
 // import Profile from "@/components/profile/Profile"
-import Settings from "@/components/settings/Settings"
+import SettingsComp from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
-import Review from "./components/review/Review"
+import Review from "@/components/review/Review"
 
 const App = () => {
   return (
@@ -159,7 +159,7 @@ const App = () => {
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Settings />
+                    <SettingsComp />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
