@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
 import { getCourseLevels, createCourseLevel, updateCourseLevel, deleteCourseLevel, toggleCourseLevelStatus, BASE_URL } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getInstructors } from "@/api/api";
@@ -28,6 +28,7 @@ const CourseLevel = () => {
     const [selectedCourse, setSelectedCourse] = useState("");
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
+        // name: "",
         description: "",
         order: "",
         priceUSD: "",
@@ -44,11 +45,6 @@ const CourseLevel = () => {
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" });
     const [detailsDialog, setDetailsDialog] = useState({ isOpen: false, item: null });
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // حالات التحقق من رابط المعاينة (YouTube)
-    const [linkValidation, setLinkValidation] = useState({
-        previewUrl: { isValid: false, message: "", checking: false, exists: false }
-    });
 
     // Search states for selects
     const [specializationSearch, setSpecializationSearch] = useState("");
@@ -68,187 +64,43 @@ const CourseLevel = () => {
     const [sortBy, setSortBy] = useState("order");
     const [sortOrder, setSortOrder] = useState("asc");
 
-    // دالة للتحقق من صحة رابط YouTube
-    const validateYouTubeUrl = (url) => {
-        if (!url) return { isValid: false, message: "يرجى إدخال رابط YouTube", exists: false };
-        
-        try {
-            // التحقق من أن الرابط يحتوي على بروتوكول
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                return { 
-                    isValid: false, 
-                    message: "يجب أن يبدأ الرابط بـ http:// أو https://",
-                    exists: false
-                };
-            }
-            
-            const urlObj = new URL(url);
-            
-            // التحقق من أن الرابط خاص بـ YouTube
-            if (!urlObj.hostname.includes('youtube.com') && !urlObj.hostname.includes('youtu.be')) {
-                return { 
-                    isValid: false, 
-                    message: "يجب أن يكون الرابط من youtube.com أو youtu.be",
-                    exists: false
-                };
-            }
 
-            // استخراج YouTube ID والتحقق منه
-            const youtubeId = extractYouTubeId(url);
-            if (!youtubeId) {
-                return { 
-                    isValid: false, 
-                    message: "لم يتم العثور على معرف فيديو YouTube صحيح",
-                    exists: false
-                };
-            }
+    const [linkValidation, setLinkValidation] = useState({
+        previewUrl: { isValid: true, message: "" }
+    });
 
-            // التحقق من أن معرف الفيديو بطول 11 حرف (معيار YouTube)
-            if (youtubeId.length !== 11) {
-                return { 
-                    isValid: false, 
-                    message: "معرف فيديو YouTube يجب أن يكون 11 حرفاً",
-                    exists: false
-                };
-            }
-            
-            return { 
-                isValid: true, 
-                message: "جاري التحقق من وجود الفيديو...",
-                exists: false,
-                youtubeId: youtubeId
-            };
-        } catch (error) {
+    // دالة للتحقق من صحة الرابط
+const validateUrl = (url) => {
+    if (!url) return { isValid: true, message: "" };
+    
+    try {
+        // التحقق من أن الرابط يحتوي على بروتوكول
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
             return { 
                 isValid: false, 
-                message: "صيغة الرابط غير صحيحة",
-                exists: false
+                message: "يجب أن يبدأ الرابط بـ http:// أو https://" 
             };
         }
-    };
-
-    // استخراج YouTube ID من الرابط
-    const extractYouTubeId = (url) => {
-        if (!url) return ""
-        const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
-        return match ? match[1] : ""
-    };
-
-    // دالة للتحقق الفعلي من وجود الرابط
-    const checkUrlExists = async (url, type) => {
-        if (!url) {
-            return { 
-                isValid: false, 
-                message: "", 
-                exists: false 
-            };
-        }
-
-        try {
-            if (type === 'youtube') {
-                const youtubeId = extractYouTubeId(url);
-                if (!youtubeId) {
-                    return { 
-                        isValid: false, 
-                        message: "لم يتم العثور على معرف فيديو صحيح",
-                        exists: false 
-                    };
-                }
-
-                // التحقق من وجود الفيديو عبر الصورة المصغرة
-                const thumbResponse = await fetch(`https://img.youtube.com/vi/${youtubeId}/0.jpg`);
-                
-                if (thumbResponse.status === 200) {
-                    return { 
-                        isValid: true, 
-                        message: "✅ الفيديو متوفر على YouTube",
-                        exists: true 
-                    };
-                } else if (thumbResponse.status === 404) {
-                    return { 
-                        isValid: true, 
-                        message: "⚠️ الرابط صحيح ولكن الفيديو غير متوفر أو محذوف",
-                        exists: false 
-                    };
-                } else {
-                    return { 
-                        isValid: true, 
-                        message: "🔶 الرابط صحيح - تعذر التحقق من وجود الفيديو",
-                        exists: true // نفترض أنه متاح
-                    };
-                }
-            }
-
-            // للروابط الأخرى (ليست YouTube) نكتفي بالتحقق من الصيغة
-            return { 
-                isValid: true, 
-                message: "✅ الرابط صحيح",
-                exists: true 
-            };
-
-        } catch (error) {
-            return { 
-                isValid: true,
-                message: "🔶 تم التحقق من صيغة الرابط - تعذر التأكد من الوجود",
-                exists: true 
-            };
-        }
-    };
-
-    // دالة للتحقق من الروابط مع تأخير
-    const validateUrlWithDelay = async (url, type) => {
-        // أولاً: التحقق من الصيغة
-        const formatValidation = type === 'youtube' ? validateYouTubeUrl(url) : { isValid: true, message: "" };
         
-        if (!formatValidation.isValid) {
-            return formatValidation;
-        }
+        new URL(url);
+        return { isValid: true, message: "الرابط صحيح" };
+    } catch (error) {
+        return { 
+            isValid: false, 
+            message: "صيغة الرابط غير صحيحة" 
+        };
+    }
+};
 
-        // إذا كانت الصيغة صحيحة، نبدأ التحقق من الوجود
-        setLinkValidation(prev => ({
-            ...prev,
-            previewUrl: { ...formatValidation, checking: true }
-        }));
-
-        // تأخير لمحاكاة عملية التحقق
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        try {
-            const existenceCheck = await checkUrlExists(url, type);
-            return {
-                ...existenceCheck,
-                youtubeId: formatValidation.youtubeId
-            };
-        } catch (error) {
-            return {
-                isValid: false,
-                message: "فشل التحقق من الرابط",
-                exists: false
-            };
-        }
-    };
-
-    // عند تغيير رابط المعاينة
-    const handlePreviewUrlChange = async (url) => {
-        handleFormChange("previewUrl", url);
-        
-        // إذا كان الرابط فارغاً، نعيد تعيين الحالة
-        if (!url) {
-            setLinkValidation(prev => ({
-                ...prev,
-                previewUrl: { isValid: false, message: "", checking: false, exists: false }
-            }));
-            return;
-        }
-
-        // التحقق من الرابط (نعتبره YouTube)
-        const validation = await validateUrlWithDelay(url, 'youtube');
-        
-        setLinkValidation(prev => ({
-            ...prev,
-            previewUrl: { ...validation, checking: false }
-        }));
-    };
+// دالة للتعامل مع تغيير رابط المعاينة
+const handlePreviewUrlChange = (value) => {
+    handleFormChange("previewUrl", value);
+    const validation = validateUrl(value);
+    setLinkValidation(prev => ({ 
+        ...prev, 
+        previewUrl: validation 
+    }));
+};
 
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
@@ -470,27 +322,13 @@ const CourseLevel = () => {
         }
     };
 
-    // التحقق من إمكانية الحفظ
-    const canSave = useMemo(() => {
-        // التحقق من الحقول الإلزامية
-        if (!form.order || !form.instructorId || !selectedCourse || (!imageFile && !editItem)) {
-            return false;
-        }
-
-        // إذا كان هناك رابط معاينة، يجب أن يكون صالحاً
-        if (form.previewUrl && (!linkValidation.previewUrl.isValid || !linkValidation.previewUrl.exists)) {
-            return false;
-        }
-
-        return true;
-    }, [form, linkValidation, selectedCourse, imageFile, editItem]);
-
     // حفظ المستوى (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!canSave) {
-            showErrorToast("يرجى التحقق من صحة جميع البيانات والروابط");
-            return;
-        }
+        // if (!form.name.trim()) return showErrorToast("يرجى إدخال عنوان المستوى");
+        if (!form.order) return showErrorToast("يرجى إدخال ترتيب المستوى");
+        if (!form.instructorId) return showErrorToast("يرجى اختيار المدرب");
+        if (!selectedCourse) return showErrorToast("يرجى اختيار الكورس أولاً");
+        if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة");
 
         setIsSubmitting(true);
         try {
@@ -537,9 +375,6 @@ const CourseLevel = () => {
             });
             setImageFile(null);
             setImagePreview(null);
-            setLinkValidation({
-                previewUrl: { isValid: false, message: "", checking: false, exists: false }
-            });
             setIsDialogOpen(false);
             fetchCourseLevels(selectedCourse);
         } catch (err) {
@@ -624,6 +459,12 @@ const CourseLevel = () => {
         }
     };
 
+    // Handle items per page change
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+    };
+
     // Handle sort
     const handleSort = (field) => {
         if (sortBy === field) {
@@ -685,35 +526,6 @@ const CourseLevel = () => {
             instructor.name?.toLowerCase().includes(instructorFilterSearch.toLowerCase())
         );
     }, [instructors, instructorFilterSearch]);
-
-    // مكون عرض حالة الرابط
-    const LinkStatus = ({ validation, type }) => {
-        if (!validation.message) return null;
-
-        let icon;
-        let color;
-
-        if (validation.checking) {
-            icon = <Clock className="w-3 h-3 animate-spin" />;
-            color = "text-blue-600";
-        } else if (validation.isValid && validation.exists) {
-            icon = <CheckCircle className="w-3 h-3" />;
-            color = "text-green-600";
-        } else if (validation.isValid && !validation.exists) {
-            icon = <Clock className="w-3 h-3" />;
-            color = "text-yellow-600";
-        } else {
-            icon = <XCircle className="w-3 h-3" />;
-            color = "text-red-600";
-        }
-
-        return (
-            <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
-                {icon}
-                <span>{validation.message}</span>
-            </div>
-        );
-    };
 
     // مكون البطاقة للعنصر الواحد
     const LevelCard = ({ item }) => (
@@ -943,6 +755,19 @@ const CourseLevel = () => {
                                 </a>
                             </div>
                         )}
+                        {/* {item.downloadUrl && (
+                            <div>
+                                <Label className="font-medium">رابط التحميل:</Label>
+                                <a
+                                    href={item.downloadUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline block mt-1 text-sm break-all"
+                                >
+                                    {item.downloadUrl}
+                                </a>
+                            </div>
+                        )} */}
                     </div>
                 </div>
             )}
@@ -1067,20 +892,18 @@ const CourseLevel = () => {
                                     onClick={() => {
                                         setEditItem(null);
                                         setForm({
+                                            // name: "",
                                             description: "",
                                             order: "",
                                             priceUSD: "",
                                             priceSAR: "",
                                             isFree: false,
                                             previewUrl: "",
-                                            downloadUrl: "",
+                                            // downloadUrl: "",
                                             instructorId: ""
                                         });
                                         setImageFile(null);
                                         setImagePreview(null);
-                                        setLinkValidation({
-                                            previewUrl: { isValid: false, message: "", checking: false, exists: false }
-                                        });
                                     }}
                                 >
                                     إضافة مستوى <Plus className="w-4 h-4 cursor-pointer" />
@@ -1095,6 +918,17 @@ const CourseLevel = () => {
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 mt-2">
+                                    {/* <div className="space-y-2">
+                                        <Label>العنوان *</Label>
+                                        <Input
+                                            value={form.name}
+                                            onChange={(e) => handleFormChange("name", e.target.value)}
+                                            placeholder="أدخل عنوان المستوى..."
+                                        />
+                                    </div> */}
+
+
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>الترتيب *</Label>
@@ -1178,22 +1012,22 @@ const CourseLevel = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>رابط المعاينة (YouTube)</Label>
+                                        <Label>رابط المعاينة</Label>
                                         <Input
                                             value={form.previewUrl}
-                                            onChange={(e) => handlePreviewUrlChange(e.target.value)}
-                                            placeholder="https://www.youtube.com/watch?v=..."
-                                            className={linkValidation.previewUrl.isValid && linkValidation.previewUrl.exists ? "border-green-500" : 
-                                                     linkValidation.previewUrl.isValid && !linkValidation.previewUrl.exists ? "border-yellow-500" : 
-                                                     !linkValidation.previewUrl.isValid && form.previewUrl ? "border-red-500" : ""}
+                                            onChange={(e) => handleFormChange("previewUrl", e.target.value)}
+                                            placeholder="رابط فيديو المعاينة..."
                                         />
-                                        <LinkStatus validation={linkValidation.previewUrl} type="previewUrl" />
-                                        {!form.previewUrl && (
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                أدخل رابط فيديو YouTube للمعاينة (يجب أن يبدأ بـ http:// أو https://)
-                                            </div>
-                                        )}
                                     </div>
+
+                                    {/* <div className="space-y-2">
+                                        <Label>رابط التحميل</Label>
+                                        <Input
+                                            value={form.downloadUrl}
+                                            onChange={(e) => handleFormChange("downloadUrl", e.target.value)}
+                                            placeholder="رابط تحميل الملفات..."
+                                        />
+                                    </div> */}
 
                                     <div className="space-y-2">
                                         <Label htmlFor="level-image">صورة المستوى *</Label>
@@ -1218,10 +1052,9 @@ const CourseLevel = () => {
                                             </div>
                                         )}
                                     </div>
-                                    
                                     <Button
                                         onClick={handleSave}
-                                        disabled={!canSave || isSubmitting}
+                                        disabled={isSubmitting}
                                         className="w-full"
                                     >
                                         {isSubmitting ? (
@@ -1233,12 +1066,6 @@ const CourseLevel = () => {
                                             editItem ? "حفظ التعديل" : "حفظ"
                                         )}
                                     </Button>
-
-                                    {!canSave && (
-                                        <div className="text-xs text-yellow-600 text-center">
-                                            ⚠️ يرجى التحقق من صحة جميع البيانات والروابط قبل الحفظ
-                                        </div>
-                                    )}
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -1343,9 +1170,279 @@ const CourseLevel = () => {
                     </>
                 )}
             </CardHeader>
+ <CardContent>
+                {!selectedCourse ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                        {!selectedSpecialization ? "يرجى اختيار تخصص أولاً" : "يرجى اختيار كورس لعرض مستوياته"}
+                    </div>
+                ) : loading ? (
+                    <div className="flex justify-center py-8">
+                        <div className="animate-spin h-8 w-8 border-b-2 rounded-full border-gray-900"></div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Table View - for medium screens and up */}
+                        <div className="hidden md:block">
+                            <Table className="direction-rtl">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="table-header">الصورة</TableHead>
+                                        <TableHead
+                                            className="table-header cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handleSort("name")}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                العنوان
+                                                {sortBy === "name" && (
+                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                                )}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead
+                                            className="table-header cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handleSort("order")}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                الترتيب
+                                                {sortBy === "order" && (
+                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                                )}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="table-header">المدرب</TableHead>
+                                        <TableHead className="table-header">السعر</TableHead>
+                                        <TableHead className="table-header">الوصف</TableHead>
+                                        <TableHead
+                                            className="table-header cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handleSort("isActive")}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                الحالة
+                                                {sortBy === "isActive" && (
+                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                                )}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="table-header text-right">الإجراءات</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedLevels.length > 0 ? paginatedLevels.map(item => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="table-cell">
+                                                <img
+                                                    src={getImageUrl(item.imageUrl)}
+                                                    alt={item.name}
+                                                    className="w-12 h-12 object-contain rounded-md"
+                                                    {...imageConfig}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "/tallaam_logo2.png";
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell font-medium">{item.name}</TableCell>
+                                            <TableCell className="table-cell">
+                                                <Badge variant="secondary">{item.order || 0}</Badge>
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                {getInstructorName(item.instructorId)}
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                {item.isFree ? (
+                                                    <Badge variant="default">مجاني</Badge>
+                                                ) : (
+                                                    <div>
+                                                        <div>${item.priceUSD || 0}</div>
+                                                        <div className="text-xs text-muted-foreground">{item.priceSAR || 0} ل.س</div>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="table-cell max-w-xs">
+                                                <div className="truncate" title={item.description}>
+                                                    {item.description || "لا يوجد وصف"}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                <Badge variant={item.isActive ? "default" : "secondary"}>
+                                                    {item.isActive ? "نشط" : "معطل"}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="table-cell text-right space-x-2">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => handleViewDetails(item)}
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => handleToggleActive(item.id, item.isActive)}
+                                                >
+                                                    {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                </Button>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        setEditItem(item);
+                                                        setForm({
+                                                            name: item.name,
+                                                            description: item.description || "",
+                                                            order: (item.order || "").toString(),
+                                                            priceUSD: (item.priceUSD || "0").toString(),
+                                                            priceSAR: (item.priceSAR || "0").toString(),
+                                                            isFree: item.isFree || false,
+                                                            previewUrl: item.previewUrl || "",
+                                                            downloadUrl: item.downloadUrl || "",
+                                                            instructorId: item.instructorId
+                                                        });
+                                                        setImageFile(null);
+                                                        setImagePreview(item.imageUrl ? getImageUrl(item.imageUrl) : null);
+                                                        setIsDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    size="icon"
+                                                    variant="destructive"
+                                                    onClick={() => setDeleteDialog({
+                                                        isOpen: true,
+                                                        itemId: item.id,
+                                                        itemName: item.name
+                                                    })}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                                                {allLevels.length === 0 ? "لا توجد مستويات لهذا الكورس" : "لا توجد نتائج مطابقة للبحث"}
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
 
-            {/* باقي الكود يبقى كما هو بدون تغيير */}
-            {/* ... */}
+                        {/* Cards View - for small screens */}
+                        <div className="block md:hidden">
+                            {paginatedLevels.length > 0 ? (
+                                paginatedLevels.map(item => (
+                                    <LevelCard key={item.id} item={item} />
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    {allLevels.length === 0 ? "لا توجد مستويات لهذا الكورس" : "لا توجد نتائج مطابقة للبحث"}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination */}
+                        {paginatedLevels.length > 0 && (
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
+                                <div className="text-sm text-muted-foreground">
+                                    عرض {startItem} إلى {endItem} من {totalItems} مستوى
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNumber;
+                                            if (totalPages <= 5) {
+                                                pageNumber = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNumber = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNumber = totalPages - 4 + i;
+                                            } else {
+                                                pageNumber = currentPage - 2 + i;
+                                            }
+
+                                            return (
+                                                <Button
+                                                    key={pageNumber}
+                                                    variant={currentPage === pageNumber ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(pageNumber)}
+                                                    className="w-8 h-8 p-0"
+                                                >
+                                                    {pageNumber}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </CardContent>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog
+                open={deleteDialog.isOpen}
+                onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
+            >
+                <AlertDialogContent className="text-right" dir="rtl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا المستوى؟</AlertDialogTitle>
+                        <AlertDialogDescription className="text-right">
+                            سيتم حذف المستوى "{deleteDialog.itemName}" بشكل نهائي.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex flex-row-reverse gap-2">
+                        <AlertDialogAction
+                            className="bg-red-500 hover:bg-red-600"
+                            onClick={async () => {
+                                await handleDelete(deleteDialog.itemId);
+                                setDeleteDialog({ isOpen: false, itemId: null, itemName: "" });
+                            }}
+                        >
+                            حذف
+                        </AlertDialogAction>
+                        <AlertDialogCancel onClick={() => setDeleteDialog({ isOpen: false, itemId: null, itemName: "" })}>
+                            إلغاء
+                        </AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Details Dialog */}
+            <Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>تفاصيل المستوى</DialogTitle>
+                        <DialogDescription>
+                            عرض المعلومات الكاملة للمستوى
+                        </DialogDescription>
+                    </DialogHeader>
+                    {detailsDialog.item && <LevelDetails item={detailsDialog.item} />}
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 };
