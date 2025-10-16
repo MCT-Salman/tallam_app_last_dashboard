@@ -82,6 +82,10 @@ const Lesson = () => {
     const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false)
     const [editQuestionId, setEditQuestionId] = useState(null)
 
+    // ✅ إضافة حالة لتحميل الأسئلة
+    const [loadingQuestions, setLoadingQuestions] = useState(false)
+
+    // الدوال المفقودة
     const handleFormChange = (field, value) => {
         setForm(prev => ({
             ...prev,
@@ -228,25 +232,52 @@ const Lesson = () => {
         }
     }
 
-    // جلب الأسئلة
-    const fetchQuestions = async (levelId) => {
-        try {
-            const res = await getQuizByCourseLevel(levelId)
-            let data = []
-            if (Array.isArray(res.data?.data)) {
-                data = res.data.data
-            } else if (Array.isArray(res.data?.data?.data)) {
-                data = res.data.data.data
-            }
-            setQuestions(data || [])
-        } catch (err) {
-            console.error("Error fetching questions:", err)
-            showErrorToast("فشل تحميل الأسئلة")
-        }
+// ✅ جلب الأسئلة - إصدار مبسط
+const fetchQuestions = async (levelId) => {
+    if (!levelId) {
+        setQuestions([])
+        return
     }
 
-    // جلب الملفات
+    setLoadingQuestions(true)
+    try {
+        const res = await getQuizByCourseLevel(levelId)
+        console.log("📝 Questions API response:", res)
+        
+        // إذا كان هناك رسالة تفيد بعدم وجود أسئلة
+        const errorMessage = res.data?.message || res.data?.data?.message || '';
+        if (errorMessage.includes("لا يوجد أسئلة لهذا المستوى")) {
+            setQuestions([])
+            return
+        }
+
+        // إذا لم تكن هناك بيانات
+        if (!res.data?.data || (Array.isArray(res.data.data) && res.data.data.length === 0)) {
+            setQuestions([])
+            return
+        }
+
+        // استخراج البيانات
+        let data = Array.isArray(res.data.data) ? res.data.data : 
+                  Array.isArray(res.data.data?.data) ? res.data.data.data : 
+                  res.data.data ? [res.data.data] : [];
+        
+        setQuestions(data)
+    } catch (err) {
+        console.error("❌ Error fetching questions:", err)
+        // في حالة الخطأ، أعيد تعيين الأسئلة إلى فارغ
+        setQuestions([])
+    } finally {
+        setLoadingQuestions(false)
+    }
+}
+    // ✅ جلب الملفات - محسّن
     const fetchFiles = async (levelId) => {
+        if (!levelId) {
+            setFiles([])
+            return
+        }
+
         try {
             const res = await getFilesByLevel(levelId)
             let filesData = []
@@ -260,6 +291,7 @@ const Lesson = () => {
         } catch (err) {
             console.error("Error fetching files:", err)
             showErrorToast("فشل تحميل الملفات")
+            setFiles([])
         }
     }
 
@@ -289,12 +321,15 @@ const Lesson = () => {
         }
     }, [selectedCourse])
 
+    // ✅ تأثير محسّن عند تغيير المستوى
     useEffect(() => {
         if (selectedLevel) {
+            console.log("🔄 Fetching content for level:", selectedLevel)
             fetchLevelLessons(selectedLevel)
             fetchQuestions(selectedLevel)
             fetchFiles(selectedLevel)
         } else {
+            console.log("🔄 Clearing content - no level selected")
             setAllLessons([])
             setQuestions([])
             setFiles([])
@@ -461,40 +496,56 @@ const Lesson = () => {
         setDeleteDialog({ isOpen: false, itemId: null, itemName: "", type: "" })
     }
 
-    // دوال الملفات
-    const handleUploadFile = async () => {
-        if (!fileToUpload) {
-            showErrorToast("يرجى اختيار ملف")
-            return
-        }
-
-        setUploading(true)
-        try {
-            const formData = new FormData()
-            formData.append('file', fileToUpload)
-            formData.append('courseLevelId', selectedLevel)
-
-            const res = await uploadFile(formData)
-            if (res.data?.success) {
-                showSuccessToast("تم رفع الملف بنجاح")
-                setFileToUpload(null)
-                setIsFileDialogOpen(false)
-                fetchFiles(selectedLevel)
-            }
-        } catch (err) {
-            console.error("Error uploading file:", err)
-            showErrorToast(err?.response?.data?.message || "فشل رفع الملف")
-        } finally {
-            setUploading(false)
-        }
+const handleUploadFile = async () => {
+    if (!fileToUpload) {
+        showErrorToast("يرجى اختيار ملف")
+        return
     }
 
-    const getFileUrl = (fileUrl) => {
-        if (!fileUrl) return ""
-        const cleanBaseUrl = BASE_URL.replace(/\/$/, "")
-        const cleanFileUrl = fileUrl.replace(/^\//, "")
-        return `${cleanBaseUrl}/${cleanFileUrl}`
+    setUploading(true)
+    try {
+        const formData = new FormData()
+        
+        // ✅ إضافة الملف بشكل صحيح
+        formData.append('file', fileToUpload)
+        formData.append('courseLevelId', selectedLevel)
+        
+        // ✅ يمكن إضافة الاسم كحقل منفصل إذا كان السيرفر يتوقعه
+        formData.append('originalFileName', fileToUpload.name)
+
+        console.log("📤 FormData contents:");
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
+
+        const res = await uploadFile(formData)
+        if (res.data?.success) {
+            showSuccessToast("تم رفع الملف بنجاح")
+            setFileToUpload(null)
+            setIsFileDialogOpen(false)
+            fetchFiles(selectedLevel)
+        }
+    } catch (err) {
+        console.error("❌ Upload error details:", {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status
+        });
+        showErrorToast(err?.response?.data?.message || "فشل رفع الملف")
+    } finally {
+        setUploading(false)
     }
+}
+
+   const getFileUrl = (fileUrl) => {
+    if (!fileUrl) return ""
+    const cleanBaseUrl = BASE_URL.replace(/\/$/, "")
+    const cleanFileUrl = fileUrl.replace(/^\//, "")
+    return `${cleanBaseUrl}/${cleanFileUrl}`
+}
+
+
+
 
     // دوال الأسئلة
     const handleOptionChange = (index, field, value) => {
@@ -1281,8 +1332,12 @@ const Lesson = () => {
 
                         {activeTab === "quizzes" && (
                             <div className="space-y-3">
-                                {questions.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">لا توجد أسئلة</div>
+                                {loadingQuestions ? (
+                                    <div className="flex justify-center py-8">
+                                        <div className="animate-spin h-8 w-8 border-b-2 rounded-full border-gray-900"></div>
+                                    </div>
+                                ) : questions.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">لا توجد أسئلة لهذا المستوى</div>
                                 ) : (
                                     <>
                                         {questions.length > 0 && (

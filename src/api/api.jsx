@@ -587,14 +587,14 @@ export const getFileDetails = (fileId) => api.get(`/files/file/${fileId}`);
 
 // POST - رفع ملف جديد
 export const uploadFile = (data) => api.post('/files/admin/files', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data; charset=utf-8' },
 });
 
 // PUT - تعديل ملف (إذا كان مدعوماً)
 export const updateFile = (id, data) => {
   // إذا كان الـ API يدعم التعديل
   return api.put(`/files/admin/files/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data; charset=utf-8' },
   });
 };
 
@@ -1021,14 +1021,15 @@ export const createAdmin = (data) =>
 export const getAdminsList = () =>
     api.get('/admin/list');
 
+export const detailsAdmin = (adminId, data) =>
+    api.get(`/admin/${adminId}`, data);
+
 export const updateAdmin = (adminId, data) =>
     api.put(`/admin/${adminId}`, data);
 
 export const deleteAdmin = (adminId) =>
     api.delete(`/admin/${adminId}`);
 
-export const toggleAdminStatus = (adminId, isActive) =>
-    api.patch(`/admin/${adminId}/status`, { isActive });
 
 
 //   لإدارة التقييمات

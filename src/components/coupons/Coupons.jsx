@@ -7,19 +7,35 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen } from "lucide-react"
-import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses } from "@/api/api"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter } from "lucide-react"
+import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Coupons = () => {
+  // الحالات الأساسية
   const [coupons, setCoupons] = useState([])
   const [allCoupons, setAllCoupons] = useState([])
-  const [courseLevels, setCourseLevels] = useState([])
+  const [specializations, setSpecializations] = useState([])
   const [courses, setCourses] = useState([])
+  const [instructors, setInstructors] = useState([])
+  const [courseLevels, setCourseLevels] = useState([])
   const [loading, setLoading] = useState(false)
+  
+  // حالات التحديد الهرمي
+  const [selectedSpecialization, setSelectedSpecialization] = useState("")
+  const [selectedCourse, setSelectedCourse] = useState("")
+  const [selectedInstructor, setSelectedInstructor] = useState("")
+  const [selectedLevel, setSelectedLevel] = useState("")
+
+  // حالات البحث في التحديدات
+  const [specializationSearch, setSpecializationSearch] = useState("")
+  const [courseSearch, setCourseSearch] = useState("")
+  const [instructorSearch, setInstructorSearch] = useState("")
+  const [levelSearch, setLevelSearch] = useState("")
+
+  // حالة النموذج
   const [form, setForm] = useState({
     code: "",
     discount: "",
@@ -27,26 +43,148 @@ const Coupons = () => {
     expiry: "",
     maxUsage: "",
     isActive: true,
+    specializationId: "",
+    courseId: "",
+    instructorId: "",
     courseLevelId: ""
   })
+
+  // حالات الديالوج
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" })
   const [detailDialog, setDetailDialog] = useState({ isOpen: false, coupon: null })
 
-  // Pagination & Filtering states
+  // حالات الفلترة والترتيب
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [specializationFilter, setSpecializationFilter] = useState("all")
   const [courseFilter, setCourseFilter] = useState("all")
+  const [instructorFilter, setInstructorFilter] = useState("all")
   const [levelFilter, setLevelFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortOrder, setSortOrder] = useState("desc")
   const [totalCoupons, setTotalCoupons] = useState(0)
 
-  // جلب جميع الكوبونات
+  // 🔄 جلب البيانات الأساسية
+  const fetchSpecializations = async () => {
+    try {
+      const res = await getSpecializations()
+      const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                  Array.isArray(res.data?.data?.data) ? res.data.data.data :
+                  Array.isArray(res.data?.data) ? res.data.data : []
+      setSpecializations(data)
+    } catch (err) {
+      console.error("❌ Error fetching specializations:", err)
+      showErrorToast("فشل تحميل الاختصاصات")
+    }
+  }
+
+  const fetchCourses = async (specializationId = null) => {
+    try {
+      const res = await getCourses()
+      let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                      Array.isArray(res.data?.data?.data) ? res.data.data.data : []
+      
+      // فلترة الكورسات حسب الاختصاص إذا تم تحديده
+      if (specializationId) {
+        allCourses = allCourses.filter(course => 
+          course.specializationId === parseInt(specializationId)
+        )
+      }
+      
+      setCourses(allCourses)
+    } catch (err) {
+      console.error("❌ Error fetching courses:", err)
+      showErrorToast("فشل تحميل الكورسات")
+    }
+  }
+
+  const fetchInstructorsByCourse = async (courseId) => {
+    if (!courseId) {
+      setInstructors([]);
+      setSelectedInstructor("");
+      return;
+    }
+
+    try {
+      console.log("🔄 Fetching instructors for course:", courseId);
+      const res = await getInstructorsByCourse(courseId);
+      console.log("📊 Instructors API full response:", res);
+      
+      let data = [];
+      if (Array.isArray(res.data?.data?.instructors)) {
+        data = res.data.data.instructors;
+      } else if (Array.isArray(res.data?.data?.data)) {
+        data = res.data.data.data;
+      } else if (Array.isArray(res.data?.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        data = res.data;
+      }
+      
+      console.log("✅ Extracted instructors for course:", data);
+      setInstructors(data || []);
+    } catch (err) {
+      console.error("❌ Error fetching instructors:", err);
+      showErrorToast("فشل تحميل المدرسين");
+      setInstructors([]);
+    }
+  };
+
+  const fetchCourseLevels = async (courseId, instructorId = null) => {
+    if (!courseId) {
+      setCourseLevels([])
+      return
+    }
+
+    try {
+      const res = await getCourseLevels(courseId)
+      console.log("Full levels response:", res);
+      
+      let data = [];
+      if (Array.isArray(res.data?.data)) {
+        if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+          data = res.data.data[0];
+        } else {
+          data = res.data.data;
+        }
+      } else if (Array.isArray(res.data?.data?.items)) {
+        data = res.data.data.items;
+      } else if (Array.isArray(res.data?.data?.data)) {
+        data = res.data.data.data;
+      }
+      
+      // ✅ فلترة المستويات حسب المدرس المحدد
+      let filteredLevels = data || [];
+      if (instructorId) {
+        const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
+        if (selectedInstructorData && selectedInstructorData.levelIds) {
+          filteredLevels = filteredLevels.filter(level => 
+            selectedInstructorData.levelIds.includes(level.id)
+          );
+        }
+      }
+      
+      // إضافة معلومات الكورس لكل مستوى
+      const levelsWithCourseInfo = filteredLevels.map(level => ({
+        ...level,
+        courseId: courseId,
+        courseTitle: courses.find(course => course.id === courseId)?.title || "غير محدد"
+      }))
+
+      setCourseLevels(levelsWithCourseInfo);
+    } catch (err) {
+      console.error("Error fetching levels:", err);
+      showErrorToast("فشل تحميل مستويات الكورس");
+      setCourseLevels([]);
+    }
+  }
+
+  // 🔄 جلب الكوبونات
   const fetchCoupons = async () => {
     setLoading(true)
     try {
@@ -62,7 +200,7 @@ const Coupons = () => {
       const res = await getCoupons(params)
       console.log("📊 Coupons API response:", res)
 
-      // معالجة الـ response بناءً على الهيكل الذي عرضته
+      // معالجة الـ response
       let data = []
       let total = 0
 
@@ -91,81 +229,121 @@ const Coupons = () => {
     }
   }
 
-  // جلب الكورسات
-  const fetchCourses = async () => {
-    try {
-      const res = await getCourses()
-      console.log("📚 Courses API response:", res)
+  // 🔄 useEffect للبيانات الأساسية
+  useEffect(() => {
+    fetchSpecializations()
+    fetchCourses()
+    fetchCoupons()
+  }, [])
 
-      let coursesData = []
-      if (res.data?.data?.items && Array.isArray(res.data.data.items)) {
-        coursesData = res.data.data.items
-      } else if (Array.isArray(res.data?.items)) {
-        coursesData = res.data.data
-      } else if (Array.isArray(res.data)) {
-        coursesData = res.data
-      }
-
-      setCourses(coursesData || [])
-      console.log("📚 Courses data:", coursesData)
-    } catch (err) {
-      console.error("❌ Error fetching courses:", err)
-      showErrorToast("فشل تحميل الكورسات")
-    }
-  }
-
-  // جلب مستويات كورس محدد
-  const fetchCourseLevels = async (courseId) => {
-    if (!courseId) {
-      setCourseLevels([])
-      return
-    }
-
-    try {
-      const res = await getCourseLevels(courseId)
-      console.log(`📚 Levels for course ${courseId}:`, res)
-
-      let levelsData = []
-      if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-        levelsData = res.data.data.data
-      } else if (Array.isArray(res.data?.data)) {
-        levelsData = res.data.data
-      } else if (Array.isArray(res.data)) {
-        levelsData = res.data
-      }
-
-      // إضافة معلومات الكورس لكل مستوى
-      const levelsWithCourseInfo = levelsData.map(level => ({
-        ...level,
-        courseId: courseId,
-        courseTitle: courses.find(course => course.id === courseId)?.title || "غير محدد"
-      }))
-
-      setCourseLevels(levelsWithCourseInfo)
-      console.log("📚 Loaded course levels:", levelsWithCourseInfo)
-    } catch (err) {
-      console.error(`❌ Error fetching levels for course ${courseId}:`, err)
-      showErrorToast("فشل تحميل مستويات الكورس")
-      setCourseLevels([])
-    }
-  }
-
+  // 🔄 useEffect للفلترة
   useEffect(() => {
     fetchCoupons()
-    fetchCourses()
   }, [currentPage, itemsPerPage, searchTerm, statusFilter])
 
-  // عند تغيير الكورس في الفلتر
+  // 🔄 عند تغيير الاختصاص في الفلتر
+  useEffect(() => {
+    if (specializationFilter && specializationFilter !== "all") {
+      fetchCourses(specializationFilter)
+      setCourseFilter("all")
+      setInstructorFilter("all")
+      setLevelFilter("all")
+    } else {
+      fetchCourses()
+      setCourseFilter("all")
+      setInstructorFilter("all")
+      setLevelFilter("all")
+    }
+  }, [specializationFilter])
+
+  // 🔄 عند تغيير الكورس في الفلتر
   useEffect(() => {
     if (courseFilter && courseFilter !== "all") {
-      fetchCourseLevels(parseInt(courseFilter))
+      fetchInstructorsByCourse(parseInt(courseFilter))
+      setInstructorFilter("all")
+      setLevelFilter("all")
     } else {
-      setCourseLevels([])
+      setInstructors([])
+      setInstructorFilter("all")
       setLevelFilter("all")
     }
   }, [courseFilter])
 
-  // فلترة وترتيب البيانات
+  // 🔄 عند تغيير المدرس في الفلتر
+  useEffect(() => {
+    if (instructorFilter && instructorFilter !== "all") {
+      fetchCourseLevels(parseInt(courseFilter), parseInt(instructorFilter))
+      setLevelFilter("all")
+    } else {
+      setCourseLevels([])
+      setLevelFilter("all")
+    }
+  }, [instructorFilter, courseFilter])
+
+  // 🔄 عند تغيير الاختصاص في النموذج
+  useEffect(() => {
+    if (form.specializationId) {
+      fetchCourses(form.specializationId)
+      setForm(prev => ({ ...prev, courseId: "", instructorId: "", courseLevelId: "" }))
+    } else {
+      setCourses([])
+      setForm(prev => ({ ...prev, courseId: "", instructorId: "", courseLevelId: "" }))
+    }
+  }, [form.specializationId])
+
+  // 🔄 عند تغيير الكورس في النموذج
+  useEffect(() => {
+    if (form.courseId) {
+      fetchInstructorsByCourse(parseInt(form.courseId))
+      setForm(prev => ({ ...prev, instructorId: "", courseLevelId: "" }))
+    } else {
+      setInstructors([])
+      setForm(prev => ({ ...prev, instructorId: "", courseLevelId: "" }))
+    }
+  }, [form.courseId])
+
+  // 🔄 عند تغيير المدرس في النموذج
+  useEffect(() => {
+    if (form.instructorId) {
+      fetchCourseLevels(parseInt(form.courseId), parseInt(form.instructorId))
+      setForm(prev => ({ ...prev, courseLevelId: "" }))
+    } else {
+      setCourseLevels([])
+      setForm(prev => ({ ...prev, courseLevelId: "" }))
+    }
+  }, [form.instructorId, form.courseId])
+
+  // 🔄 فلترة البيانات للبحث في التحديدات
+  const filteredSpecializationsForSelect = useMemo(() => {
+    if (!specializationSearch) return specializations;
+    return specializations.filter(spec => 
+      spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+      spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+    );
+  }, [specializations, specializationSearch]);
+
+  const filteredCoursesForSelect = useMemo(() => {
+    if (!courseSearch) return courses;
+    return courses.filter(course => 
+      course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+    );
+  }, [courses, courseSearch]);
+
+  const filteredInstructorsForSelect = useMemo(() => {
+    if (!instructorSearch) return instructors;
+    return instructors.filter(instructor => 
+      instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+    );
+  }, [instructors, instructorSearch]);
+
+  const filteredLevelsForSelect = useMemo(() => {
+    if (!levelSearch) return courseLevels;
+    return courseLevels.filter(level => 
+      level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+    );
+  }, [courseLevels, levelSearch]);
+
+  // 🔄 فلترة وترتيب الكوبونات
   const filteredAndSortedCoupons = useMemo(() => {
     let filtered = [...allCoupons]
 
@@ -190,11 +368,28 @@ const Coupons = () => {
       )
     }
 
+    // فلترة بالاختصاص
+    if (specializationFilter !== "all") {
+      filtered = filtered.filter(coupon => {
+        const courseLevel = coupon.courseLevel
+        return courseLevel && courseLevel.course?.specializationId === parseInt(specializationFilter)
+      })
+    }
+
     // فلترة بالكورس
     if (courseFilter !== "all") {
       filtered = filtered.filter(coupon => {
-        const courseLevel = allCoupons.find(c => c.id === coupon.id)?.courseLevel
+        const courseLevel = coupon.courseLevel
         return courseLevel && courseLevel.courseId === parseInt(courseFilter)
+      })
+    }
+
+    // فلترة بالمدرس
+    if (instructorFilter !== "all") {
+      filtered = filtered.filter(coupon => {
+        // هنا يمكن إضافة منطق الفلترة حسب المدرس
+        // قد تحتاج إلى تعديل بناءً على هيكل البيانات
+        return true; // مؤقتاً
       })
     }
 
@@ -241,26 +436,42 @@ const Coupons = () => {
     })
 
     return filtered
-  }, [allCoupons, searchTerm, statusFilter, typeFilter, courseFilter, levelFilter, sortBy, sortOrder])
+  }, [allCoupons, searchTerm, statusFilter, typeFilter, specializationFilter, courseFilter, instructorFilter, levelFilter, sortBy, sortOrder])
 
-  // حساب البيانات المعروضة في الصفحة الحالية
+  // 🔄 حساب البيانات المعروضة في الصفحة الحالية
   const paginatedCoupons = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     return filteredAndSortedCoupons.slice(startIndex, endIndex)
   }, [filteredAndSortedCoupons, currentPage, itemsPerPage])
 
-  // إعادة تعيين الصفحة عند تغيير الفلتر
+  // 🔄 إعادة تعيين الصفحة عند تغيير الفلتر
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, statusFilter, typeFilter, courseFilter, levelFilter, itemsPerPage])
+  }, [searchTerm, statusFilter, typeFilter, specializationFilter, courseFilter, instructorFilter, levelFilter, itemsPerPage])
 
-  // التعامل مع تغييرات النموذج
+  // 🎯 دوال التعامل مع النموذج
   const handleFormChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
-  // حفظ الكوبون (إضافة أو تعديل)
+  const resetForm = () => {
+    setForm({
+      code: "",
+      discount: "",
+      isPercent: true,
+      expiry: "",
+      maxUsage: "",
+      isActive: true,
+      specializationId: "",
+      courseId: "",
+      instructorId: "",
+      courseLevelId: ""
+    })
+    setEditItem(null)
+  }
+
+  // 💾 حفظ الكوبون
   const handleSave = async () => {
     if (!form.code.trim()) return showErrorToast("يرجى إدخال كود الخصم")
     if (!form.discount || parseFloat(form.discount) <= 0) return showErrorToast("يرجى إدخال قيمة الخصم صحيحة")
@@ -282,22 +493,12 @@ const Coupons = () => {
       if (editItem) {
         await updateCoupon(editItem.id, couponData)
         showSuccessToast("تم تعديل الكوبون بنجاح")
-        setEditItem(null)
       } else {
         await createCoupon(couponData)
         showSuccessToast("تم إنشاء الكوبون بنجاح")
       }
 
-      // إعادة تعيين النموذج
-      setForm({
-        code: "",
-        discount: "",
-        isPercent: true,
-        expiry: "",
-        maxUsage: "",
-        isActive: true,
-        courseLevelId: ""
-      })
+      resetForm()
       setIsDialogOpen(false)
       fetchCoupons()
     } catch (err) {
@@ -306,7 +507,7 @@ const Coupons = () => {
     }
   }
 
-  // تبديل حالة الكوبون
+  // 🔄 تبديل حالة الكوبون
   const handleToggleActive = async (id, isActive) => {
     try {
       await toggleCouponActive(id, !isActive)
@@ -317,7 +518,7 @@ const Coupons = () => {
     }
   }
 
-  // حذف الكوبون
+  // 🗑️ حذف الكوبون
   const handleDelete = async (id) => {
     try {
       await deleteCoupon(id)
@@ -328,26 +529,20 @@ const Coupons = () => {
     }
   }
 
-  // تنسيق التاريخ بالتقويم السوري
+  // 📅 تنسيق التاريخ
   const formatDate = (dateString) => {
     if (!dateString) return "غير محدد"
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US')
   }
 
-  // تنسيق العملة السورية
-  const formatCurrency = (amount) => {
-    if (!amount) return "0 ل.س"
-    return new Intl.NumberFormat('ar-SY').format(amount) + " ل.س"
-  }
-
-  // التحقق من انتهاء الصلاحية
+  // 🔍 التحقق من انتهاء الصلاحية
   const isExpired = (expiryDate) => {
     if (!expiryDate) return false
     return new Date(expiryDate) < new Date()
   }
 
-  // الحصول على لون البادج حسب الحالة
+  // 🎯 الحصول على حالة الكوبون
   const getStatusBadgeVariant = (coupon) => {
     if (!coupon.isActive) return 'secondary'
     if (isExpired(coupon.expiry)) return 'destructive'
@@ -355,7 +550,6 @@ const Coupons = () => {
     return 'default'
   }
 
-  // الحصول على نص الحالة
   const getStatusText = (coupon) => {
     if (!coupon.isActive) return "معطل"
     if (isExpired(coupon.expiry)) return "منتهي"
@@ -363,7 +557,7 @@ const Coupons = () => {
     return "نشط"
   }
 
-  // الحصول على اسم المستوى الدراسي والكورس
+  // 📚 الحصول على معلومات الكورس والمستوى
   const getCourseLevelInfo = (coupon) => {
     if (!coupon.courseLevel) return "غير محدد"
 
@@ -373,20 +567,53 @@ const Coupons = () => {
     return `${courseName} - ${levelName}`
   }
 
-  // Pagination calculations
+  // 🎯 دوال مساعدة للحصول على الأسماء
+  const getSpecializationName = (specializationId) => {
+    const specialization = specializations.find(spec => spec.id === parseInt(specializationId))
+    return specialization ? (specialization.name || specialization.title) : "غير محدد"
+  }
+
+  const getCourseName = (courseId) => {
+    const course = courses.find(crs => crs.id === parseInt(courseId))
+    return course ? course.title : "غير محدد"
+  }
+
+  const getInstructorName = (instructorId) => {
+    const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
+    return instructor ? instructor.name : "غير محدد";
+  };
+
+  const getLevelName = (levelId) => {
+    const level = courseLevels.find(lvl => lvl.id === parseInt(levelId))
+    return level ? level.name : "غير محدد"
+  }
+
+  // 🔄 إعادة تعيين جميع التحديدات
+  const resetAllSelections = () => {
+    setSelectedSpecialization("")
+    setSelectedCourse("")
+    setSelectedInstructor("")
+    setSelectedLevel("")
+    setSpecializationSearch("")
+    setCourseSearch("")
+    setInstructorSearch("")
+    setLevelSearch("")
+  }
+
+  // 📊 حسابات الترقيم
   const totalItems = filteredAndSortedCoupons.length
   const totalPages = Math.ceil(totalItems / itemsPerPage)
   const startItem = (currentPage - 1) * itemsPerPage + 1
   const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
-  // Handle page change
+  // 🔄 تغيير الصفحة
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
     }
   }
 
-  // Handle sort
+  // 🔄 الترتيب
   const handleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc")
@@ -396,19 +623,21 @@ const Coupons = () => {
     }
   }
 
-  // Reset filters
+  // 🔄 إعادة تعيين الفلاتر
   const resetFilters = () => {
     setSearchTerm("")
     setStatusFilter("all")
     setTypeFilter("all")
+    setSpecializationFilter("all")
     setCourseFilter("all")
+    setInstructorFilter("all")
     setLevelFilter("all")
     setSortBy("createdAt")
     setSortOrder("desc")
     setCurrentPage(1)
   }
 
-  // عرض التفاصيل الكاملة للكوبون
+  // 👁️ عرض التفاصيل الكاملة للكوبون
   const renderCouponDetails = (coupon) => {
     if (!coupon) return null
 
@@ -480,7 +709,7 @@ const Coupons = () => {
     )
   }
 
-  // مكون بطاقة الكوبون للعرض على الجوال
+  // 📱 مكون بطاقة الكوبون للعرض على الجوال
   const CouponCard = ({ coupon }) => (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -553,6 +782,9 @@ const Coupons = () => {
                 expiry: coupon.expiry?.split('T')[0] || "",
                 maxUsage: coupon.maxUsage?.toString() || "",
                 isActive: coupon.isActive,
+                specializationId: coupon.courseLevel?.course?.specializationId?.toString() || "",
+                courseId: coupon.courseLevel?.courseId?.toString() || "",
+                instructorId: "",
                 courseLevelId: coupon.courseLevelId?.toString() || ""
               })
               setIsDialogOpen(true)
@@ -585,24 +817,14 @@ const Coupons = () => {
       <CardHeader className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <CardTitle>إدارة كوبونات الخصم</CardTitle>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetForm()
+          }}>
             <DialogTrigger asChild>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditItem(null)
-                  setForm({
-                    code: "",
-                    discount: "",
-                    isPercent: true,
-                    expiry: "",
-                    maxUsage: "",
-                    isActive: true,
-                    courseLevelId: ""
-                  })
-                }}
-              >
-                إضافة كوبون <Plus className="w-4 h-4 cursor-pointer" />
+              <Button size="sm">
+                <Plus className="w-4 h-4 ml-1" />
+                إضافة كوبون
               </Button>
             </DialogTrigger>
 
@@ -673,18 +895,114 @@ const Coupons = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* اختيار الاختصاص والكورس والمدرس والمستوى */}
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>الاختصاص</Label>
+                    <Select
+                      value={form.specializationId}
+                      onValueChange={(value) => handleFormChange("specializationId", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر الاختصاص" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="ابحث عن اختصاص..."
+                            value={specializationSearch}
+                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                            className="mb-2"
+                          />
+                        </div>
+                        {filteredSpecializationsForSelect.map((spec) => (
+                          <SelectItem key={spec.id} value={spec.id.toString()}>
+                            {spec.name || spec.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>الكورس</Label>
+                    <Select
+                      value={form.courseId}
+                      onValueChange={(value) => handleFormChange("courseId", value)}
+                      disabled={!form.specializationId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={form.specializationId ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="ابحث عن كورس..."
+                            value={courseSearch}
+                            onChange={(e) => setCourseSearch(e.target.value)}
+                            className="mb-2"
+                          />
+                        </div>
+                        {filteredCoursesForSelect
+                          .filter(course => course.specializationId === parseInt(form.specializationId))
+                          .map(course => (
+                            <SelectItem key={course.id} value={course.id.toString()}>
+                              {course.title}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>المدرس</Label>
+                    <Select
+                      value={form.instructorId}
+                      onValueChange={(value) => handleFormChange("instructorId", value)}
+                      disabled={!form.courseId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={form.courseId ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="ابحث عن مدرس..."
+                            value={instructorSearch}
+                            onChange={(e) => setInstructorSearch(e.target.value)}
+                            className="mb-2"
+                          />
+                        </div>
+                        {filteredInstructorsForSelect.map((instructor) => (
+                          <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                            {instructor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label>المستوى الدراسي *</Label>
                     <Select
                       value={form.courseLevelId}
                       onValueChange={(value) => handleFormChange("courseLevelId", value)}
+                      disabled={!form.instructorId}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر المستوى الدراسي" />
+                        <SelectValue placeholder={form.instructorId ? "اختر المستوى الدراسي" : "اختر المدرس أولاً"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.isArray(courseLevels) && courseLevels.map(level => (
+                        <div className="p-2">
+                          <Input
+                            placeholder="ابحث عن مستوى..."
+                            value={levelSearch}
+                            onChange={(e) => setLevelSearch(e.target.value)}
+                            className="mb-2"
+                          />
+                        </div>
+                        {filteredLevelsForSelect.map(level => (
                           <SelectItem key={level.id} value={level.id.toString()}>
                             {level.courseTitle} - {level.name}
                           </SelectItem>
@@ -692,29 +1010,62 @@ const Coupons = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-2 flex items-center gap-2">
-                    <Label>الحالة</Label>
-                    <Switch
-                      checked={form.isActive}
-                      onCheckedChange={(checked) => handleFormChange("isActive", checked)}
-                    />
-                    <span>{form.isActive ? "نشط" : "معطل"}</span>
-                  </div>
                 </div>
 
-                <Button onClick={handleSave}>
-                  {editItem ? "حفظ التعديل" : "حفظ"}
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={form.isActive}
+                    onCheckedChange={(checked) => handleFormChange("isActive", checked)}
+                  />
+                  <Label>الحالة: {form.isActive ? "نشط" : "معطل"}</Label>
+                </div>
+
+                <Button onClick={handleSave} className="w-full">
+                  {editItem ? "حفظ التعديل" : "حفظ الكوبون"}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Filters Section */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* Search */}
-          <div className="relative">
+        {/* مسار الاختيار */}
+        {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+              <span className="text-blue-700">المسار المختار:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="bg-white">
+                  {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                </Badge>
+                <ChevronRight className="h-4 w-4 text-blue-500" />
+                <Badge variant="outline" className="bg-white">
+                  {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                </Badge>
+                <ChevronRight className="h-4 w-4 text-blue-500" />
+                <Badge variant="outline" className="bg-white">
+                  {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                </Badge>
+                <ChevronRight className="h-4 w-4 text-blue-500" />
+                <Badge variant="outline" className="bg-white">
+                  {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetAllSelections}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  إعادة تعيين الكل
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🔍 قسم الفلترة */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+          {/* البحث */}
+          <div className="relative md:col-span-2">
             <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="بحث بالكود..."
@@ -724,7 +1075,7 @@ const Coupons = () => {
             />
           </div>
 
-          {/* Status Filter */}
+          {/* فلترة الحالة */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
               <SelectValue placeholder="فلترة بالحالة" />
@@ -736,7 +1087,7 @@ const Coupons = () => {
             </SelectContent>
           </Select>
 
-          {/* Type Filter */}
+          {/* فلترة النوع */}
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
               <SelectValue placeholder="فلترة بالنوع" />
@@ -748,33 +1099,74 @@ const Coupons = () => {
             </SelectContent>
           </Select>
 
-          {/* Course Filter */}
-          <Select value={courseFilter} onValueChange={setCourseFilter}>
+          {/* فلترة الاختصاص */}
+          <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="فلترة بالكورس" />
+              <SelectValue placeholder="فلترة بالاختصاص" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">جميع الكورسات</SelectItem>
-              {Array.isArray(courses) && courses.map(course => (
-                <SelectItem key={course.id} value={course.id.toString()}>
-                  {course.title}
+              <SelectItem value="all">جميع الاختصاصات</SelectItem>
+              {specializations.map(spec => (
+                <SelectItem key={spec.id} value={spec.id.toString()}>
+                  {spec.name || spec.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          {/* Level Filter */}
-          <Select
-            value={levelFilter}
-            onValueChange={setLevelFilter}
+          {/* فلترة الكورس */}
+          <Select 
+            value={courseFilter} 
+            onValueChange={setCourseFilter}
+            disabled={!specializationFilter || specializationFilter === "all"}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={specializationFilter !== "all" ? "فلترة بالكورس" : "اختر الاختصاص أولاً"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع الكورسات</SelectItem>
+              {courses
+                .filter(course => course.specializationId === parseInt(specializationFilter))
+                .map(course => (
+                  <SelectItem key={course.id} value={course.id.toString()}>
+                    {course.title}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+
+          {/* فلترة المدرس */}
+          <Select 
+            value={instructorFilter} 
+            onValueChange={setInstructorFilter}
             disabled={!courseFilter || courseFilter === "all"}
           >
             <SelectTrigger>
-              <SelectValue placeholder={courseFilter !== "all" ? "فلترة بالمستوى" : "اختر الكورس أولاً"} />
+              <SelectValue placeholder={courseFilter !== "all" ? "فلترة بالمدرس" : "اختر الكورس أولاً"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع المدرسين</SelectItem>
+              {instructors.map(instructor => (
+                <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                  {instructor.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* فلترة المستوى */}
+          <Select
+            value={levelFilter}
+            onValueChange={setLevelFilter}
+            disabled={!instructorFilter || instructorFilter === "all"}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={instructorFilter !== "all" ? "فلترة بالمستوى" : "اختر المدرس أولاً"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">جميع المستويات</SelectItem>
-              {Array.isArray(courseLevels) && courseLevels.map(level => (
+              {courseLevels.map(level => (
                 <SelectItem key={level.id} value={level.id.toString()}>
                   {level.name}
                 </SelectItem>
@@ -783,15 +1175,16 @@ const Coupons = () => {
           </Select>
         </div>
 
-        {/* Reset Filters & Results Count */}
+        {/* 🔄 إعادة تعيين الفلترة وعدد النتائج */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="text-sm text-muted-foreground">
             عرض {startItem} إلى {endItem} من {totalItems} كوبون
-            {(searchTerm || statusFilter !== "all" || typeFilter !== "all" || courseFilter !== "all" || levelFilter !== "all") && ` (مفلتر)`}
+            {(searchTerm || statusFilter !== "all" || typeFilter !== "all" || specializationFilter !== "all" || courseFilter !== "all" || instructorFilter !== "all" || levelFilter !== "all") && ` (مفلتر)`}
           </div>
 
-          {(searchTerm || statusFilter !== "all" || typeFilter !== "all" || courseFilter !== "all" || levelFilter !== "all") && (
+          {(searchTerm || statusFilter !== "all" || typeFilter !== "all" || specializationFilter !== "all" || courseFilter !== "all" || instructorFilter !== "all" || levelFilter !== "all") && (
             <Button variant="outline" size="sm" onClick={resetFilters}>
+              <Filter className="w-4 h-4 ml-1" />
               إعادة تعيين الفلترة
             </Button>
           )}
@@ -801,173 +1194,182 @@ const Coupons = () => {
       <CardContent>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 rounded-full border-gray-900"></div>
+            <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
           </div>
         ) : (
           <>
-            {/* Table View - for medium screens and up */}
+            {/* 📊 عرض الجدول للشاشات المتوسطة والكبيرة */}
             <div className="hidden md:block">
-              <Table className="direction-rtl">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead
-                      className="table-header cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort("code")}
-                    >
-                      <div className="flex items-center gap-1">
-                        كود الخصم
-                        {sortBy === "code" && (
-                          <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="table-header cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort("discount")}
-                    >
-                      <div className="flex items-center gap-1">
-                        الخصم
-                        {sortBy === "discount" && (
-                          <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="table-header">النوع</TableHead>
-                    <TableHead className="table-header">الاستخدام</TableHead>
-                    <TableHead
-                      className="table-header cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort("expiry")}
-                    >
-                      <div className="flex items-center gap-1">
-                        الانتهاء
-                        {sortBy === "expiry" && (
-                          <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="table-header">المستوى</TableHead>
-                    <TableHead
-                      className="table-header cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort("isActive")}
-                    >
-                      <div className="flex items-center gap-1">
-                        الحالة
-                        {sortBy === "isActive" && (
-                          <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="table-header text-right">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.isArray(paginatedCoupons) && paginatedCoupons.length > 0 ? paginatedCoupons.map(coupon => (
-                    <TableRow key={coupon.id}>
-                      <TableCell className="table-cell">
-                        <div className="font-mono font-bold">{coupon.code}</div>
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        <div className="flex items-center gap-2">
-                          {coupon.isPercent ? (
-                            <Percent className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Hash className="w-4 h-4 text-blue-600" />
-                          )}
-                          <span className="font-bold">
-                            {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        <Badge variant={coupon.isPercent ? "default" : "secondary"}>
-                          {coupon.isPercent ? 'نسبة' : 'ثابت'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-gray-500" />
-                          <span>{coupon.usedCount || 0} / {coupon.maxUsage || '∞'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-500" />
-                          <span>{formatDate(coupon.expiry)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        {getCourseLevelInfo(coupon)}
-                      </TableCell>
-                      <TableCell className="table-cell">
-                        <Badge variant={getStatusBadgeVariant(coupon)}>
-                          {getStatusText(coupon)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="table-cell text-right space-x-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setDetailDialog({ isOpen: true, coupon })}
-                          title="عرض التفاصيل"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleToggleActive(coupon.id, coupon.isActive)}
-                          title={coupon.isActive ? "تعطيل" : "تفعيل"}
-                        >
-                          {coupon.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem(coupon)
-                            setForm({
-                              code: coupon.code || "",
-                              discount: coupon.discount?.toString() || "",
-                              isPercent: coupon.isPercent,
-                              expiry: coupon.expiry?.split('T')[0] || "",
-                              maxUsage: coupon.maxUsage?.toString() || "",
-                              isActive: coupon.isActive,
-                              courseLevelId: coupon.courseLevelId?.toString() || ""
-                            })
-                            setIsDialogOpen(true)
-                          }}
-                          title="تعديل"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          onClick={() => setDeleteDialog({
-                            isOpen: true,
-                            itemId: coupon.id,
-                            itemName: coupon.code || "بدون كود"
-                          })}
-                          title="حذف"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table className="min-w-full">
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
-                        {allCoupons.length === 0 ? "لا توجد كوبونات متاحة" : "لا توجد نتائج مطابقة للبحث"}
-                      </TableCell>
+                      <TableHead
+                        className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                        onClick={() => handleSort("code")}
+                      >
+                        <div className="flex items-center gap-1">
+                          كود الخصم
+                          {sortBy === "code" && (
+                            <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                        onClick={() => handleSort("discount")}
+                      >
+                        <div className="flex items-center gap-1">
+                          الخصم
+                          {sortBy === "discount" && (
+                            <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">النوع</TableHead>
+                      <TableHead className="whitespace-nowrap">الاستخدام</TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                        onClick={() => handleSort("expiry")}
+                      >
+                        <div className="flex items-center gap-1">
+                          الانتهاء
+                          {sortBy === "expiry" && (
+                            <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">المستوى</TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                        onClick={() => handleSort("isActive")}
+                      >
+                        <div className="flex items-center gap-1">
+                          الحالة
+                          {sortBy === "isActive" && (
+                            <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-right whitespace-nowrap">الإجراءات</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedCoupons.length > 0 ? paginatedCoupons.map(coupon => (
+                      <TableRow key={coupon.id}>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="font-mono font-bold">{coupon.code}</div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {coupon.isPercent ? (
+                              <Percent className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Hash className="w-4 h-4 text-blue-600" />
+                            )}
+                            <span className="font-bold">
+                              {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge variant={coupon.isPercent ? "default" : "secondary"}>
+                            {coupon.isPercent ? 'نسبة' : 'ثابت'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-gray-500" />
+                            <span>{coupon.usedCount || 0} / {coupon.maxUsage || '∞'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-500" />
+                            <span>{formatDate(coupon.expiry)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {getCourseLevelInfo(coupon)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge variant={getStatusBadgeVariant(coupon)}>
+                            {getStatusText(coupon)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2 whitespace-nowrap">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDetailDialog({ isOpen: true, coupon })}
+                            title="عرض التفاصيل"
+                            className="h-8 w-8"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleToggleActive(coupon.id, coupon.isActive)}
+                            title={coupon.isActive ? "تعطيل" : "تفعيل"}
+                            className="h-8 w-8"
+                          >
+                            {coupon.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditItem(coupon)
+                              setForm({
+                                code: coupon.code || "",
+                                discount: coupon.discount?.toString() || "",
+                                isPercent: coupon.isPercent,
+                                expiry: coupon.expiry?.split('T')[0] || "",
+                                maxUsage: coupon.maxUsage?.toString() || "",
+                                isActive: coupon.isActive,
+                                specializationId: coupon.courseLevel?.course?.specializationId?.toString() || "",
+                                courseId: coupon.courseLevel?.courseId?.toString() || "",
+                                instructorId: "",
+                                courseLevelId: coupon.courseLevelId?.toString() || ""
+                              })
+                              setIsDialogOpen(true)
+                            }}
+                            title="تعديل"
+                            className="h-8 w-8"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => setDeleteDialog({
+                              isOpen: true,
+                              itemId: coupon.id,
+                              itemName: coupon.code || "بدون كود"
+                            })}
+                            title="حذف"
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )) : (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          {allCoupons.length === 0 ? "لا توجد كوبونات متاحة" : "لا توجد نتائج مطابقة للبحث"}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
-            {/* Cards View - for small screens */}
+            {/* 📱 عرض البطاقات للشاشات الصغيرة */}
             <div className="block md:hidden">
-              {Array.isArray(paginatedCoupons) && paginatedCoupons.length > 0 ? (
+              {paginatedCoupons.length > 0 ? (
                 paginatedCoupons.map(coupon => (
                   <CouponCard key={coupon.id} coupon={coupon} />
                 ))
@@ -978,9 +1380,9 @@ const Coupons = () => {
               )}
             </div>
 
-            {/* Pagination */}
-            {Array.isArray(paginatedCoupons) && paginatedCoupons.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
+            {/* 🔢 الترقيم */}
+            {paginatedCoupons.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                 <div className="text-sm text-muted-foreground">
                   عرض {startItem} إلى {endItem} من {totalItems} كوبون
                 </div>
@@ -995,7 +1397,7 @@ const Coupons = () => {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap justify-center">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNumber
                       if (totalPages <= 5) {
@@ -1014,7 +1416,7 @@ const Coupons = () => {
                           variant={currentPage === pageNumber ? "default" : "outline"}
                           size="sm"
                           onClick={() => handlePageChange(pageNumber)}
-                          className="w-8 h-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
                           {pageNumber}
                         </Button>
@@ -1037,7 +1439,7 @@ const Coupons = () => {
         )}
       </CardContent>
 
-      {/* Delete Confirmation Dialog */}
+      {/* 🗑️ ديالوج تأكيد الحذف */}
       <AlertDialog
         open={deleteDialog.isOpen}
         onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
@@ -1066,7 +1468,7 @@ const Coupons = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Coupon Details Dialog */}
+      {/* 👁️ ديالوج تفاصيل الكوبون */}
       <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, coupon: null })}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
