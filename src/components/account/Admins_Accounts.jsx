@@ -244,7 +244,7 @@ const Admins_Accounts = () => {
   // تنسيق التاريخ
   const formatDate = (dateString) => {
     if (!dateString) return "غير محدد"
-    return new Date(dateString).toLocaleDateString('ar-SA')
+    return new Date(dateString).toLocaleDateString('en-US')
   }
 
   // فلترة وترتيب البيانات
@@ -381,7 +381,7 @@ const Admins_Accounts = () => {
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-gray-500" />
-              <span>{admin.user?.phone}</span>
+              <span dir='ltr'>{admin.user?.phone}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
@@ -503,6 +503,7 @@ const Admins_Accounts = () => {
                     onChange={(e) => handleFormChange("phone", e.target.value)}
                     placeholder="+963123456789"
                     className="text-right"
+                    dir="ltr"
                   />
                 </div>
 
@@ -745,7 +746,7 @@ const Admins_Accounts = () => {
                           <Badge variant="secondary">@{admin.username}</Badge>
                         </TableCell>
                         <TableCell>{admin.email}</TableCell>
-                        <TableCell>{admin.user?.phone}</TableCell>
+                        <TableCell dir="ltr">{admin.user?.phone}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
                             {admin.user?.role === "SUPER_ADMIN" ? "مدير عام" : "مدير"}
@@ -904,7 +905,7 @@ const Admins_Accounts = () => {
                 </div>
                 <div>
                   <Label className="font-medium">رقم الهاتف:</Label>
-                  <p className="mt-1">{selectedAdmin.user?.phone}</p>
+                  <p className="mt-1" dir='ltr'>{selectedAdmin.user?.phone}</p>
                 </div>
                 <div>
                   <Label className="font-medium">الجنس:</Label>
@@ -1002,6 +1003,7 @@ const Admins_Accounts = () => {
                     onChange={(e) => handleFormChange("phone", e.target.value)}
                     placeholder="+963123456789"
                     className="text-right"
+                    dir="ltr"
                   />
                 </div>
 

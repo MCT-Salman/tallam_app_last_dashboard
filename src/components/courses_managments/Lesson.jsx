@@ -10,18 +10,19 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Youtube, Download, Info, Loader2, CheckCircle, XCircle, Clock, BookOpen, File, Upload, FileQuestion } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft,ChevronRight, Eye, Youtube, Download, Info, Loader2, CheckCircle, XCircle, Clock, BookOpen, File, Upload, FileQuestion, Filter } from "lucide-react"
 import { getLevelLessons, createLessonForLevel, updateLesson, deleteLesson, toggleLessonStatus } from "@/api/api"
 import { getCourses } from "@/api/api"
 import { getCourseLevels } from "@/api/api"
 import { getSpecializations } from "@/api/api"
-import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, deleteQuiz, uploadFile, deleteFile, getFilesByLevel } from "@/api/api"
+import { getQuizByCourseLevel, addQuestion, updateQuestion, deleteQuestion, deleteQuiz, uploadFile, deleteFile, getFilesByLevel, getInstructorsByCourse } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
 
 const Lesson = () => {
     const [allLessons, setAllLessons] = useState([])
     const [specializations, setSpecializations] = useState([])
+    const [instructors, setInstructors] = useState([])
     const [courses, setCourses] = useState([])
     const [levels, setLevels] = useState([])
     const [files, setFiles] = useState([])
@@ -30,6 +31,7 @@ const Lesson = () => {
     
     const [selectedSpecialization, setSelectedSpecialization] = useState("")
     const [selectedCourse, setSelectedCourse] = useState("")
+    const [selectedInstructor, setSelectedInstructor] = useState("")
     const [selectedLevel, setSelectedLevel] = useState("")
     const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({
@@ -47,6 +49,12 @@ const Lesson = () => {
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "", type: "" })
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, lesson: null })
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Search states for selects
+    const [specializationSearch, setSpecializationSearch] = useState("")
+    const [courseSearch, setCourseSearch] = useState("")
+    const [instructorSearch, setInstructorSearch] = useState("")
+    const [levelSearch, setLevelSearch] = useState("")
 
     // حالات التحقق من الروابط
     const [linkValidation, setLinkValidation] = useState({
@@ -139,7 +147,7 @@ const Lesson = () => {
         }
     };
 
-    // جلب الكورسات
+    // جلب الكورسات بناءً على الاختصاص المحدد
     const fetchCourses = async (specializationId) => {
         if (!specializationId) {
             setCourses([]);
@@ -162,35 +170,83 @@ const Lesson = () => {
         }
     };
 
-    // جلب المستويات
-    const fetchCourseLevels = async (courseId) => {
+    // ✅ جلب المدرسين بناءً على الكورس المحدد
+    const fetchInstructorsByCourse = async (courseId) => {
         if (!courseId) {
-            setLevels([])
-            setSelectedLevel("")
-            return
+            setInstructors([]);
+            setSelectedInstructor("");
+            return;
         }
 
         try {
-            const res = await getCourseLevels(courseId)
-            console.log("Full levels response:", res);
+            console.log("🔄 Fetching instructors for course:", courseId);
+            const res = await getInstructorsByCourse(courseId);
+            console.log("📊 Instructors API full response:", res);
             
             let data = [];
-            if (Array.isArray(res.data?.data)) {
-                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-                    data = res.data.data[0];
-                } else {
-                    data = res.data.data;
-                }
-            } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
+            if (Array.isArray(res.data?.data?.instructors)) {
+                data = res.data.data.instructors;
             } else if (Array.isArray(res.data?.data?.data)) {
                 data = res.data.data.data;
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data;
+            } else if (Array.isArray(res.data)) {
+                data = res.data;
             }
             
-            setLevels(data || []);
+            console.log("✅ Extracted instructors for course:", data);
+            setInstructors(data || []);
+        } catch (err) {
+            console.error("❌ Error fetching instructors:", err);
+            showErrorToast("فشل تحميل المدرسين");
+            setInstructors([]);
+        }
+    };
+
+    // ✅ جلب المستويات بناءً على المدرس المحدد
+    const fetchLevelsByInstructor = async (instructorId) => {
+        if (!instructorId) {
+            setLevels([]);
+            setSelectedLevel("");
+            return;
+        }
+
+        try {
+            // البحث عن المدرس المحدد للحصول على levelIds
+            const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
+            
+            if (!selectedInstructorData || !selectedInstructorData.levelIds) {
+                setLevels([]);
+                return;
+            }
+
+            // جلب كل المستويات للكورس أولاً
+            const res = await getCourseLevels(selectedCourse);
+            console.log("Full levels response:", res);
+
+            let allLevels = [];
+            if (Array.isArray(res.data?.data)) {
+                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                    allLevels = res.data.data[0];
+                } else {
+                    allLevels = res.data.data;
+                }
+            } else if (Array.isArray(res.data?.data?.items)) {
+                allLevels = res.data.data.items;
+            } else if (Array.isArray(res.data?.data?.data)) {
+                allLevels = res.data.data.data;
+            }
+
+            // ✅ فلترة المستويات حسب levelIds الخاص بالمدرس
+            const filteredLevels = allLevels.filter(level => 
+                selectedInstructorData.levelIds.includes(level.id)
+            );
+
+            console.log("Filtered levels by instructor:", filteredLevels);
+            setLevels(filteredLevels || []);
         } catch (err) {
             console.error("Error fetching levels:", err);
-            showErrorToast("فشل تحميل المستويات");
+            showErrorToast("فشل تحميل مستويات المدرس");
             setLevels([]);
         }
     }
@@ -232,45 +288,46 @@ const Lesson = () => {
         }
     }
 
-// ✅ جلب الأسئلة - إصدار مبسط
-const fetchQuestions = async (levelId) => {
-    if (!levelId) {
-        setQuestions([])
-        return
-    }
-
-    setLoadingQuestions(true)
-    try {
-        const res = await getQuizByCourseLevel(levelId)
-        console.log("📝 Questions API response:", res)
-        
-        // إذا كان هناك رسالة تفيد بعدم وجود أسئلة
-        const errorMessage = res.data?.message || res.data?.data?.message || '';
-        if (errorMessage.includes("لا يوجد أسئلة لهذا المستوى")) {
+    // ✅ جلب الأسئلة - إصدار مبسط
+    const fetchQuestions = async (levelId) => {
+        if (!levelId) {
             setQuestions([])
             return
         }
 
-        // إذا لم تكن هناك بيانات
-        if (!res.data?.data || (Array.isArray(res.data.data) && res.data.data.length === 0)) {
-            setQuestions([])
-            return
-        }
+        setLoadingQuestions(true)
+        try {
+            const res = await getQuizByCourseLevel(levelId)
+            console.log("📝 Questions API response:", res)
+            
+            // إذا كان هناك رسالة تفيد بعدم وجود أسئلة
+            const errorMessage = res.data?.message || res.data?.data?.message || '';
+            if (errorMessage.includes("لا يوجد أسئلة لهذا المستوى")) {
+                setQuestions([])
+                return
+            }
 
-        // استخراج البيانات
-        let data = Array.isArray(res.data.data) ? res.data.data : 
-                  Array.isArray(res.data.data?.data) ? res.data.data.data : 
-                  res.data.data ? [res.data.data] : [];
-        
-        setQuestions(data)
-    } catch (err) {
-        console.error("❌ Error fetching questions:", err)
-        // في حالة الخطأ، أعيد تعيين الأسئلة إلى فارغ
-        setQuestions([])
-    } finally {
-        setLoadingQuestions(false)
+            // إذا لم تكن هناك بيانات
+            if (!res.data?.data || (Array.isArray(res.data.data) && res.data.data.length === 0)) {
+                setQuestions([])
+                return
+            }
+
+            // استخراج البيانات
+            let data = Array.isArray(res.data.data) ? res.data.data : 
+                      Array.isArray(res.data.data?.data) ? res.data.data.data : 
+                      res.data.data ? [res.data.data] : [];
+            
+            setQuestions(data)
+        } catch (err) {
+            console.error("❌ Error fetching questions:", err)
+            // في حالة الخطأ، أعيد تعيين الأسئلة إلى فارغ
+            setQuestions([])
+        } finally {
+            setLoadingQuestions(false)
+        }
     }
-}
+
     // ✅ جلب الملفات - محسّن
     const fetchFiles = async (levelId) => {
         if (!levelId) {
@@ -295,31 +352,78 @@ const fetchQuestions = async (levelId) => {
         }
     }
 
+    // Filtered data for selects with search
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec => 
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
+
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return courses;
+        return courses.filter(course => 
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [courses, courseSearch]);
+
+    const filteredInstructorsForSelect = useMemo(() => {
+        if (!instructorSearch) return instructors;
+        return instructors.filter(instructor => 
+            instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+        );
+    }, [instructors, instructorSearch]);
+
+    const filteredLevelsForSelect = useMemo(() => {
+        if (!levelSearch) return levels;
+        return levels.filter(level => 
+            level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+        );
+    }, [levels, levelSearch]);
+
     useEffect(() => {
         fetchSpecializations()
     }, [])
 
+    // ✅ عند تغيير الاختصاص المحدد
     useEffect(() => {
         if (selectedSpecialization) {
-            fetchCourses(selectedSpecialization)
-            setSelectedCourse("")
-            setSelectedLevel("")
+            fetchCourses(selectedSpecialization);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
         } else {
-            setCourses([])
-            setSelectedCourse("")
-            setSelectedLevel("")
+            setCourses([]);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
         }
     }, [selectedSpecialization])
 
+    // ✅ عند تغيير الكورس المحدد
     useEffect(() => {
         if (selectedCourse) {
-            fetchCourseLevels(selectedCourse)
-            setSelectedLevel("")
+            fetchInstructorsByCourse(selectedCourse);
+            setSelectedInstructor("");
+            setSelectedLevel("");
         } else {
-            setLevels([])
-            setSelectedLevel("")
+            setInstructors([]);
+            setSelectedInstructor("");
+            setSelectedLevel("");
         }
     }, [selectedCourse])
+
+    // ✅ عند تغيير المدرس المحدد
+    useEffect(() => {
+        if (selectedInstructor) {
+            fetchLevelsByInstructor(selectedInstructor);
+            setSelectedLevel("");
+        } else {
+            setLevels([]);
+            setSelectedLevel("");
+        }
+    }, [selectedInstructor, selectedCourse])
 
     // ✅ تأثير محسّن عند تغيير المستوى
     useEffect(() => {
@@ -496,56 +600,53 @@ const fetchQuestions = async (levelId) => {
         setDeleteDialog({ isOpen: false, itemId: null, itemName: "", type: "" })
     }
 
-const handleUploadFile = async () => {
-    if (!fileToUpload) {
-        showErrorToast("يرجى اختيار ملف")
-        return
-    }
-
-    setUploading(true)
-    try {
-        const formData = new FormData()
-        
-        // ✅ إضافة الملف بشكل صحيح
-        formData.append('file', fileToUpload)
-        formData.append('courseLevelId', selectedLevel)
-        
-        // ✅ يمكن إضافة الاسم كحقل منفصل إذا كان السيرفر يتوقعه
-        formData.append('originalFileName', fileToUpload.name)
-
-        console.log("📤 FormData contents:");
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
+    const handleUploadFile = async () => {
+        if (!fileToUpload) {
+            showErrorToast("يرجى اختيار ملف")
+            return
         }
 
-        const res = await uploadFile(formData)
-        if (res.data?.success) {
-            showSuccessToast("تم رفع الملف بنجاح")
-            setFileToUpload(null)
-            setIsFileDialogOpen(false)
-            fetchFiles(selectedLevel)
+        setUploading(true)
+        try {
+            const formData = new FormData()
+            
+            // ✅ إضافة الملف بشكل صحيح
+            formData.append('file', fileToUpload)
+            formData.append('courseLevelId', selectedLevel)
+            
+            // ✅ يمكن إضافة الاسم كحقل منفصل إذا كان السيرفر يتوقعه
+            formData.append('originalFileName', fileToUpload.name)
+
+            console.log("📤 FormData contents:");
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+
+            const res = await uploadFile(formData)
+            if (res.data?.success) {
+                showSuccessToast("تم رفع الملف بنجاح")
+                setFileToUpload(null)
+                setIsFileDialogOpen(false)
+                fetchFiles(selectedLevel)
+            }
+        } catch (err) {
+            console.error("❌ Upload error details:", {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status
+            });
+            showErrorToast(err?.response?.data?.message || "فشل رفع الملف")
+        } finally {
+            setUploading(false)
         }
-    } catch (err) {
-        console.error("❌ Upload error details:", {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status
-        });
-        showErrorToast(err?.response?.data?.message || "فشل رفع الملف")
-    } finally {
-        setUploading(false)
     }
-}
 
-   const getFileUrl = (fileUrl) => {
-    if (!fileUrl) return ""
-    const cleanBaseUrl = BASE_URL.replace(/\/$/, "")
-    const cleanFileUrl = fileUrl.replace(/^\//, "")
-    return `${cleanBaseUrl}/${cleanFileUrl}`
-}
-
-
-
+    const getFileUrl = (fileUrl) => {
+        if (!fileUrl) return ""
+        const cleanBaseUrl = BASE_URL.replace(/\/$/, "")
+        const cleanFileUrl = fileUrl.replace(/^\//, "")
+        return `${cleanBaseUrl}/${cleanFileUrl}`
+    }
 
     // دوال الأسئلة
     const handleOptionChange = (index, field, value) => {
@@ -620,6 +721,47 @@ const handleUploadFile = async () => {
         } catch (err) {
             showErrorToast(err?.response?.data?.message || "فشل حذف الأسئلة")
         }
+    }
+
+    // الحصول على اسم الاختصاص
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === parseInt(specializationId))
+        return specialization ? (specialization.name || specialization.title) : "غير محدد"
+    }
+
+    // الحصول على اسم الكورس
+    const getCourseName = (courseId) => {
+        const course = courses.find(crs => crs.id === parseInt(courseId))
+        return course ? course.title : "غير محدد"
+    }
+
+    // الحصول على اسم المدرس
+    const getInstructorName = (instructorId) => {
+        const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
+        return instructor ? instructor.name : "غير محدد";
+    };
+
+    // الحصول على اسم المستوى
+    const getLevelName = (levelId) => {
+        const level = levels.find(lvl => lvl.id === parseInt(levelId))
+        return level ? level.name : "غير محدد"
+    }
+
+    // Reset all selections
+    const resetAllSelections = () => {
+        setSelectedSpecialization("")
+        setSelectedCourse("")
+        setSelectedInstructor("")
+        setSelectedLevel("")
+        setAllLessons([])
+        setQuestions([])
+        setFiles([])
+        setSearchTerm("")
+        setCurrentPage(1)
+        setSpecializationSearch("")
+        setCourseSearch("")
+        setInstructorSearch("")
+        setLevelSearch("")
     }
 
     // التنسيق
@@ -837,15 +979,58 @@ const handleUploadFile = async () => {
                 <CardTitle>إدارة محتوى المستوى</CardTitle>
 
                 <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* ✅ مسار الاختيار */}
+                    {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+                                <span className="text-blue-700">المسار المختار:</span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                    </Badge>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={resetAllSelections}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        إعادة تعيين الكل
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* ✅ اختيار الاختصاص */}
                         <div className="space-y-2">
-                            <Label>اختر التخصص</Label>
+                            <Label>الاختصاص</Label>
                             <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="اختر التخصص" />
+                                    <SelectValue placeholder="اختر الاختصاص" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {specializations.map(spec => (
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن اختصاص..."
+                                            value={specializationSearch}
+                                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredSpecializations.map((spec) => (
                                         <SelectItem key={spec.id} value={spec.id.toString()}>
                                             {spec.name || spec.title}
                                         </SelectItem>
@@ -854,14 +1039,27 @@ const handleUploadFile = async () => {
                             </Select>
                         </div>
 
+                        {/* ✅ اختيار الكورس */}
                         <div className="space-y-2">
-                            <Label>اختر الكورس</Label>
-                            <Select value={selectedCourse} onValueChange={setSelectedCourse} disabled={!selectedSpecialization}>
+                            <Label>الكورس</Label>
+                            <Select 
+                                value={selectedCourse} 
+                                onValueChange={setSelectedCourse}
+                                disabled={!selectedSpecialization}
+                            >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر التخصص أولاً"} />
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {courses.map(course => (
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن كورس..."
+                                            value={courseSearch}
+                                            onChange={(e) => setCourseSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredCoursesForSelect.map((course) => (
                                         <SelectItem key={course.id} value={course.id.toString()}>
                                             {course.title}
                                         </SelectItem>
@@ -870,14 +1068,61 @@ const handleUploadFile = async () => {
                             </Select>
                         </div>
 
+                        {/* ✅ اختيار المدرس */}
                         <div className="space-y-2">
-                            <Label>اختر المستوى</Label>
-                            <Select value={selectedLevel} onValueChange={setSelectedLevel} disabled={!selectedCourse}>
+                            <Label>المدرس</Label>
+                            <Select 
+                                value={selectedInstructor} 
+                                onValueChange={setSelectedInstructor}
+                                disabled={!selectedCourse}
+                            >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
+                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {levels.map(level => (
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مدرس..."
+                                            value={instructorSearch}
+                                            onChange={(e) => setInstructorSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredInstructorsForSelect.map((instructor) => (
+                                        <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                            {instructor.name}
+                                        </SelectItem>
+                                    ))}
+                                    {filteredInstructorsForSelect.length === 0 && selectedCourse && (
+                                        <div className="p-2 text-sm text-muted-foreground text-center">
+                                            لا توجد مدرسين لهذا الكورس
+                                        </div>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* ✅ اختيار المستوى */}
+                        <div className="space-y-2">
+                            <Label>المستوى</Label>
+                            <Select
+                                value={selectedLevel}
+                                onValueChange={setSelectedLevel}
+                                disabled={!selectedInstructor}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مستوى..."
+                                            value={levelSearch}
+                                            onChange={(e) => setLevelSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredLevelsForSelect.map((level) => (
                                         <SelectItem key={level.id} value={level.id.toString()}>
                                             {level.name} (ترتيب: {level.order})
                                         </SelectItem>
@@ -1098,7 +1343,22 @@ const handleUploadFile = async () => {
 
                     {selectedLevel && (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="flex gap-2 flex-wrap">
+                                <Button variant={activeTab === "lessons" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("lessons")}>
+                                    <BookOpen className="w-4 h-4 mr-1" />
+                                    الدروس ({allLessons.length})
+                                </Button>
+                                <Button variant={activeTab === "files" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("files")}>
+                                    <File className="w-4 h-4 mr-1" />
+                                    الملفات ({files.length})
+                                </Button>
+                                <Button variant={activeTab === "quizzes" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("quizzes")}>
+                                    <FileQuestion className="w-4 h-4 mr-1" />
+                                    الأسئلة ({questions.length})
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="relative">
                                     <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input placeholder="بحث بالعنوان..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-10" />
@@ -1145,28 +1405,12 @@ const handleUploadFile = async () => {
                                 </div>
                                 {(searchTerm || statusFilter !== "all" || freePreviewFilter !== "all") && (
                                     <Button variant="outline" size="sm" onClick={resetFilters}>
+                                        <Filter className="w-4 h-4 ml-1" />
                                         إعادة تعيين الفلترة
                                     </Button>
                                 )}
                             </div>
                         </>
-                    )}
-
-                    {selectedLevel && (
-                        <div className="flex gap-2 flex-wrap">
-                            <Button variant={activeTab === "lessons" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("lessons")}>
-                                <BookOpen className="w-4 h-4 mr-1" />
-                                الدروس ({allLessons.length})
-                            </Button>
-                            <Button variant={activeTab === "files" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("files")}>
-                                <File className="w-4 h-4 mr-1" />
-                                الملفات ({files.length})
-                            </Button>
-                            <Button variant={activeTab === "quizzes" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("quizzes")}>
-                                <FileQuestion className="w-4 h-4 mr-1" />
-                                الأسئلة ({questions.length})
-                            </Button>
-                        </div>
                     )}
                 </div>
             </CardHeader>
@@ -1174,7 +1418,10 @@ const handleUploadFile = async () => {
             <CardContent>
                 {!selectedLevel ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        يرجى اختيار التخصص والكورس والمستوى لعرض المحتوى
+                        {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
+                         !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+                         !selectedInstructor ? "يرجى اختيار مدرس أولاً" : 
+                         "يرجى اختيار مستوى لعرض المحتوى"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">

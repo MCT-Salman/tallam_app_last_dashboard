@@ -724,6 +724,36 @@ export const deleteStory = (id) =>
 // --- Access Codes API ---
 
 // توليد كود جديد
+// export const generateAccessCode = async (formData) => {
+//   const response = await api.post('/access-codes/admin/generate', formData, {
+//     headers: {
+//       'Content-Type': 'multipart/form-data',
+//     },
+//   });
+//   return response;
+// };
+
+// // جلب جميع الأكواد
+// export const getAllAccessCodes = async () => {
+//   const response = await api.get('/access-codes/admin/all');
+//   return response;
+// };
+
+// // جلب أكواد مستخدم معين
+// export const getAccessCodesByUserId = async (userId) => {
+//   const response = await api.get(`/access-codes/admin/user/${userId}`);
+//   return response;
+// };
+
+// // جلب أكواد كورس معين
+// export const getAccessCodesByCourse = async (courseId) => {
+//   const response = await api.get(`/access-codes/admin/course/${courseId}`);
+//   return response;
+// };
+
+
+
+// توليد كود جديد
 export const generateAccessCode = async (formData) => {
   const response = await api.post('/access-codes/admin/generate', formData, {
     headers: {
@@ -750,6 +780,38 @@ export const getAccessCodesByCourse = async (courseId) => {
   const response = await api.get(`/access-codes/admin/course/${courseId}`);
   return response;
 };
+
+// حذف الكود
+export const deleteAccessCode = async (accessCodeId) => {
+  const response = await api.delete(`/access-codes/admin/access-code/${accessCodeId}`);
+  return response;
+};
+
+// تحديث حالة الكود (تفعيل/تعطيل)
+export const updateAccessCodeStatus = async (accessCodeId, isActive) => {
+  const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}/active`, {
+    isActive
+  });
+  return response;
+};
+
+// --- Coupons API ---
+
+// جلب الكوبونات النشطة للمستوى
+export const getActiveCouponsByLevel = async (levelId) => {
+  const response = await api.get(`/coupons/admin/level/${levelId}/active`);
+  return response;
+};
+
+// حساب السعر النهائي مع الكوبون
+export const calculateFinalPrice = async (couponId, courseLevelId) => {
+  const response = await api.post(`/coupons/admin/coupon/${couponId}`, {
+    courseLevelId
+  });
+  return response;
+};
+
+
 
 // حذف كود 
 // export const deleteAccessCode = async (codeId) => {

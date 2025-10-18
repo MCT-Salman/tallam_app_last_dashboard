@@ -8,8 +8,8 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Download, File, FileText, Image, Archive, Video, Music, FileQuestion } from "lucide-react"
-import { getFilesByLevel, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFileDetails, getSpecializations } from "@/api/api"
+import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Download, File, FileText, Image, Archive, Video, Music, FileQuestion, Filter } from "lucide-react"
+import { getFilesByLevel, uploadFile, deleteFile, getCourses, getCourseLevels, updateFile, getFileDetails, getSpecializations, getInstructorsByCourse } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
 
@@ -17,10 +17,12 @@ const Files = () => {
     const [files, setFiles] = useState([])
     const [allFiles, setAllFiles] = useState([])
     const [specializations, setSpecializations] = useState([])
+    const [instructors, setInstructors] = useState([])
     const [courses, setCourses] = useState([])
     const [levels, setLevels] = useState([])
     const [selectedSpecialization, setSelectedSpecialization] = useState("")
     const [selectedCourse, setSelectedCourse] = useState("")
+    const [selectedInstructor, setSelectedInstructor] = useState("")
     const [selectedLevel, setSelectedLevel] = useState("")
     const [loading, setLoading] = useState(false)
     const [uploading, setUploading] = useState(false)
@@ -30,6 +32,12 @@ const Files = () => {
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, file: null })
     const [editDialog, setEditDialog] = useState({ isOpen: false, file: null, newFile: null })
 
+    // Search states for selects
+    const [specializationSearch, setSpecializationSearch] = useState("")
+    const [courseSearch, setCourseSearch] = useState("")
+    const [instructorSearch, setInstructorSearch] = useState("")
+    const [levelSearch, setLevelSearch] = useState("")
+
     // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -37,8 +45,6 @@ const Files = () => {
     const [typeFilter, setTypeFilter] = useState("all")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState("desc")
-    const [totalFiles, setTotalFiles] = useState(0)
-    const [pagination, setPagination] = useState({})
 
     // دالة لتنظيف وتكوين مسار الملف
     const getFileUrl = (fileUrl) => {
@@ -51,17 +57,17 @@ const Files = () => {
     // جلب الاختصاصات
     const fetchSpecializations = async () => {
         try {
-            const res = await getSpecializations();
+            const res = await getSpecializations()
             const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
                 Array.isArray(res.data?.data?.data) ? res.data.data.data :
-                Array.isArray(res.data?.data) ? res.data.data : [];
-            console.log("Specializations data:", data);
-            setSpecializations(data);
+                Array.isArray(res.data?.data) ? res.data.data : []
+            console.log("Specializations data:", data)
+            setSpecializations(data)
         } catch (err) {
-            console.error("Error fetching specializations:", err);
-            showErrorToast("فشل تحميل الاختصاصات");
+            console.error("Error fetching specializations:", err)
+            showErrorToast("فشل تحميل الاختصاصات")
         }
-    };
+    }
 
     // جلب الكورسات بناءً على الاختصاص المحدد
     const fetchCourses = async (specializationId) => {
@@ -76,12 +82,12 @@ const Files = () => {
             let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
                 Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
             
-            // فلترة الكورسات حسب الاختصاص المحدد
+            // ✅ فلترة الكورسات حسب الاختصاص المحدد
             const filteredCourses = allCourses.filter(course => 
                 course.specializationId === parseInt(specializationId)
             );
             
-            console.log("Filtered courses:", filteredCourses);
+            console.log("Filtered courses by specialization:", filteredCourses);
             setCourses(filteredCourses);
         } catch (err) {
             console.error(err);
@@ -89,123 +95,140 @@ const Files = () => {
         }
     };
 
-  // جلب مستويات الكورس المحدد
-const fetchCourseLevels = async (courseId) => {
-    if (!courseId) {
-        setLevels([])
-        setSelectedLevel("")
-        return
-    }
-
-    try {
-        const res = await getCourseLevels(courseId)
-        console.log("Full levels response:", res);
-        
-        let data = [];
-        if (Array.isArray(res.data?.data)) {
-            if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
-                data = res.data.data[0];
-            } else {
-                data = res.data.data;
-            }
-        } else if (Array.isArray(res.data?.data?.items)) {
-            data = res.data.data.items;
-        } else if (Array.isArray(res.data?.data?.data)) {
-            data = res.data.data.data;
-        }
-        
-        // ✅ تأكد من أن كل مستوى يحتوي على courseId
-        const levelsWithCourseId = data.map(level => ({
-            ...level,
-            courseId: level.courseId || parseInt(courseId) // استخدم courseId من المستوى أو من المعلمة
-        }));
-        
-        console.log("Levels data with courseId:", levelsWithCourseId);
-        setLevels(levelsWithCourseId || []);
-    } catch (err) {
-        console.error("Error fetching levels:", err);
-        showErrorToast("فشل تحميل مستويات الكورس");
-        setLevels([]);
-    }
-}
-
- // جلب الملفات حسب المستوى - التعديل الرئيسي هنا
-const fetchFiles = async () => {
-    if (!selectedLevel) {
-        setAllFiles([])
-        setTotalFiles(0)
-        return
-    }
-
-    setLoading(true)
-    try {
-        const params = {
-            page: currentPage,
-            limit: itemsPerPage,
-            search: searchTerm || undefined
+    // ✅ جلب المدرسين بناءً على الكورس المحدد
+    const fetchInstructorsByCourse = async (courseId) => {
+        if (!courseId) {
+            setInstructors([]);
+            setSelectedInstructor("");
+            return;
         }
 
-        // تنظيف البيانات - إزالة القيم undefined
-        Object.keys(params).forEach(key => {
-            if (params[key] === undefined) {
-                delete params[key]
-            }
-        })
-
-        console.log("📤 Fetching files for level:", selectedLevel, "with params:", params)
-
-        const res = await getFilesByLevel(selectedLevel, params);
-        console.log("📊 Files API response:", res)
-        
-        let data = []
-        let total = 0
-        let paginationData = {}
-        
-        if (res.data?.success) {
-            // الهيكل الجديد بناءً على التوثيق
-            if (Array.isArray(res.data.data)) {
-                data = res.data.data
-                total = res.data.data.length
-                paginationData = res.data.pagination || {}
-            } else {
-                data = []
-                total = 0
-            }
-        }
-        
-        // ✅ تأكد من أن الملفات تعود للمستوى المحدد فقط
-        const filteredFiles = data.filter(file => 
-            file.courseLevelId === parseInt(selectedLevel)
-        );
-        
-        console.log("✅ Filtered files for level:", selectedLevel, filteredFiles);
-        
-        setAllFiles(filteredFiles)
-        setTotalFiles(filteredFiles.length)
-        setPagination(paginationData)
-    } catch (err) {
-        console.error("❌ Error fetching files:", err)
-        console.error("❌ Error response:", err.response?.data)
-        const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
-        showErrorToast(errorMessage)
-        setAllFiles([])
-        setTotalFiles(0)
-    } finally {
-        setLoading(false)
-    }
-}
-
-    // جلب تفاصيل ملف معين
-    const fetchFileDetails = async (fileId) => {
         try {
-            const res = await getFileDetails(fileId)
-            if (res.data?.success) {
-                return res.data.data
+            console.log("🔄 Fetching instructors for course:", courseId);
+            const res = await getInstructorsByCourse(courseId);
+            console.log("📊 Instructors API full response:", res);
+            
+            let data = [];
+            if (Array.isArray(res.data?.data?.instructors)) {
+                data = res.data.data.instructors;
+            } else if (Array.isArray(res.data?.data?.data)) {
+                data = res.data.data.data;
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data;
+            } else if (Array.isArray(res.data)) {
+                data = res.data;
             }
-            return null
+            
+            console.log("✅ Extracted instructors for course:", data);
+            setInstructors(data || []);
         } catch (err) {
-            console.error("Error fetching file details:", err)
-            return null
+            console.error("❌ Error fetching instructors:", err);
+            showErrorToast("فشل تحميل المدرسين");
+            setInstructors([]);
+        }
+    };
+
+    // ✅ جلب المستويات بناءً على المدرس المحدد
+    const fetchLevelsByInstructor = async (instructorId) => {
+        if (!instructorId) {
+            setLevels([]);
+            setSelectedLevel("");
+            return;
+        }
+
+        try {
+            // البحث عن المدرس المحدد للحصول على levelIds
+            const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
+            
+            if (!selectedInstructorData || !selectedInstructorData.levelIds) {
+                setLevels([]);
+                return;
+            }
+
+            // جلب كل المستويات للكورس أولاً
+            const res = await getCourseLevels(selectedCourse);
+            console.log("Full levels response:", res);
+
+            let allLevels = [];
+            if (Array.isArray(res.data?.data)) {
+                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                    allLevels = res.data.data[0];
+                } else {
+                    allLevels = res.data.data;
+                }
+            } else if (Array.isArray(res.data?.data?.items)) {
+                allLevels = res.data.data.items;
+            } else if (Array.isArray(res.data?.data?.data)) {
+                allLevels = res.data.data.data;
+            }
+
+            // ✅ فلترة المستويات حسب levelIds الخاص بالمدرس
+            const filteredLevels = allLevels.filter(level => 
+                selectedInstructorData.levelIds.includes(level.id)
+            );
+
+            console.log("Filtered levels by instructor:", filteredLevels);
+            setLevels(filteredLevels || []);
+        } catch (err) {
+            console.error("Error fetching levels:", err);
+            showErrorToast("فشل تحميل مستويات المدرس");
+            setLevels([]);
+        }
+    }
+
+    // جلب الملفات حسب المستوى
+    const fetchFiles = async () => {
+        if (!selectedLevel) {
+            setAllFiles([])
+            return
+        }
+
+        setLoading(true)
+        try {
+            const params = {
+                page: currentPage,
+                limit: itemsPerPage,
+                search: searchTerm || undefined
+            }
+
+            // تنظيف البيانات - إزالة القيم undefined
+            Object.keys(params).forEach(key => {
+                if (params[key] === undefined) {
+                    delete params[key]
+                }
+            })
+
+            console.log("📤 Fetching files for level:", selectedLevel, "with params:", params)
+
+            const res = await getFilesByLevel(selectedLevel, params);
+            console.log("📊 Files API response:", res)
+            
+            let data = []
+            
+            if (res.data?.success) {
+                if (Array.isArray(res.data.data)) {
+                    data = res.data.data
+                } else {
+                    data = []
+                }
+            }
+            
+            // ✅ تأكد من أن الملفات تعود للمستوى المحدد فقط
+            const filteredFiles = data.filter(file => 
+                file.courseLevelId === parseInt(selectedLevel)
+            );
+            
+            console.log("✅ Filtered files for level:", selectedLevel, filteredFiles);
+            
+            setAllFiles(filteredFiles)
+        } catch (err) {
+            console.error("❌ Error fetching files:", err)
+            console.error("❌ Error response:", err.response?.data)
+            const errorMessage = err.response?.data?.message || "فشل تحميل الملفات"
+            showErrorToast(errorMessage)
+            setAllFiles([])
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -213,40 +236,87 @@ const fetchFiles = async () => {
         fetchSpecializations()
     }, [])
 
+    // ✅ عند تغيير الاختصاص المحدد
     useEffect(() => {
         if (selectedSpecialization) {
-            fetchCourses(selectedSpecialization)
-            setSelectedCourse("")
-            setSelectedLevel("")
+            fetchCourses(selectedSpecialization);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
         } else {
-            setCourses([])
-            setSelectedCourse("")
-            setSelectedLevel("")
+            setCourses([]);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
         }
     }, [selectedSpecialization])
 
+    // ✅ عند تغيير الكورس المحدد
     useEffect(() => {
         if (selectedCourse) {
-            fetchCourseLevels(selectedCourse)
-            setSelectedLevel("")
+            fetchInstructorsByCourse(selectedCourse);
+            setSelectedInstructor("");
+            setSelectedLevel("");
         } else {
-            setLevels([])
-            setSelectedLevel("")
+            setInstructors([]);
+            setSelectedInstructor("");
+            setSelectedLevel("");
         }
     }, [selectedCourse])
 
+    // ✅ عند تغيير المدرس المحدد
+    useEffect(() => {
+        if (selectedInstructor) {
+            fetchLevelsByInstructor(selectedInstructor);
+            setSelectedLevel("");
+        } else {
+            setLevels([]);
+            setSelectedLevel("");
+        }
+    }, [selectedInstructor, selectedCourse])
+
+    // ✅ عند تغيير المستوى المحدد
     useEffect(() => {
         if (selectedLevel) {
             fetchFiles()
         } else {
             setAllFiles([])
-            setTotalFiles(0)
         }
     }, [selectedLevel, currentPage, itemsPerPage, searchTerm])
 
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm, typeFilter, itemsPerPage, selectedLevel])
+
+    // Filtered data for selects with search
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec => 
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
+
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return courses;
+        return courses.filter(course => 
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [courses, courseSearch]);
+
+    const filteredInstructorsForSelect = useMemo(() => {
+        if (!instructorSearch) return instructors;
+        return instructors.filter(instructor => 
+            instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+        );
+    }, [instructors, instructorSearch]);
+
+    const filteredLevelsForSelect = useMemo(() => {
+        if (!levelSearch) return levels;
+        return levels.filter(level => 
+            level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+        );
+    }, [levels, levelSearch]);
 
     // التعامل مع اختيار الملف للرفع
     const handleFileSelect = (e) => {
@@ -256,45 +326,44 @@ const fetchFiles = async () => {
         }
     }
 
-   // رفع الملف
-const handleUpload = async () => {
-    if (!fileToUpload) return showErrorToast("يرجى اختيار ملف للرفع")
-    if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
+    // رفع الملف
+    const handleUpload = async () => {
+        if (!fileToUpload) return showErrorToast("يرجى اختيار ملف للرفع")
+        if (!selectedLevel) return showErrorToast("يرجى اختيار المستوى أولاً")
 
-    setUploading(true)
-    try {
-        const formData = new FormData()
-        formData.append('file', fileToUpload)
-        formData.append('courseLevelId', selectedLevel)
+        setUploading(true)
+        try {
+            const formData = new FormData()
+            formData.append('file', fileToUpload)
+            formData.append('courseLevelId', selectedLevel)
 
-        // ✅ التأكد من البيانات المرسلة
-        console.log("📤 Uploading file data:", {
-            fileName: fileToUpload.name,
-            fileSize: fileToUpload.size,
-            fileType: fileToUpload.type,
-            courseLevelId: selectedLevel,
-            formData: formData
-        })
+            console.log("📤 Uploading file data:", {
+                fileName: fileToUpload.name,
+                fileSize: fileToUpload.size,
+                fileType: fileToUpload.type,
+                courseLevelId: selectedLevel,
+                formData: formData
+            })
 
-        const res = await uploadFile(formData)
-        console.log("📊 Upload response:", res)
+            const res = await uploadFile(formData)
+            console.log("📊 Upload response:", res)
 
-        if (res.data?.success) {
-            showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
-            setFileToUpload(null)
-            setIsDialogOpen(false)
-            fetchFiles()
-        } else {
-            throw new Error(res.data?.message || "فشل رفع الملف")
+            if (res.data?.success) {
+                showSuccessToast(res.data.message || "تم رفع الملف بنجاح")
+                setFileToUpload(null)
+                setIsDialogOpen(false)
+                fetchFiles()
+            } else {
+                throw new Error(res.data?.message || "فشل رفع الملف")
+            }
+        } catch (err) {
+            console.error("❌ Upload error:", err.response?.data || err)
+            const errorMessage = err.response?.data?.message || "فشل رفع الملف"
+            showErrorToast(errorMessage)
+        } finally {
+            setUploading(false)
         }
-    } catch (err) {
-        console.error("❌ Upload error:", err.response?.data || err)
-        const errorMessage = err.response?.data?.message || "فشل رفع الملف"
-        showErrorToast(errorMessage)
-    } finally {
-        setUploading(false)
     }
-}
 
     // تعديل الملف
     const handleUpdateFile = async (fileId, updatedData) => {
@@ -395,119 +464,211 @@ const handleUpload = async () => {
         return new Date(dateString).toLocaleDateString('en-US')
     }
 
+    // الحصول على اسم الاختصاص
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === parseInt(specializationId))
+        return specialization ? (specialization.name || specialization.title) : "غير محدد"
+    }
+
     // الحصول على اسم الكورس
     const getCourseName = (courseId) => {
-        const course = courses.find(crs => crs.id === courseId)
+        const course = courses.find(crs => crs.id === parseInt(courseId))
         return course ? course.title : "غير محدد"
     }
 
+    // الحصول على اسم المدرس
+    const getInstructorName = (instructorId) => {
+        const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
+        return instructor ? instructor.name : "غير محدد";
+    };
+
     // الحصول على اسم المستوى
     const getLevelName = (levelId) => {
-        const level = levels.find(lvl => lvl.id === levelId)
+        const level = levels.find(lvl => lvl.id === parseInt(levelId))
         return level ? level.name : "غير محدد"
     }
 
-   // عرض التفاصيل الكاملة للملف
-const renderFileDetails = (file) => {
-    if (!file) return null
+    // Reset all selections
+    const resetAllSelections = () => {
+        setSelectedSpecialization("")
+        setSelectedCourse("")
+        setSelectedInstructor("")
+        setSelectedLevel("")
+        setAllFiles([])
+        setSearchTerm("")
+        setCurrentPage(1)
+        setSpecializationSearch("")
+        setCourseSearch("")
+        setInstructorSearch("")
+        setLevelSearch("")
+    }
 
-    // الحصول على معلومات الكورس والمستوى
-    const currentLevel = levels.find(level => level.id === parseInt(file.courseLevelId));
-    const currentCourse = currentLevel ? courses.find(course => course.id === currentLevel.courseId) : null;
+    // فلترة وترتيب البيانات
+    const filteredAndSortedFiles = useMemo(() => {
+        let filtered = [...allFiles]
 
-    return (
-        <div className="space-y-6 text-right">
-            {/* المعلومات الأساسية */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label className="font-bold">اسم الملف:</Label>
-                    <p className="mt-1 text-lg">{file.name}</p>
-                </div>
-                <div>
-                    <Label className="font-bold">نوع الملف:</Label>
-                    <p className="mt-1">
-                        <Badge variant="outline">
-                            {getFileTypeText(file.type)}
-                        </Badge>
-                    </p>
-                </div>
-                <div>
-                    <Label className="font-bold">حجم الملف:</Label>
-                    <p className="mt-1">{formatFileSize(file.size)}</p>
-                </div>
-                <div>
-                    <Label className="font-bold">تاريخ الرفع:</Label>
-                    <p className="mt-1">{formatDate(file.createdAt)}</p>
-                </div>
-                <div>
-                    <Label className="font-bold">الكورس:</Label>
-                    <p className="mt-1">
-                        {currentCourse ? currentCourse.title : "غير محدد"}
-                        {currentCourse && (
-                            <span className="text-sm text-muted-foreground block">
-                                (ID: {currentCourse.id})
-                            </span>
-                        )}
-                    </p>
-                </div>
-                <div>
-                    <Label className="font-bold">المستوى:</Label>
-                    <p className="mt-1">
-                        {currentLevel ? currentLevel.name : "غير محدد"}
-                        {currentLevel && (
-                            <span className="text-sm text-muted-foreground block">
-                                (ترتيب: {currentLevel.order}, ID: {currentLevel.id})
-                            </span>
-                        )}
-                    </p>
-                </div>
-            </div>
+        if (searchTerm.trim()) {
+            filtered = filtered.filter(file =>
+                file.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                file.type?.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        }
 
-            {/* معلومات إضافية */}
-            <div className="border-t pt-4">
-                <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        if (typeFilter !== "all") {
+            filtered = filtered.filter(file => {
+                if (typeFilter === "image") return file.type?.startsWith('image/')
+                if (typeFilter === "video") return file.type?.startsWith('video/')
+                if (typeFilter === "audio") return file.type?.startsWith('audio/')
+                if (typeFilter === "document") return file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('word')
+                if (typeFilter === "archive") return file.type?.includes('zip') || file.type?.includes('rar')
+                return true
+            })
+        }
+
+        filtered.sort((a, b) => {
+            let aValue, bValue
+
+            switch (sortBy) {
+                case "name":
+                    aValue = a.name?.toLowerCase() || ""
+                    bValue = b.name?.toLowerCase() || ""
+                    break
+                case "size":
+                    aValue = a.size || 0
+                    bValue = b.size || 0
+                    break
+                case "type":
+                    aValue = a.type?.toLowerCase() || ""
+                    bValue = b.type?.toLowerCase() || ""
+                    break
+                case "createdAt":
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+                    break
+                default:
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+            return 0
+        })
+
+        return filtered
+    }, [allFiles, searchTerm, typeFilter, sortBy, sortOrder])
+
+    // Pagination calculations
+    const totalItems = filteredAndSortedFiles.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startItem = (currentPage - 1) * itemsPerPage + 1
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+
+    // Handle page change
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
+        }
+    }
+
+    // Handle sort
+    const handleSort = (field) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+        } else {
+            setSortBy(field)
+            setSortOrder("asc")
+        }
+    }
+
+    // Reset filters
+    const resetFilters = () => {
+        setSearchTerm("")
+        setTypeFilter("all")
+        setSortBy("createdAt")
+        setSortOrder("desc")
+        setCurrentPage(1)
+    }
+
+    // عرض التفاصيل الكاملة للملف
+    const renderFileDetails = (file) => {
+        if (!file) return null
+
+        return (
+            <div className="space-y-6 text-right">
+                {/* المعلومات الأساسية */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <Label className="font-medium">معرف الملف:</Label>
-                        <p>{file.id || "غير محدد"}</p>
+                        <Label className="font-bold">اسم الملف:</Label>
+                        <p className="mt-1 text-lg">{file.name}</p>
                     </div>
                     <div>
-                        <Label className="font-medium">معرف المستوى:</Label>
-                        <p>{file.courseLevelId || "غير محدد"}</p>
+                        <Label className="font-bold">نوع الملف:</Label>
+                        <p className="mt-1">
+                            <Badge variant="outline">
+                                {getFileTypeText(file.type)}
+                            </Badge>
+                        </p>
                     </div>
                     <div>
-                        <Label className="font-medium">المفتاح:</Label>
-                        <p className="font-mono text-sm break-all">{file.key}</p>
+                        <Label className="font-bold">حجم الملف:</Label>
+                        <p className="mt-1">{formatFileSize(file.size)}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">تاريخ الرفع:</Label>
+                        <p className="mt-1">{formatDate(file.createdAt)}</p>
+                    </div>
+                </div>
+
+                {/* معلومات التصنيف الهرمي */}
+                <div className="border-t pt-4">
+                    <h3 className="font-bold mb-3">معلومات التصنيف:</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <Label className="font-medium">الاختصاص:</Label>
+                            <p>{getSpecializationName(selectedSpecialization)}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">الكورس:</Label>
+                            <p>{getCourseName(selectedCourse)}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">المدرس:</Label>
+                            <p>{getInstructorName(selectedInstructor)}</p>
+                        </div>
+                        <div>
+                            <Label className="font-medium">المستوى:</Label>
+                            <p>{getLevelName(selectedLevel)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* رابط التحميل */}
+                <div className="border-t pt-4">
+                    <Label className="font-bold">رابط التحميل:</Label>
+                    <div className="mt-2">
+                        <a 
+                            href={getFileUrl(file.url)} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline break-all"
+                        >
+                            {getFileUrl(file.url)}
+                        </a>
+                    </div>
+                    <div className="mt-2">
+                        <Button
+                            size="sm"
+                            onClick={() => window.open(getFileUrl(file.url), '_blank')}
+                        >
+                            <Download className="w-4 h-4 ml-1" />
+                            تحميل الملف
+                        </Button>
                     </div>
                 </div>
             </div>
-
-            {/* رابط التحميل */}
-            <div className="border-t pt-4">
-                <Label className="font-bold">رابط التحميل:</Label>
-                <div className="mt-2">
-                    <a 
-                        href={getFileUrl(file.url)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline break-all"
-                    >
-                        {getFileUrl(file.url)}
-                    </a>
-                </div>
-                <div className="mt-2">
-                    <Button
-                        size="sm"
-                        onClick={() => window.open(getFileUrl(file.url), '_blank')}
-                    >
-                        <Download className="w-4 h-4 ml-1" />
-                        تحميل الملف
-                    </Button>
-                </div>
-            </div>
-        </div>
-    )
-}
+        )
+    }
 
     // مكون بطاقة الملف للعرض على الجوال
     const FileCard = ({ file }) => (
@@ -589,84 +750,6 @@ const renderFileDetails = (file) => {
         </Card>
     )
 
-    // فلترة وترتيب البيانات
-    const filteredAndSortedFiles = useMemo(() => {
-        let filtered = [...allFiles]
-
-        if (searchTerm.trim()) {
-            filtered = filtered.filter(file =>
-                file.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                file.type?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
-        if (typeFilter !== "all") {
-            filtered = filtered.filter(file => {
-                if (typeFilter === "image") return file.type?.startsWith('image/')
-                if (typeFilter === "video") return file.type?.startsWith('video/')
-                if (typeFilter === "audio") return file.type?.startsWith('audio/')
-                if (typeFilter === "document") return file.type?.includes('document') || file.type?.includes('pdf') || file.type?.includes('word')
-                if (typeFilter === "archive") return file.type?.includes('zip') || file.type?.includes('rar')
-                return true
-            })
-        }
-
-        filtered.sort((a, b) => {
-            let aValue, bValue
-
-            switch (sortBy) {
-                case "name":
-                    aValue = a.name?.toLowerCase() || ""
-                    bValue = b.name?.toLowerCase() || ""
-                    break
-                case "size":
-                    aValue = a.size || 0
-                    bValue = b.size || 0
-                    break
-                case "type":
-                    aValue = a.type?.toLowerCase() || ""
-                    bValue = b.type?.toLowerCase() || ""
-                    break
-                case "createdAt":
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-                    break
-                default:
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-            }
-
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-            return 0
-        })
-
-        return filtered
-    }, [allFiles, searchTerm, typeFilter, sortBy, sortOrder])
-
-    // Pagination calculations
-    const totalItems = filteredAndSortedFiles.length
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
-    const startItem = (currentPage - 1) * itemsPerPage + 1
-    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
-
-    // Handle page change
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page)
-        }
-    }
-
-    // Handle sort
-    const handleSort = (field) => {
-        if (sortBy === field) {
-            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-        } else {
-            setSortBy(field)
-            setSortOrder("asc")
-        }
-    }
-
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
@@ -722,65 +805,159 @@ const renderFileDetails = (file) => {
                     </Dialog>
                 </div>
 
-                {/* التصنيف الهرمي: اختصاص → كورس → مستوى */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* اختيار الاختصاص */}
-                    <div className="space-y-2">
-                        <Label>اختر الاختصاص</Label>
-                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="اختر الاختصاص" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {specializations.map((spec) => (
-                                    <SelectItem key={spec.id} value={spec.id}>
-                                        {spec.name || spec.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                {/* ✅ التصنيف الهرمي الجديد: اختصاص → كورس → مدرس → مستوى */}
+                <div className="space-y-4">
+                    {/* مسار الاختيار */}
+                    {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+                                <span className="text-blue-700">المسار المختار:</span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                                    </Badge>
+                                    <ChevronRight className="h-4 w-4 text-blue-500" />
+                                    <Badge variant="outline" className="bg-white">
+                                        {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                    </Badge>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={resetAllSelections}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        إعادة تعيين الكل
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                    {/* اختيار الكورس */}
-                    <div className="space-y-2">
-                        <Label>اختر الكورس</Label>
-                        <Select 
-                            value={selectedCourse} 
-                            onValueChange={setSelectedCourse}
-                            disabled={!selectedSpecialization}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {courses.map((course) => (
-                                    <SelectItem key={course.id} value={course.id}>
-                                        {course.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* ✅ اختيار الاختصاص */}
+                        <div className="space-y-2">
+                            <Label>الاختصاص</Label>
+                            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="اختر الاختصاص" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن اختصاص..."
+                                            value={specializationSearch}
+                                            onChange={(e) => setSpecializationSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredSpecializations.map((spec) => (
+                                        <SelectItem key={spec.id} value={spec.id.toString()}>
+                                            {spec.name || spec.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {/* اختيار المستوى */}
-                    <div className="space-y-2">
-                        <Label>اختر المستوى</Label>
-                        <Select 
-                            value={selectedLevel} 
-                            onValueChange={setSelectedLevel}
-                            disabled={!selectedCourse}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {levels.map((level) => (
-                                    <SelectItem key={level.id} value={level.id}>
-                                        {level.name} (ترتيب: {level.order})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        {/* ✅ اختيار الكورس */}
+                        <div className="space-y-2">
+                            <Label>الكورس</Label>
+                            <Select 
+                                value={selectedCourse} 
+                                onValueChange={setSelectedCourse}
+                                disabled={!selectedSpecialization}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن كورس..."
+                                            value={courseSearch}
+                                            onChange={(e) => setCourseSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredCoursesForSelect.map((course) => (
+                                        <SelectItem key={course.id} value={course.id.toString()}>
+                                            {course.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* ✅ اختيار المدرس */}
+                        <div className="space-y-2">
+                            <Label>المدرس</Label>
+                            <Select 
+                                value={selectedInstructor} 
+                                onValueChange={setSelectedInstructor}
+                                disabled={!selectedCourse}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مدرس..."
+                                            value={instructorSearch}
+                                            onChange={(e) => setInstructorSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredInstructorsForSelect.map((instructor) => (
+                                        <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                            {instructor.name}
+                                        </SelectItem>
+                                    ))}
+                                    {filteredInstructorsForSelect.length === 0 && selectedCourse && (
+                                        <div className="p-2 text-sm text-muted-foreground text-center">
+                                            لا توجد مدرسين لهذا الكورس
+                                        </div>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* ✅ اختيار المستوى */}
+                        <div className="space-y-2">
+                            <Label>المستوى</Label>
+                            <Select
+                                value={selectedLevel}
+                                onValueChange={setSelectedLevel}
+                                disabled={!selectedInstructor}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2">
+                                        <Input
+                                            placeholder="ابحث عن مستوى..."
+                                            value={levelSearch}
+                                            onChange={(e) => setLevelSearch(e.target.value)}
+                                            className="mb-2"
+                                        />
+                                    </div>
+                                    {filteredLevelsForSelect.map((level) => (
+                                        <SelectItem key={level.id} value={level.id.toString()}>
+                                            {level.name} (ترتيب: {level.order})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
 
@@ -851,12 +1028,9 @@ const renderFileDetails = (file) => {
                                 {(searchTerm || typeFilter !== "all") && ` (مفلتر)`}
                             </div>
 
-                            {(searchTerm || typeFilter !== "all") && (
-                                <Button variant="outline" size="sm" onClick={() => {
-                                    setSearchTerm("")
-                                    setTypeFilter("all")
-                                    setCurrentPage(1)
-                                }}>
+                            {(searchTerm || typeFilter !== "all" || sortBy !== "createdAt" || sortOrder !== "desc") && (
+                                <Button variant="outline" size="sm" onClick={resetFilters}>
+                                    <Filter className="w-4 h-4 ml-1" />
                                     إعادة تعيين الفلترة
                                 </Button>
                             )}
@@ -870,6 +1044,7 @@ const renderFileDetails = (file) => {
                     <div className="text-center py-8 text-muted-foreground">
                         {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
                          !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+                         !selectedInstructor ? "يرجى اختيار مدرس أولاً" : 
                          "يرجى اختيار مستوى لعرض ملفاته"}
                     </div>
                 ) : loading ? (
