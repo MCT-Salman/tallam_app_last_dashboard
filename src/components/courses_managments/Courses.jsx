@@ -18,8 +18,8 @@ const Courses = () => {
     { value: "Course", label: "المواد" },
     { value: "CourseLevel", label: "المستويات" },
     { value: "Lesson", label: "الدروس" },
-    { value: "File", label: "الملفات" },
-    { value: "Quiz", label: "الاختبارات" }
+    // { value: "File", label: "الملفات" },
+    // { value: "Quiz", label: "الاختبارات" }
   ];
 
   return (
@@ -46,7 +46,7 @@ const Courses = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
         {/* للشاشات المتوسطة والكبيرة - تبويبات عادية */}
-        <TabsList className="hidden md:grid md:grid-cols-7 gap-2 bg-muted rounded-lg p-1">
+        <TabsList className="hidden md:grid md:grid-cols-5 gap-2 bg-muted rounded-lg p-1">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
@@ -75,12 +75,12 @@ const Courses = () => {
           <TabsContent value="Lesson" className="space-y-3 md:space-y-4">
             <Lesson />
           </TabsContent>
-          <TabsContent value="File" className="space-y-3 md:space-y-4">
+          {/* <TabsContent value="File" className="space-y-3 md:space-y-4">
             <Files />
           </TabsContent>
           <TabsContent value="Quiz" className="space-y-3 md:space-y-4">
             <Quizzes />
-          </TabsContent>
+          </TabsContent> */}
         </div>
       </Tabs>
     </div>

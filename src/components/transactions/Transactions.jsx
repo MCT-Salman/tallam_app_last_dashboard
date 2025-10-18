@@ -217,7 +217,7 @@ const Transactions = () => {
     // تنسيق المبلغ بالليرة السورية
     const formatAmount = (amountObj) => {
         const amount = getAmountValue(amountObj)
-        return new Intl.NumberFormat('ar-SY', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'SYP'
         }).format(amount || 0)
@@ -639,7 +639,7 @@ const Transactions = () => {
             <div className="space-y-6 text-right">
                 {/* المعلومات الأساسية */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <div className="bg-white p-4 text-right rounded-lg shadow-sm border">
                         <Label className="font-semibold text-gray-600 block mb-2">رقم المعاملة</Label>
                         <p className="text-xl font-bold text-gray-900">#{transaction.id}</p>
                     </div>
