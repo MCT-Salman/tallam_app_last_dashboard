@@ -1372,14 +1372,341 @@ const Transactions = () => {
                 )}
 
                 {/* Transaction Details Dialog */}
-                <Dialog open={detailDialog} onOpenChange={setDetailDialog}>
-                    <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>تفاصيل المعاملة #{selectedTransaction?.id}</DialogTitle>
-                        </DialogHeader>
-                        {renderTransactionDetails(selectedTransaction)}
-                    </DialogContent>
-                </Dialog>
+<Dialog open={detailDialog} onOpenChange={setDetailDialog}>
+  <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+        <div className="flex items-center gap-2">
+          <Receipt className="w-6 h-6 text-blue-600" />
+          تفاصيل المعاملة
+        </div>
+      </DialogTitle>
+    </DialogHeader>
+    
+    {selectedTransaction && (
+      <div className="space-y-6 text-right">
+        {/* الهيدر مع المعلومات الأساسية */}
+        <div className="bg-gradient-to-l from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            {/* أيقونة المعاملة */}
+            <div className="relative flex-shrink-0">
+              <div className="w-32 h-32 lg:w-40 lg:h-40 bg-blue-600 rounded-2xl shadow-lg border-4 border-white flex items-center justify-center">
+                <DollarSign className="w-16 h-16 text-white" />
+              </div>
+              {/* شارة رقم المعاملة */}
+              <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold shadow-lg">
+                #{selectedTransaction.id}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                معاملة #{selectedTransaction.id}
+              </h2>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
+                   مدفوعة
+                </Badge>
+                
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                  <DollarSign className="w-3 h-3 ml-1" />
+                  {formatAmount(selectedTransaction.amountPaid)}
+                </Badge>
+                
+                {selectedTransaction.receiptImageUrl && (
+                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                     يوجد إيصال
+                  </Badge>
+                )}
+              </div>
+              
+              {/* معلومات سريعة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
+                  <span>تاريخ المعاملة: {formatDate(selectedTransaction.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <span>المستخدم: {selectedTransaction.accessCode?.user?.name || "غير محدد"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* الشبكة الرئيسية للمعلومات */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* معلومات المبلغ والدفع */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <DollarSign className="w-5 h-5 text-green-600" />
+                معلومات المبلغ والدفع
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">المبلغ المدفوع</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-2xl text-green-600 block">
+                      {formatAmount(selectedTransaction.amountPaid)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {getAmountValue(selectedTransaction.amountPaid).toLocaleString()} ليرة سورية
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
+                    <span className="text-sm font-medium text-gray-700">تاريخ الدفع</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">
+                      {formatDate(selectedTransaction.createdAt)}
+                    </span>
+                    {/* <span className="text-xs text-gray-500">
+                      {new Date(selectedTransaction.createdAt).toLocaleTimeString('ar-SA')}
+                    </span> */}
+                  </div>
+                </div>
+              </div>
+              
+              {/* حالة الإيصال */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">حالة الإيصال</span>
+                  <Badge 
+                    variant={selectedTransaction.receiptImageUrl ? "default" : "secondary"}
+                    className={selectedTransaction.receiptImageUrl ? "bg-green-600" : "bg-gray-500"}
+                  >
+                    {selectedTransaction.receiptImageUrl ? "🟢 مرفق" : "🔴 غير مرفق"}
+                  </Badge>
+                </div>
+                {selectedTransaction.receiptImageUrl && (
+                  <div className="text-center mt-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
+                      className="w-full"
+                    >
+                      <Image className="w-4 h-4 ml-2" />
+                      عرض صورة الإيصال
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* معلومات المستخدم */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <User className="w-5 h-5 text-purple-600" />
+                معلومات المستخدم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">الاسم الكامل</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedTransaction.accessCode?.user?.name || "غير محدد"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
+                  <span className="font-medium text-gray-900" dir="ltr">
+                    {selectedTransaction.accessCode?.user?.phone || "غير محدد"}
+                  </span>
+                </div>
+                
+                {/* <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">البريد الإلكتروني</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedTransaction.accessCode?.user?.email || "غير محدد"}
+                  </span>
+                </div> */}
+                
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">البلد</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedTransaction.accessCode?.user?.country || "غير محدد"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* معلومات الكورس والوصول */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <BookOpen className="w-5 h-5 text-orange-600" />
+              معلومات الكورس والوصول
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الكورس</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">اسم الكورس:</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedTransaction.accessCode?.courseLevel?.course?.title || "غير محدد"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">المستوى:</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedTransaction.accessCode?.courseLevel?.name || "غير محدد"}
+                    </span>
+                  </div>
+                  {/* <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">نوع الكورس:</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedTransaction.accessCode?.courseLevel?.course?.type || "غير محدد"}
+                    </span>
+                  </div> */}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الوصول</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">كود الدخول:</span>
+                    <Badge variant="secondary" className="font-mono text-lg font-bold">
+                      {selectedTransaction.accessCode?.code || "غير محدد"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">حالة الكود:</span>
+                    <Badge variant="default" className="bg-green-600">
+                      🟢 نشط
+                    </Badge>
+                  </div>
+                  {/* <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">تاريخ الإنشاء:</span>
+                    <span className="font-medium text-gray-900 text-sm">
+                      {formatDate(selectedTransaction.accessCode?.createdAt)}
+                    </span>
+                  </div> */}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* معلومات إضافية */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <FileText className="w-5 h-5 text-gray-600" />
+              معلومات إضافية
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">معرف المعاملة</span>
+                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
+                  {selectedTransaction.id}
+                </span>
+              </div> */}
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
+                <div className="text-right">
+                  <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.createdAt)}</span>
+                  {/* <span className="text-xs text-gray-500">
+                    {new Date(selectedTransaction.createdAt).toLocaleTimeString('ar-SA')}
+                  </span> */}
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
+                <div className="text-right">
+                  <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.updatedAt)}</span>
+                  {/* <span className="text-xs text-gray-500">
+                    {new Date(selectedTransaction.updatedAt).toLocaleTimeString('ar-SA')}
+                  </span> */}
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">نوع المعاملة</span>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  شراء كورس
+                </Badge>
+              </div>
+            </div>
+            
+            {/* الملاحظات */}
+            {selectedTransaction.notes && (
+              <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-yellow-600" />
+                  الملاحظات
+                </h4>
+                <p className="text-gray-700 bg-white p-3 rounded border border-yellow-300">
+                  {selectedTransaction.notes}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* أزرار الإجراءات */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="default"
+            onClick={() => handleExportInvoice(selectedTransaction)}
+            className="flex items-center gap-2 flex-1 bg-green-600 hover:bg-green-700"
+          >
+            <FileText className="w-4 h-4" />
+            تصدير الفاتورة
+          </Button>
+          
+          {selectedTransaction.receiptImageUrl && (
+            <Button
+              variant="outline"
+              onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
+              className="flex items-center gap-2 flex-1"
+            >
+              <Image className="w-4 h-4" />
+              عرض الإيصال
+            </Button>
+          )}
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              // إمكانية إضافة وظيفة الطباعة المباشرة
+              window.print();
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <FileText className="w-4 h-4" />
+            طباعة التفاصيل
+          </Button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
             </CardContent>
         </Card>
     )

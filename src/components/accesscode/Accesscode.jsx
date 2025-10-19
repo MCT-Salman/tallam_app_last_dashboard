@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X } from "lucide-react";
+import { Plus,Clock, Shield, Hash, BarChart3,Users ,Upload , Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
@@ -815,6 +815,39 @@ const AccessCode = () => {
             </div>
         );
     };
+
+    // دالة لتحسين تنسيق التاريخ
+// const formatDate = (dateString) => {
+//   if (!dateString) return "غير محدد";
+//   return new Date(dateString).toLocaleDateString('ar-SA', {
+//     year: 'numeric',
+//     month: 'long',
+//     day: 'numeric',
+//     hour: '2-digit',
+//     minute: '2-digit'
+//   });
+// };
+
+// دالة لحساب الوقت المنقضي
+const calculateTimeAgo = (dateString) => {
+  if (!dateString) return "غير محدد";
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffMins < 1) return "الآن";
+  if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+  if (diffDays === 1) return "منذ يوم";
+  if (diffDays < 7) return `منذ ${diffDays} أيام`;
+  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
+  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} أشهر`;
+  return `منذ ${Math.floor(diffDays / 365)} سنوات`;
+};
 
     // 👁️ عرض التفاصيل
     const renderCodeDetails = (item) => {
@@ -1952,15 +1985,410 @@ const AccessCode = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* 👁️ ديالوج التفاصيل */}
-            <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ ...detailDialog, isOpen: open })}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>تفاصيل الكود</DialogTitle>
-                    </DialogHeader>
-                    {renderCodeDetails(detailDialog.item)}
-                </DialogContent>
-            </Dialog>
+            {/*  ديالوج التفاصيل */}
+<Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ ...detailDialog, isOpen: open })}>
+  <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+        <div className="flex items-center gap-2">
+          <FileText className="w-6 h-6 text-blue-600" />
+          تفاصيل كود الوصول
+        </div>
+      </DialogTitle>
+    </DialogHeader>
+    
+    {detailDialog.item && (
+      <div className="space-y-6 text-right">
+        {/* الهيدر مع المعلومات الأساسية */}
+        <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            {/* أيقونة الكود */}
+            <div className="relative flex-shrink-0">
+              <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
+                <FileText className="w-10 h-10 text-blue-600" />
+              </div>
+              {/* شارة الحالة */}
+              <div className={`absolute -top-2 -right-2 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg ${
+                detailDialog.item.isActive && !detailDialog.item.used 
+                  ? "bg-green-500 text-white" 
+                  : "bg-gray-500 text-white"
+              }`}>
+                {detailDialog.item.isActive && !detailDialog.item.used ? "✓" : "✗"}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 font-mono">
+                    {detailDialog.item.code}
+                  </h2>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"} 
+                          className={detailDialog.item.isActive && !detailDialog.item.used ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
+                      {detailDialog.item.isActive && !detailDialog.item.used ? "🟢 نشط" : "🔴 مستخدم"}
+                    </Badge>
+                    
+                    {detailDialog.item.validityInMonths && (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                        <Calendar className="w-3 h-3 ml-1" />
+                        {detailDialog.item.validityInMonths} شهر
+                      </Badge>
+                    )}
+                    
+                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                      <Book className="w-3 h-3 ml-1" />
+                      {detailDialog.item.courseLevel?.course?.title || "غير محدد"}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => copyToClipboard(detailDialog.item.code)}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  نسخ الكود
+                </Button>
+              </div>
+              
+              {/* معلومات سريعة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>أصدر في: {formatDate(detailDialog.item.issuedAt)}</span>
+                </div>
+                {detailDialog.item.user && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <User className="w-4 h-4 text-blue-600" />
+                    <span>{detailDialog.item.user.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* الشبكة الرئيسية للمعلومات */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* معلومات المستخدم والكورس */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <User className="w-5 h-5 text-green-600" />
+                معلومات المستخدم والكورس
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                {/* معلومات المستخدم */}
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">المستخدم</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">{detailDialog.item.user?.name || "غير محدد"}</span>
+                    <span className="text-xs text-gray-500" dir="ltr">{detailDialog.item.user?.phone}</span>
+                  </div>
+                </div>
+                
+                {/* الكورس */}
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Book className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">الكورس</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.course?.title || "غير محدد"}</span>
+                </div>
+                
+                {/* المستوى */}
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">المستوى</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.name || "غير محدد"}</span>
+                </div>
+                
+                {/* المدرب */}
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">المدرب</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.instructor?.name || "غير محدد"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* معلومات الإصدار والصحة */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Calendar className="w-5 h-5 text-purple-600" />
+                معلومات الإصدار والصحة
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ الإصدار</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">{formatDate(detailDialog.item.issuedAt)}</span>
+                    {/* <span className="text-xs text-gray-500">
+                      {new Date(detailDialog.item.issuedAt).toLocaleTimeString('ar-SA')}
+                    </span> */}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">مدة الصلاحية</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{detailDialog.item.validityInMonths || "غير محدد"} شهر</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">الحالة الحالية</span>
+                  </div>
+                  <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"}>
+                    {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
+                  </Badge>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">معرف الكود</span>
+                  </div>
+                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
+                    {detailDialog.item.id}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* المعلومات المالية */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <DollarSign className="w-5 h-5 text-orange-600" />
+              المعلومات المالية
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* المبلغ المدفوع */}
+              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-2xl font-bold text-blue-600">💰</div>
+                <div className="text-sm font-medium text-gray-700 mt-2">المبلغ المدفوع</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">{getAmountPaid(detailDialog.item)} ل.س</div>
+                <div className="text-xs text-blue-600 mt-1">المبلغ الفعلي</div>
+              </div>
+              
+              {/* سعر الكورس */}
+              {detailDialog.item.courseLevel && (
+                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-600">🏷️</div>
+                  <div className="text-sm font-medium text-gray-700 mt-2">سعر الكورس</div>
+                  {detailDialog.item.courseLevel.priceSAR > 0 && (
+                    <div className="text-xl font-bold text-gray-900">{detailDialog.item.courseLevel.priceSAR} ل.س</div>
+                  )}
+                  {detailDialog.item.courseLevel.priceUSD > 0 && (
+                    <div className="text-sm text-gray-600 mt-1">{detailDialog.item.courseLevel.priceUSD} $</div>
+                  )}
+                </div>
+              )}
+              
+              {/* معلومات الكوبون */}
+              {getCouponInfo(detailDialog.item) ? (
+                <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="text-2xl font-bold text-purple-600">🎫</div>
+                  <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
+                  <div className="text-lg font-bold text-gray-900 mt-1">{getCouponInfo(detailDialog.item).code}</div>
+                  <div className="text-xs text-purple-600 mt-1">
+                    {getCouponInfo(detailDialog.item).isPercent ? 
+                      `${getCouponInfo(detailDialog.item).discount}% خصم` : 
+                      `${getCouponInfo(detailDialog.item).discount} ل.س خصم`}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-2xl font-bold text-gray-600">➖</div>
+                  <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
+                  <div className="text-lg font-bold text-gray-900 mt-1">بدون كوبون</div>
+                  <div className="text-xs text-gray-600 mt-1">لم يتم تطبيق خصم</div>
+                </div>
+              )}
+            </div>
+            
+            {/* تفاصيل إضافية */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">المستخدم المصدر</span>
+                <span className="font-medium text-gray-900">{getIssuedByName(detailDialog.item.issuedBy)}</span>
+              </div> */}
+              
+              {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].notes && (
+                <div className="md:col-span-2">
+                  <span className="text-sm font-medium text-gray-700 block mb-2">الملاحظات</span>
+                  <p className="p-3 bg-gray-50 rounded border text-gray-800">{detailDialog.item.transaction[0].notes}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* صورة الإيصال */}
+        {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].receiptImageUrl && (
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-red-50 to-rose-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Upload  className="w-5 h-5 text-red-600" />
+                صورة الإيصال
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center">
+                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group cursor-pointer transition-all duration-300 hover:shadow-lg">
+                  <img
+                    src={getImageUrl(detailDialog.item.transaction[0].receiptImageUrl)}
+                    alt="صورة الإيصال"
+                    className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto transition-all duration-300 group-hover:scale-105"
+                    {...imageConfig}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/tallaam_logo2.png";
+                    }}
+                    onClick={() => {
+                      window.open(getImageUrl(detailDialog.item.transaction[0].receiptImageUrl), '_blank');
+                    }}
+                  />
+                  <div className="absolute top-3 right-3 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-4 h-4" />
+                    انقر للتكبير
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-3 flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  انقر على الصورة لعرضها بحجم كامل في نافذة جديدة
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ملخص سريع */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <BarChart3 className="w-5 h-5 text-gray-600" />
+              ملخص الكود
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="text-2xl font-bold text-blue-600">
+                  {detailDialog.item.isActive && !detailDialog.item.used ? "✅" : "❌"}
+                </div>
+                <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
+                </div>
+              </div>
+              
+              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
+                <div className="text-2xl font-bold text-green-600">📅</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {detailDialog.item.validityInMonths || "0"} شهر
+                </div>
+              </div>
+              
+              <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600">💳</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">المدفوع</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {getAmountPaid(detailDialog.item)} ل.س
+                </div>
+              </div>
+              
+              <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                <div className="text-2xl font-bold text-orange-600">🎯</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">الكورس</div>
+                <div className="text-lg font-bold text-gray-900 truncate" title={detailDialog.item.courseLevel?.course?.title}>
+                  {detailDialog.item.courseLevel?.course?.title ? 
+                    (detailDialog.item.courseLevel.course.title.length > 12 ? 
+                      detailDialog.item.courseLevel.course.title.substring(0, 12) + "..." : 
+                      detailDialog.item.courseLevel.course.title) 
+                    : "---"}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* أزرار الإجراءات */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="outline"
+            onClick={() => copyToClipboard(detailDialog.item.code)}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Copy className="w-4 h-4" />
+            نسخ الكود
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              setStatusDialog({
+                isOpen: true,
+                itemId: detailDialog.item.id,
+                itemName: detailDialog.item.code,
+                isActive: !detailDialog.item.isActive
+              });
+              setDetailDialog({ isOpen: false, item: null });
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            {detailDialog.item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {detailDialog.item.isActive ? "تعطيل الكود" : "تفعيل الكود"}
+          </Button>
+          
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setDeleteDialog({
+                isOpen: true,
+                itemId: detailDialog.item.id,
+                itemName: detailDialog.item.code
+              });
+              setDetailDialog({ isOpen: false, item: null });
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Trash2 className="w-4 h-4" />
+            حذف الكود
+          </Button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
         </Card>
     );
 };

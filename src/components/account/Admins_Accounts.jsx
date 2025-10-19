@@ -346,6 +346,7 @@ const Admins_Accounts = () => {
     }
   }
 
+
   // تحميل البيانات عند فتح المكون
   useEffect(() => {
     fetchAdmins()
@@ -883,74 +884,192 @@ const Admins_Accounts = () => {
       </Card>
 
       {/* دايولوج عرض التفاصيل */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-right">تفاصيل المدير</DialogTitle>
-          </DialogHeader>
-          {selectedAdmin && (
-            <div className="space-y-4 mt-2 text-right">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-medium">الاسم الكامل:</Label>
-                  <p className="mt-1">{selectedAdmin.user?.name}</p>
-                </div>
-                <div>
-                  <Label className="font-medium">اسم المستخدم:</Label>
-                  <p className="mt-1">@{selectedAdmin.username}</p>
-                </div>
-                <div>
-                  <Label className="font-medium">البريد الإلكتروني:</Label>
-                  <p className="mt-1">{selectedAdmin.email}</p>
-                </div>
-                <div>
-                  <Label className="font-medium">رقم الهاتف:</Label>
-                  <p className="mt-1" dir='ltr'>{selectedAdmin.user?.phone}</p>
-                </div>
-                <div>
-                  <Label className="font-medium">الجنس:</Label>
-                  <p className="mt-1">{selectedAdmin.user?.sex || '---'}</p>
-                </div>
-                <div>
-                  <Label className="font-medium">الدور:</Label>
-                  <p className="mt-1">
-                    <Badge variant="outline">
-                      {selectedAdmin.user?.role === "SUPER_ADMIN" ? "مدير عام" : "مدير"}
-                    </Badge>
-                  </p>
-                </div>
-                <div>
-                  <Label className="font-medium">الحالة:</Label>
-                  <div className="mt-1">
-                    <Badge variant={selectedAdmin.user?.isActive ? "default" : "secondary"} 
-                          className={selectedAdmin.user?.isActive ? "bg-green-600" : ""}>
-                      {selectedAdmin.user?.isActive ? "نشط" : "معطل"}
-                    </Badge>
-                  </div>
-                </div>
-                <div>
-                  <Label className="font-medium">تاريخ الميلاد:</Label>
-                  <p className="mt-1">
-                    {selectedAdmin.user?.birthDate ? formatDate(selectedAdmin.user.birthDate) : '---'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="font-medium">تاريخ الانتهاء:</Label>
-                  <p className="mt-1">
-                    {selectedAdmin.user?.expiresAt ? formatDate(selectedAdmin.user.expiresAt) : '---'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="font-medium">تاريخ الإنشاء:</Label>
-                  <p className="mt-1">
-                    {formatDate(selectedAdmin.user?.createdAt)}
-                  </p>
-                </div>
+      // دايولوج عرض التفاصيل - تصميم محسن
+<Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+        <div className="flex items-center gap-2">
+          <Shield className="w-6 h-6 text-blue-600" />
+          تفاصيل المدير
+        </div>
+      </DialogTitle>
+    </DialogHeader>
+    
+    {selectedAdmin && (
+      <div className="space-y-6 text-right">
+        {/* الهيدر مع المعلومات الأساسية */}
+        <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* الصورة الرمزية */}
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+              <User className="w-10 h-10 text-blue-600" />
+            </div>
+            
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedAdmin.user?.name}</h2>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                  @{selectedAdmin.username}
+                </Badge>
+                <Badge variant={selectedAdmin.user?.isActive ? "default" : "secondary"} 
+                      className={selectedAdmin.user?.isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
+                  {selectedAdmin.user?.isActive ? "🟢 نشط" : "🔴 معطل"}
+                </Badge>
+                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                  {selectedAdmin.user?.role === "SUPER_ADMIN" ? "👑 مدير عام" : "🛡️ مدير"}
+                </Badge>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+
+        {/* الشبكة الرئيسية للمعلومات */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* المعلومات الشخصية */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gray-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <User className="w-5 h-5 text-blue-600" />
+                المعلومات الشخصية
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">البريد الإلكتروني</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{selectedAdmin.email}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
+                  </div>
+                  <span className="font-medium text-gray-900" dir="ltr">{selectedAdmin.user?.phone}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">الجنس</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{selectedAdmin.user?.sex || 'غير محدد'}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ الميلاد</span>
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    {selectedAdmin.user?.birthDate ? formatDate(selectedAdmin.user.birthDate) : 'غير محدد'}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* معلومات الحساب */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gray-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Shield className="w-5 h-5 text-green-600" />
+                معلومات الحساب
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{formatDate(selectedAdmin.user?.createdAt)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ الانتهاء</span>
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    {selectedAdmin.user?.expiresAt ? formatDate(selectedAdmin.user.expiresAt) : 'غير محدد'}
+                  </span>
+                </div>
+{/*                 
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">معرف المستخدم</span>
+                  </div>
+                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
+                    {selectedAdmin.id}
+                  </span>
+                </div> */}
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    {selectedAdmin.user?.updatedAt ? formatDate(selectedAdmin.user.updatedAt) : 'غير متوفر'}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+       
+
+        {/* أزرار الإجراءات */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="outline"
+            onClick={() => {
+              openEditDialog(selectedAdmin)
+              setViewDialogOpen(false)
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Edit className="w-4 h-4" />
+            تعديل البيانات
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => handleToggleAdminStatus(selectedAdmin.id, selectedAdmin.user?.isActive)}
+            className="flex items-center gap-2 flex-1"
+          >
+            {selectedAdmin.user?.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+            {selectedAdmin.user?.isActive ? "تعطيل الحساب" : "تفعيل الحساب"}
+          </Button>
+          
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setDeleteDialog({
+                isOpen: true,
+                adminId: selectedAdmin.id,
+                adminName: selectedAdmin.user?.name
+              })
+              setViewDialogOpen(false)
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Trash2 className="w-4 h-4" />
+            حذف الحساب
+          </Button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
 
       {/* دايولوج تعديل المدير */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

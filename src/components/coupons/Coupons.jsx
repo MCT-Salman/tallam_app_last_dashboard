@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter } from "lucide-react"
+import { Plus, Edit,DollarSign ,Shield,BarChart3 , Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter } from "lucide-react"
 import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -454,6 +454,40 @@ const Coupons = () => {
   const handleFormChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }))
   }
+
+  // دالة لتحسين تنسيق التاريخ
+// const formatDate = (dateString) => {
+//   if (!dateString) return "غير محدد";
+//   const date = new Date(dateString);
+//   return date.toLocaleDateString('ar-SA', {
+//     year: 'numeric',
+//     month: 'long',
+//     day: 'numeric',
+//     hour: '2-digit',
+//     minute: '2-digit'
+//   });
+// };
+
+// دالة لحساب الوقت المنقضي
+const calculateTimeAgo = (dateString) => {
+  if (!dateString) return "غير محدد";
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffMins < 1) return "الآن";
+  if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+  if (diffDays === 1) return "منذ يوم";
+  if (diffDays < 7) return `منذ ${diffDays} أيام`;
+  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
+  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} أشهر`;
+  return `منذ ${Math.floor(diffDays / 365)} سنوات`;
+};
 
   const resetForm = () => {
     setForm({
@@ -1468,15 +1502,384 @@ const Coupons = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 👁️ ديالوج تفاصيل الكوبون */}
-      <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, coupon: null })}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>تفاصيل الكوبون</DialogTitle>
-          </DialogHeader>
-          {renderCouponDetails(detailDialog.coupon)}
-        </DialogContent>
-      </Dialog>
+      {/*  ديالوج تفاصيل الكوبون */}
+<Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, coupon: null })}>
+  <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+        <div className="flex items-center gap-2">
+          <Percent className="w-6 h-6 text-green-600" />
+          تفاصيل كوبون الخصم
+        </div>
+      </DialogTitle>
+    </DialogHeader>
+    
+    {detailDialog.coupon && (
+      <div className="space-y-6 text-right">
+        {/* الهيدر مع المعلومات الأساسية */}
+        <div className="bg-gradient-to-l from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            {/* أيقونة الكوبون */}
+            <div className="relative flex-shrink-0">
+              <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
+                {detailDialog.coupon.isPercent ? (
+                  <Percent className="w-10 h-10 text-green-600" />
+                ) : (
+                  <Hash className="w-10 h-10 text-green-600" />
+                )}
+              </div>
+              {/* شارة الحالة */}
+              <div className={`absolute -top-2 -right-2 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg ${
+                getStatusBadgeVariant(detailDialog.coupon) === 'default' 
+                  ? "bg-green-500 text-white" 
+                  : getStatusBadgeVariant(detailDialog.coupon) === 'destructive'
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-500 text-white"
+              }`}>
+                {getStatusText(detailDialog.coupon) === "نشط" ? "✓" : 
+                 getStatusText(detailDialog.coupon) === "منتهي" ? "⌛" : 
+                 getStatusText(detailDialog.coupon) === "مستنفذ" ? "⛔" : "✗"}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 font-mono">
+                    {detailDialog.coupon.code}
+                  </h2>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant={getStatusBadgeVariant(detailDialog.coupon)} 
+                          className={`text-sm font-medium ${
+                            getStatusBadgeVariant(detailDialog.coupon) === 'default' 
+                              ? "bg-green-600 hover:bg-green-700" 
+                              : getStatusBadgeVariant(detailDialog.coupon) === 'destructive'
+                              ? "bg-red-600 hover:bg-red-700"
+                              : "bg-gray-500"
+                          }`}>
+                      {getStatusText(detailDialog.coupon)}
+                    </Badge>
+                    
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                      {detailDialog.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
+                    </Badge>
+                    
+                    {detailDialog.coupon.maxUsage && (
+                      <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                        <Users className="w-3 h-3 ml-1" />
+                        {detailDialog.coupon.usedCount || 0} / {detailDialog.coupon.maxUsage}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                {/* قيمة الخصم */}
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200 shadow-sm">
+                  <div className="text-2xl font-bold text-green-600">
+                    {detailDialog.coupon.discount} {detailDialog.coupon.isPercent ? '%' : 'ل.س'}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">قيمة الخصم</div>
+                </div>
+              </div>
+              
+              {/* معلومات سريعة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Calendar className="w-4 h-4 text-green-600" />
+                  <span>أنشئ في: {formatDate(detailDialog.coupon.createdAt)}</span>
+                </div>
+                {detailDialog.coupon.expiry && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Calendar className="w-4 h-4 text-orange-600" />
+                    <span>ينتهي في: {formatDate(detailDialog.coupon.expiry)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* الشبكة الرئيسية للمعلومات */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* معلومات الكوبون */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-blue-50 to-cyan-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Percent className="w-5 h-5 text-blue-600" />
+                معلومات الكوبون
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">كود الخصم</span>
+                  </div>
+                  <span className="font-mono font-bold text-gray-900">{detailDialog.coupon.code}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">نوع الخصم</span>
+                  </div>
+                  <Badge variant={detailDialog.coupon.isPercent ? "default" : "secondary"}>
+                    {detailDialog.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
+                  </Badge>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">قيمة الخصم</span>
+                  </div>
+                  <span className="font-bold text-lg text-green-600">
+                    {detailDialog.coupon.discount} {detailDialog.coupon.isPercent ? '%' : 'ل.س'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ الانتهاء</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">
+                      {detailDialog.coupon.expiry ? formatDate(detailDialog.coupon.expiry) : 'غير محدد'}
+                    </span>
+                    {detailDialog.coupon.expiry && (
+                      <span className={`text-xs ${
+                        isExpired(detailDialog.coupon.expiry) ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {isExpired(detailDialog.coupon.expiry) ? 'منتهي الصلاحية' : 'نشط'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* معلومات الاستخدام */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Users className="w-5 h-5 text-purple-600" />
+                معلومات الاستخدام
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">مرات الاستخدام</span>
+                  </div>
+                  <span className="font-medium text-gray-900">{detailDialog.coupon.usedCount || 0}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">الحد الأقصى</span>
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    {detailDialog.coupon.maxUsage || '∞'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">الحالة الحالية</span>
+                  </div>
+                  <Badge variant={getStatusBadgeVariant(detailDialog.coupon)}>
+                    {getStatusText(detailDialog.coupon)}
+                  </Badge>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">{formatDate(detailDialog.coupon.updatedAt)}</span>
+                    {/* <span className="text-xs text-gray-500">
+                      {new Date(detailDialog.coupon.updatedAt).toLocaleTimeString('ar-SA')}
+                    </span> */}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* معلومات الكورس والمستوى */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <BookOpen className="w-5 h-5 text-orange-600" />
+              معلومات الكورس والمستوى
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">الكورس</span>
+                <span className="font-medium text-gray-900">
+                  {detailDialog.coupon.courseLevel?.course?.title || "غير محدد"}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">المستوى</span>
+                <span className="font-medium text-gray-900">
+                  {detailDialog.coupon.courseLevel?.name || "غير محدد"}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">الاختصاص</span>
+                <span className="font-medium text-gray-900">
+                  {detailDialog.coupon.courseLevel?.course?.specialization?.name || 
+                   detailDialog.coupon.courseLevel?.course?.specialization?.title || 
+                   "غير محدد"}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">المدرب</span>
+                <span className="font-medium text-gray-900">
+                  {detailDialog.coupon.courseLevel?.instructor?.name || "غير محدد"}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* الإحصائيات السريعة */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <BarChart3 className="w-5 h-5 text-gray-600" />
+              ملخص الكوبون
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
+                <div className="text-2xl font-bold text-green-600">
+                  {detailDialog.coupon.isPercent ? "%" : "💰"}
+                </div>
+                <div className="text-sm font-medium text-gray-700 mt-1">نوع الخصم</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {detailDialog.coupon.isPercent ? 'نسبة' : 'ثابت'}
+                </div>
+              </div>
+              
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="text-2xl font-bold text-blue-600">🎯</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {getStatusText(detailDialog.coupon)}
+                </div>
+              </div>
+              
+              <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600">📊</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">الاستخدام</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {detailDialog.coupon.usedCount || 0} / {detailDialog.coupon.maxUsage || '∞'}
+                </div>
+              </div>
+{/*               
+              <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                <div className="text-2xl font-bold text-orange-600">🆔</div>
+                <div className="text-sm font-medium text-gray-700 mt-1">المعرف</div>
+                <div className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-800 truncate">
+                  {detailDialog.coupon.id}
+                </div>
+              </div> */}
+            </div>
+          </CardContent>
+        </Card>
+
+        
+
+        {/* أزرار الإجراءات */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigator.clipboard.writeText(detailDialog.coupon.code);
+              showSuccessToast("تم نسخ كود الكوبون إلى الحافظة");
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Hash className="w-4 h-4" />
+            نسخ الكود
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              handleToggleActive(detailDialog.coupon.id, detailDialog.coupon.isActive);
+              setDetailDialog({ isOpen: false, coupon: null });
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            {detailDialog.coupon.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {detailDialog.coupon.isActive ? "تعطيل الكوبون" : "تفعيل الكوبون"}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              setEditItem(detailDialog.coupon);
+              setForm({
+                code: detailDialog.coupon.code || "",
+                discount: detailDialog.coupon.discount?.toString() || "",
+                isPercent: detailDialog.coupon.isPercent,
+                expiry: detailDialog.coupon.expiry?.split('T')[0] || "",
+                maxUsage: detailDialog.coupon.maxUsage?.toString() || "",
+                isActive: detailDialog.coupon.isActive,
+                specializationId: detailDialog.coupon.courseLevel?.course?.specializationId?.toString() || "",
+                courseId: detailDialog.coupon.courseLevel?.courseId?.toString() || "",
+                instructorId: "",
+                courseLevelId: detailDialog.coupon.courseLevelId?.toString() || ""
+              });
+              setIsDialogOpen(true);
+              setDetailDialog({ isOpen: false, coupon: null });
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Edit className="w-4 h-4" />
+            تعديل الكوبون
+          </Button>
+          
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setDeleteDialog({
+                isOpen: true,
+                itemId: detailDialog.coupon.id,
+                itemName: detailDialog.coupon.code
+              });
+              setDetailDialog({ isOpen: false, coupon: null });
+            }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <Trash2 className="w-4 h-4" />
+            حذف الكوبون
+          </Button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
     </Card>
   )
 }
