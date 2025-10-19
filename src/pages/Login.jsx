@@ -14,12 +14,14 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import heroImg from "/tallaam_logo.png"
+import { useSearchParams } from 'react-router-dom';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const { login, loading, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     identifier: "",
@@ -27,6 +29,16 @@ export default function Login() {
   })
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    // قراءة رسالة انتهاء الجلسة من URL
+    const sessionExpired = searchParams.get('sessionExpired');
+    const message = searchParams.get('message');
+    
+    if (sessionExpired && message) {
+      setError(decodeURIComponent(message));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -98,6 +110,7 @@ export default function Login() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
                     e.preventDefault()
+                    handleSubmit(e) // ✅ إضافة هذا السطر
                   }
                 }}
               >

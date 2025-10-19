@@ -395,10 +395,10 @@ const Stories = () => {
                             <Label className="font-medium">آخر تحديث:</Label>
                             <p>{formatDate(story.updatedAt)}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <Label className="font-medium">معرف القصة:</Label>
                             <p>{story.id || "غير محدد"}</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

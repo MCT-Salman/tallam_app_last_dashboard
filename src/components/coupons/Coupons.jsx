@@ -699,10 +699,10 @@ const Coupons = () => {
               <Label className="font-medium">آخر تحديث:</Label>
               <p>{formatDate(coupon.updatedAt)}</p>
             </div>
-            <div>
+            {/* <div>
               <Label className="font-medium">معرف الكوبون:</Label>
               <p>{coupon.id || "غير محدد"}</p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

@@ -659,19 +659,19 @@ const Transactions = () => {
                         <p className="text-lg text-gray-900">{formatDate(transaction.updatedAt)}</p>
                     </div>
 
-                    {transaction.accessCodeId && (
+                    {/* {transaction.accessCodeId && (
                         <div className="bg-white p-4 rounded-lg shadow-sm border">
                             <Label className="font-semibold text-gray-600 block mb-2">معرف كود الدخول</Label>
                             <p className="text-lg text-gray-900">{transaction.accessCodeId}</p>
                         </div>
-                    )}
+                    )} */}
 
-                    {transaction.couponId && (
+                    {/* {transaction.couponId && (
                         <div className="bg-white p-4 rounded-lg shadow-sm border">
                             <Label className="font-semibold text-gray-600 block mb-2">معرف الكوبون</Label>
                             <p className="text-lg text-gray-900">{transaction.couponId}</p>
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 {/* صورة الإيصال */}
@@ -741,7 +741,7 @@ const Transactions = () => {
                             value={user?.isActive ? 'نشط' : 'غير نشط'}
                             isActive={user?.isActive}
                         />
-                        <InfoCard label="معرف المستخدم" value={user?.id} />
+                        {/* <InfoCard label="معرف المستخدم" value={user?.id} /> */}
                     </div>
 
                     {user?.avatarUrl && (
@@ -770,8 +770,8 @@ const Transactions = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <InfoCard label="اسم الكورس" value={course?.title} />
                         <InfoCard label="اسم المستوى" value={courseLevel?.name} />
-                        <InfoCard label="معرف الكورس" value={course?.id} />
-                        <InfoCard label="معرف المستوى" value={courseLevel?.id} />
+                        {/* <InfoCard label="معرف الكورس" value={course?.id} /> */}
+                        {/* <InfoCard label="معرف المستوى" value={courseLevel?.id} /> */}
                     </div>
                 </div>
 
@@ -794,11 +794,11 @@ const Transactions = () => {
                             </div>
                         </div>
 
-                        <InfoCard
+                        {/* <InfoCard
                             label="معرف كود الدخول"
                             value={transaction.accessCode?.id}
                             className="bg-white border border-gray-200 rounded-xl p-4"
-                        />
+                        /> */}
                     </div>
                 </div>
 
@@ -1049,7 +1049,7 @@ const Transactions = () => {
                                                         <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                                         <div className="min-w-0">
                                                             <div className="truncate">{item.accessCode?.user?.name || "غير محدد"}</div>
-                                                            <div className="text-sm text-muted-foreground truncate">
+                                                            <div className="text-sm text-muted-foreground truncate"dir='ltr'>
                                                                 {item.accessCode?.user?.phone}
                                                             </div>
                                                         </div>

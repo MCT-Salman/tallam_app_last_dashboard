@@ -397,10 +397,10 @@ const Account = () => {
                             <Label className="font-medium">تاريخ الانتهاء:</Label>
                             <p>{formatDate(user.expiresAt)}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <Label className="font-medium">معرف المستخدم:</Label>
                             <p>{user.id || "غير محدد"}</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

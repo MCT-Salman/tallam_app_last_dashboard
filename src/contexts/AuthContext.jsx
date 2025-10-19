@@ -1,13 +1,12 @@
-// src\contexts\AuthContext.jsx
+// // src/contexts/AuthContext.jsx
 // import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
-// import { login as apiLogin, refreshToken as apiRefreshToken } from '@/api/api';
-// import { startTokenMonitoring as startTokenMonitoringUtil, ensureValidToken } from '@/utils/tokenManager';
+// import { login as apiLogin } from '@/api/api';
+// import { startTokenMonitoring as startTokenMonitoringUtil, ensureValidToken, refreshAuthToken as refreshTokenUtil } from '@/utils/tokenManager';
 
 // // eslint-disable-next-line react-refresh/only-export-components
 // export const AuthContext = createContext(null);
 
 // export const AuthProvider = ({ children }) => {
-
 //   const [user, setUser] = useState(() => {
 //     const storedUser = localStorage.getItem('user');
 //     try {
@@ -20,125 +19,99 @@
 //   });
 
 //   const [token, setToken] = useState(localStorage.getItem('accessToken'));
-//   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-//     const token = localStorage.getItem('accessToken');
-//     if (!token) return false;
-    
-//     // تحقق أساسي من صحة التوكن
-//     try {
-//       const payload = JSON.parse(atob(token.split('.')[1]));
-//       const expiry = payload.exp * 1000; // تحويل إلى milliseconds
-//       return Date.now() < expiry;
-//     } catch (e) {
-//       console.error('Invalid token format:', e);
-//       localStorage.removeItem('accessToken');
-//       localStorage.removeItem('user');
-//       return false;
-//     }
-//   });
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
 //   const [loading, setLoading] = useState(true); 
 //   const tokenMonitoringRef = useRef(null); 
 
+//  const login = useCallback(async (identifier, password) => {
+//   try {
+//     // لا تفعّل setLoading هنا — هذا يخص التهيئة فقط
+//     const response = await apiLogin(identifier, password);
+//     console.log('🔍 API Response:', response.data);
+    
+//     let accessToken, refreshToken, userData;
 
-
-//   const login = useCallback(async (identifier, password) => {
-//     setLoading(true);
-//     try {
-//       const response = await apiLogin(identifier, password);
-//       console.log('🔍 API Response:', response.data);
-//       console.log('🔍 Full Response:', response);
-      
-//       // Check different possible response structures
-//       let accessToken, refreshToken, userData;
-      
-//       if (response.data.success && response.data.data) {
-//         // If response is wrapped in a data object
-//         accessToken = response.data.data.accessToken;
-//         refreshToken = response.data.data.refreshToken;
-//         userData = response.data.data.user;
-//       } else {
-//         throw new Error('Invalid response format');
-//       }
-      
-//       console.log('🔍 Extracted accessToken:', accessToken);
-//       console.log('🔍 Extracted refreshToken:', refreshToken);
-//       console.log('🔍 Extracted userData:', userData);
-      
-//       if (!accessToken) {
-//         throw new Error('Access token not found in response');
-//       }
-      
-//       // تشفير البيانات الحساسة قبل تخزينها
-//       localStorage.setItem('accessToken', accessToken);
-//       if (refreshToken) {
-//         localStorage.setItem('refreshToken', refreshToken);
-//       }
-//       if (userData) {
-//         localStorage.setItem('user', JSON.stringify(userData));
-//       }
-      
-//       setToken(accessToken);
-//       setUser(userData);
-//       setIsAuthenticated(true);
-//       setLoading(false);
-//       return true;
-//     } catch (error) {
-//       console.error('Login failed:', error.response?.data?.message || error.message);
-//       console.error('Full error:', error);
-//       // تنظيف جميع البيانات عند فشل تسجيل الدخول
-//       localStorage.removeItem('accessToken');
-//       localStorage.removeItem('refreshToken');
-//       localStorage.removeItem('user');
-//       setIsAuthenticated(false);
-//       setLoading(false);
-//       throw error;
+//     if (response.data.success && response.data.data) {
+//       accessToken = response.data.data.accessToken;
+//       refreshToken = response.data.data.refreshToken;
+//       userData = response.data.data.user;
+//     } else {
+//       throw new Error('Invalid response format');
 //     }
-//   }, []);
+
+//     if (!accessToken) {
+//       throw new Error('Access token not found in response');
+//     }
+
+//     localStorage.setItem('accessToken', accessToken);
+//     if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+//     if (userData) localStorage.setItem('user', JSON.stringify(userData));
+
+//     setToken(accessToken);
+//     setUser(userData);
+//     setIsAuthenticated(true);
+
+//     return true;
+//   } catch (error) {
+//     console.error('Login failed:', error.response?.data?.message || error.message);
+//     localStorage.removeItem('accessToken');
+//     localStorage.removeItem('refreshToken');
+//     localStorage.removeItem('user');
+//     setIsAuthenticated(false);
+//     // لا تغيّر setLoading هنا، خليه كما هو
+//     throw error;
+//   }
+// }, []);
+
 
 //   const logout = useCallback(() => {
 //     setLoading(true);
     
-//     // حذف جميع البيانات من localStorage بشكل كامل
+//     // تنظيف localStorage
 //     const keysToRemove = [];
 //     for (let i = 0; i < localStorage.length; i++) {
 //       const key = localStorage.key(i);
-//       // حذف جميع المفاتيح المتعلقة بالتطبيق
 //       if (key && (
 //         key.includes('accessToken') || 
 //         key.includes('refreshToken') || 
 //         key.includes('user') ||
 //         key.includes('auth') ||
-//         key.includes('token') ||
-//         key.startsWith('tallaam_') ||
-//         key.startsWith('app_')
+//         key.includes('token')
 //       )) {
 //         keysToRemove.push(key);
 //       }
 //     }
     
-//     // حذف جميع المفاتيح المحددة
-//     keysToRemove.forEach(key => {
-//       localStorage.removeItem(key);
-//     });
+//     keysToRemove.forEach(key => localStorage.removeItem(key));
     
-//     // حذف البيانات الأساسية بشكل صريح للتأكد
-//     localStorage.removeItem('accessToken');
-//     localStorage.removeItem('refreshToken');
-//     localStorage.removeItem('user');
-//     localStorage.removeItem('app_settings');
-//     localStorage.removeItem('theme');
-//     localStorage.removeItem('language');
+//     // تنظيف إضافي
+//     ['accessToken', 'refreshToken', 'user'].forEach(key => 
+//       localStorage.removeItem(key)
+//     );
     
-//     // إعادة تعيين حالة المصادقة
 //     setToken(null);
 //     setUser(null);
 //     setIsAuthenticated(false);
 //     setLoading(false);
     
-//     console.log('✅ جميع بيانات المستخدم تم حذفها من localStorage');
+//     console.log('✅ جميع بيانات المستخدم تم حذفها');
 //   }, []);
 
-//   // التحقق من صحة التوكن بشكل دوري
+//   // دالة محدثة لتحديث التوكن
+//   const refreshAuthToken = useCallback(async () => {
+//     try {
+//       setLoading(true);
+//       const newAccessToken = await refreshTokenUtil();
+//       setToken(newAccessToken);
+//       setLoading(false);
+//       return newAccessToken;
+//     } catch (error) {
+//       setLoading(false);
+//       logout();
+//       throw error;
+//     }
+//   }, [logout]);
+
 //   const validateToken = useCallback(() => {
 //     const token = localStorage.getItem('accessToken');
 //     if (!token) {
@@ -155,6 +128,7 @@
 //         logout();
 //       }
       
+//       setIsAuthenticated(isValid);
 //       return isValid;
 //     } catch (e) {
 //       console.error('Invalid token format:', e);
@@ -163,59 +137,16 @@
 //     }
 //   }, [logout]);
 
-//   // دالة لتحديث التوكن
-//   const refreshAuthToken = useCallback(async () => {
-//     const refreshToken = localStorage.getItem('refreshToken');
-//     if (!refreshToken) {
-//       throw new Error('No refresh token available');
-//     }
-
-//     try {
-//       setLoading(true);
-//       const response = await apiRefreshToken(refreshToken);
-//       console.log('🔄 Refresh Token Response:', response.data);
-      
-//       // استخراج التوكن الجديد من الاستجابة
-//       let newAccessToken;
-//       if (response.data.data) {
-//         newAccessToken = response.data.data.accessToken;
-//       } else {
-//         newAccessToken = response.data.accessToken;
-//       }
-      
-//       if (!newAccessToken) {
-//         throw new Error('New access token not found in response');
-//       }
-      
-//       // تحديث التوكن في localStorage والحالة
-//       localStorage.setItem('accessToken', newAccessToken);
-//       setToken(newAccessToken);
-//       setLoading(false);
-      
-//       console.log('✅ Token refreshed successfully');
-//       return newAccessToken;
-//     } catch (error) {
-//       console.error('Token refresh failed:', error.response?.data?.message || error.message);
-//       setLoading(false);
-//       // إذا فشل تحديث التوكن، قم بتسجيل الخروج
-//       logout();
-//       throw error;
-//     }
-//   }, [logout]);
-
-//   // دالة لبدء مراقبة التوكن
 //   const startTokenMonitoring = useCallback(() => {
 //     if (tokenMonitoringRef.current) {
-//       // إيقاف المراقبة الحالية إذا كانت موجودة
 //       tokenMonitoringRef.current();
 //     }
     
 //     console.log('🔍 Starting automatic token monitoring...');
-//     const stopMonitoring = startTokenMonitoringUtil(30 * 1000); // التحقق كل 30 ثانية
+//     const stopMonitoring = startTokenMonitoringUtil(refreshAuthToken, 30 * 1000);
 //     tokenMonitoringRef.current = stopMonitoring;
-//   }, []);
+//   }, [refreshAuthToken]);
 
-//   // دالة لإيقاف مراقبة التوكن
 //   const stopTokenMonitoring = useCallback(() => {
 //     if (tokenMonitoringRef.current) {
 //       console.log('⏹️ Stopping token monitoring...');
@@ -224,7 +155,40 @@
 //     }
 //   }, []);
 
-//   // بدء مراقبة التوكن عند تسجيل الدخول
+//   // التحقق من التوكن عند التحميل
+//   useEffect(() => {
+//     const initializeAuth = async () => {
+//       const storedToken = localStorage.getItem('accessToken');
+//       const storedUser = localStorage.getItem('user');
+      
+//       if (storedToken && storedUser) {
+//         try {
+//           const isValid = await ensureValidToken();
+          
+//           if (isValid) {
+//             const user = JSON.parse(storedUser);
+//             setToken(storedToken);
+//             setUser(user);
+//             setIsAuthenticated(true);
+//             console.log('✅ User authenticated and token validated');
+//           } else {
+//             logout();
+//           }
+//         } catch (error) {
+//           console.error('Error during authentication initialization:', error);
+//           logout();
+//         }
+//       } else {
+//         setIsAuthenticated(false);
+//       }
+      
+//       setLoading(false);
+//     };
+    
+//     initializeAuth();
+//   }, [logout]);
+
+//   // إدارة مراقبة التوكن
 //   useEffect(() => {
 //     if (isAuthenticated && token) {
 //       startTokenMonitoring();
@@ -235,40 +199,7 @@
 //     return () => {
 //       stopTokenMonitoring();
 //     };
-//   }, [isAuthenticated, token]);
-
-//   // التحقق من صلاحية التوكن عند تحميل التطبيق
-//   useEffect(() => {
-//     const initializeAuth = async () => {
-//       const storedToken = localStorage.getItem('accessToken');
-//       const storedUser = localStorage.getItem('user');
-      
-//       if (storedToken && storedUser) {
-//         try {
-//           // التحقق من صلاحية التوكن وتحديثه إذا لزم الأمر
-//           const isValid = await ensureValidToken();
-          
-//           if (isValid) {
-//             const user = JSON.parse(storedUser);
-//             setToken(storedToken);
-//             setUser(user);
-//             setIsAuthenticated(true);
-//             console.log('✅ User authenticated and token validated');
-//           } else {
-//             // إذا فشل التحقق، قم بتسجيل الخروج
-//             logout();
-//           }
-//         } catch (error) {
-//           console.error('Error during authentication initialization:', error);
-//           logout();
-//         }
-//       }
-      
-//       setLoading(false);
-//     };
-    
-//     initializeAuth();
-//   }, [logout]);
+//   }, [isAuthenticated, token, startTokenMonitoring, stopTokenMonitoring]);
 
 //   const authContextValue = {
 //     user,
@@ -278,9 +209,9 @@
 //     login,
 //     logout,
 //     validateToken,
-//     refreshAuthToken, // إضافة دالة تحديث التوكن
-//     startTokenMonitoring, // إضافة دالة بدء المراقبة
-//     stopTokenMonitoring, // إضافة دالة إيقاف المراقبة
+//     refreshAuthToken,
+//     startTokenMonitoring,
+//     stopTokenMonitoring,
 //   };
 
 //   return (
@@ -289,6 +220,11 @@
 //     </AuthContext.Provider>
 //   );
 // };
+
+
+
+
+
 
 
 
@@ -308,62 +244,98 @@ export const AuthProvider = ({ children }) => {
     try {
       return storedUser ? JSON.parse(storedUser) : null;
     } catch (e) {
-      console.log(e)
+      console.error('Error parsing stored user:', e);
       localStorage.removeItem('user');
       return null;
     }
   });
 
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [token, setToken] = useState(() => localStorage.getItem('accessToken'));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); 
-  const tokenMonitoringRef = useRef(null); 
+  const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const tokenMonitoringRef = useRef(null);
 
- const login = useCallback(async (identifier, password) => {
-  try {
-    // لا تفعّل setLoading هنا — هذا يخص التهيئة فقط
-    const response = await apiLogin(identifier, password);
-    console.log('🔍 API Response:', response.data);
+  // دالة مساعدة لإعادة التوجيه إلى Login باستخدام window.location
+  const redirectToLogin = useCallback((message = '') => {
+    console.log('🔄 Redirecting to login...');
     
-    let accessToken, refreshToken, userData;
-
-    if (response.data.success && response.data.data) {
-      accessToken = response.data.data.accessToken;
-      refreshToken = response.data.data.refreshToken;
-      userData = response.data.data.user;
-    } else {
-      throw new Error('Invalid response format');
-    }
-
-    if (!accessToken) {
-      throw new Error('Access token not found in response');
-    }
-
-    localStorage.setItem('accessToken', accessToken);
-    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-    if (userData) localStorage.setItem('user', JSON.stringify(userData));
-
-    setToken(accessToken);
-    setUser(userData);
-    setIsAuthenticated(true);
-
-    return true;
-  } catch (error) {
-    console.error('Login failed:', error.response?.data?.message || error.message);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    // تنظيف حالة المصادقة أولاً
     setIsAuthenticated(false);
-    // لا تغيّر setLoading هنا، خليه كما هو
-    throw error;
-  }
-}, []);
+    setUser(null);
+    setToken(null);
+    
+    // إعداد بيانات الرسالة لنقلها إلى صفحة Login
+    const loginParams = new URLSearchParams();
+    if (message) {
+      loginParams.append('message', encodeURIComponent(message));
+    }
+    loginParams.append('sessionExpired', 'true');
+    
+    // استخدام setTimeout لتجنب مشاكل التحديث أثناء التصيير
+    setTimeout(() => {
+      window.location.href = `/login?${loginParams.toString()}`;
+    }, 100);
+  }, []);
 
+  const login = useCallback(async (identifier, password) => {
+    try {
+      const response = await apiLogin(identifier, password);
+      console.log('🔍 API Response:', response.data);
+      
+      let accessToken, refreshToken, userData;
 
-  const logout = useCallback(() => {
+      if (response.data.success && response.data.data) {
+        accessToken = response.data.data.accessToken;
+        refreshToken = response.data.data.refreshToken;
+        userData = response.data.data.user;
+      } else {
+        throw new Error('Invalid response format');
+      }
+
+      if (!accessToken) {
+        throw new Error('Access token not found in response');
+      }
+
+      // حفظ في localStorage
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      if (userData) localStorage.setItem('user', JSON.stringify(userData));
+
+      // تحديث الحالة
+      setToken(accessToken);
+      setUser(userData);
+      setIsAuthenticated(true);
+      setAuthChecked(true);
+
+      console.log('✅ Login successful, starting token monitoring...');
+      startTokenMonitoring();
+
+      return true;
+    } catch (error) {
+      console.error('Login failed:', error.response?.data?.message || error.message);
+      
+      // تنظيف في حالة الفشل
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      
+      throw error;
+    }
+  }, []);
+
+  const logout = useCallback((message = '') => {
+    console.log('🚪 Logging out...');
+    
     setLoading(true);
     
-    // تنظيف localStorage
+    // إيقاف مراقبة التوكن أولاً
+    stopTokenMonitoring();
+    
+    // تنظيف localStorage بشكل شامل
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -372,38 +344,57 @@ export const AuthProvider = ({ children }) => {
         key.includes('refreshToken') || 
         key.includes('user') ||
         key.includes('auth') ||
-        key.includes('token')
+        key.includes('token') ||
+        key.includes('session')
       )) {
         keysToRemove.push(key);
       }
     }
     
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach(key => {
+      console.log(`🗑️ Removing: ${key}`);
+      localStorage.removeItem(key);
+    });
     
-    // تنظيف إضافي
-    ['accessToken', 'refreshToken', 'user'].forEach(key => 
-      localStorage.removeItem(key)
-    );
+    // تنظيف إضافي للتأكد
+    ['accessToken', 'refreshToken', 'user', 'authToken', 'refreshToken'].forEach(key => {
+      localStorage.removeItem(key);
+    });
     
+    // تحديث الحالة
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
+    setAuthChecked(true);
     setLoading(false);
     
     console.log('✅ جميع بيانات المستخدم تم حذفها');
-  }, []);
+    
+    // إعادة التوجيه إلى صفحة Login
+    redirectToLogin(message);
+  }, [redirectToLogin]);
 
   // دالة محدثة لتحديث التوكن
   const refreshAuthToken = useCallback(async () => {
     try {
+      console.log('🔄 Attempting to refresh token...');
       setLoading(true);
       const newAccessToken = await refreshTokenUtil();
-      setToken(newAccessToken);
+      
+      if (newAccessToken) {
+        localStorage.setItem('accessToken', newAccessToken);
+        setToken(newAccessToken);
+        console.log('✅ Token refreshed successfully');
+      }
+      
       setLoading(false);
       return newAccessToken;
     } catch (error) {
+      console.error('❌ Token refresh failed:', error);
       setLoading(false);
-      logout();
+      
+      // إذا فشل تحديث التوكن، سجل الخروج
+      logout('فشل في تجديد الجلسة، يرجى تسجيل الدخول مرة أخرى');
       throw error;
     }
   }, [logout]);
@@ -411,6 +402,7 @@ export const AuthProvider = ({ children }) => {
   const validateToken = useCallback(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
+      console.log('❌ No token found');
       setIsAuthenticated(false);
       return false;
     }
@@ -421,27 +413,42 @@ export const AuthProvider = ({ children }) => {
       const isValid = Date.now() < expiry;
       
       if (!isValid) {
-        logout();
+        console.log('❌ Token expired');
+        logout('انتهت صلاحية الجلسة');
+      } else {
+        console.log('✅ Token is valid');
       }
       
       setIsAuthenticated(isValid);
       return isValid;
     } catch (e) {
-      console.error('Invalid token format:', e);
-      logout();
+      console.error('❌ Invalid token format:', e);
+      logout('جلسة غير صالحة');
       return false;
     }
   }, [logout]);
 
   const startTokenMonitoring = useCallback(() => {
+    // إيقاف أي مراقبة سابقة
     if (tokenMonitoringRef.current) {
       tokenMonitoringRef.current();
     }
     
     console.log('🔍 Starting automatic token monitoring...');
-    const stopMonitoring = startTokenMonitoringUtil(refreshAuthToken, 30 * 1000);
-    tokenMonitoringRef.current = stopMonitoring;
-  }, [refreshAuthToken]);
+    
+    try {
+      const stopMonitoring = startTokenMonitoringUtil(
+        refreshAuthToken,
+        30 * 1000, // كل 30 ثانية
+        logout // callback للفشل
+      );
+      
+      tokenMonitoringRef.current = stopMonitoring;
+      console.log('✅ Token monitoring started');
+    } catch (error) {
+      console.error('❌ Failed to start token monitoring:', error);
+    }
+  }, [refreshAuthToken, logout]);
 
   const stopTokenMonitoring = useCallback(() => {
     if (tokenMonitoringRef.current) {
@@ -451,44 +458,77 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // التحقق من التوكن عند التحميل
+  // التحقق من التوكن عند التحميل الأولي
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('🔐 Initializing authentication...');
+      
       const storedToken = localStorage.getItem('accessToken');
       const storedUser = localStorage.getItem('user');
       
       if (storedToken && storedUser) {
         try {
+          console.log('📋 Found stored token and user, validating...');
+          
           const isValid = await ensureValidToken();
           
           if (isValid) {
-            const user = JSON.parse(storedUser);
-            setToken(storedToken);
-            setUser(user);
-            setIsAuthenticated(true);
-            console.log('✅ User authenticated and token validated');
+            // تحقق إضافي من صلاحية التوكن
+            try {
+              const payload = JSON.parse(atob(storedToken.split('.')[1]));
+              const expiry = payload.exp * 1000;
+              const timeUntilExpiry = expiry - Date.now();
+              
+              console.log(`⏰ Token expires in: ${Math.round(timeUntilExpiry / 1000 / 60)} minutes`);
+              
+              // إذا بقي أقل من 10 دقائق على انتهاء الصلاحية، جدد التوكن
+              if (timeUntilExpiry < 10 * 60 * 1000) {
+                console.log('🔄 Token nearing expiry, refreshing...');
+                await refreshAuthToken();
+              }
+              
+              const user = JSON.parse(storedUser);
+              setToken(storedToken);
+              setUser(user);
+              setIsAuthenticated(true);
+              setAuthChecked(true);
+              
+              console.log('✅ User authenticated and token validated');
+              
+              // بدء مراقبة التوكن
+              startTokenMonitoring();
+              
+            } catch (parseError) {
+              console.error('❌ Error parsing token or user:', parseError);
+              logout('خطأ في بيانات الجلسة');
+            }
           } else {
-            logout();
+            console.log('❌ Token validation failed during initialization');
+            logout('فشل في التحقق من صحة الجلسة');
           }
         } catch (error) {
-          console.error('Error during authentication initialization:', error);
-          logout();
+          console.error('❌ Error during authentication initialization:', error);
+          logout('خطأ في تهيئة النظام');
         }
       } else {
+        console.log('ℹ️ No stored authentication data found');
         setIsAuthenticated(false);
+        setAuthChecked(true);
       }
       
       setLoading(false);
     };
     
     initializeAuth();
-  }, [logout]);
+  }, [logout, refreshAuthToken, startTokenMonitoring]);
 
-  // إدارة مراقبة التوكن
+  // إدارة مراقبة التوكن بناءً على حالة المصادقة
   useEffect(() => {
     if (isAuthenticated && token) {
+      console.log('👀 Authentication active, monitoring tokens...');
       startTokenMonitoring();
     } else {
+      console.log('👋 Authentication inactive, stopping monitoring...');
       stopTokenMonitoring();
     }
     
@@ -497,17 +537,26 @@ export const AuthProvider = ({ children }) => {
     };
   }, [isAuthenticated, token, startTokenMonitoring, stopTokenMonitoring]);
 
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      stopTokenMonitoring();
+    };
+  }, [stopTokenMonitoring]);
+
   const authContextValue = {
     user,
     token,
     isAuthenticated,
     loading,
+    authChecked, // حالة جديدة للإشارة إلى اكتمال التحقق من المصادقة
     login,
     logout,
     validateToken,
     refreshAuthToken,
     startTokenMonitoring,
     stopTokenMonitoring,
+    redirectToLogin,
   };
 
   return (

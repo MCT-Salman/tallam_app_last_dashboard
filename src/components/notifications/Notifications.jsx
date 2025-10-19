@@ -433,7 +433,7 @@ const Notifications = () => {
                   <User className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-semibold">{notification.user.name}</p>
-                    <p className="text-sm text-muted-foreground">{notification.user.phone}</p>
+                    <p className="text-sm text-muted-foreground" dir="ltr">{notification.user.phone}</p>
                   </div>
                 </div>
               ) : (
@@ -459,7 +459,7 @@ const Notifications = () => {
                 <p className="font-semibold">{formatDate(notification.createdAt)}</p>
               </div>
             </div>
-
+{/* 
             {notification.link && (
               <div>
                 <Label className="font-bold text-base">الرابط:</Label>
@@ -472,7 +472,7 @@ const Notifications = () => {
                   {notification.link}
                 </a>
               </div>
-            )}
+            )} */}
 
             {notification.imageUrl && (
               <div>
@@ -492,10 +492,10 @@ const Notifications = () => {
               </div>
             )}
 
-            <div>
+            {/* <div>
               <Label className="font-bold text-base">معرف الإشعار:</Label>
               <p className="mt-1 font-mono bg-gray-100 p-2 rounded">{notification.id}</p>
-            </div>
+            </div> */}
           </div>
         </div>
 
