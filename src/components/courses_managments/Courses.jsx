@@ -6,8 +6,8 @@ import Instructor from "./Instructor";
 import Course from "./Course";
 import CourseLevel from "./CourseLevel";
 import Lesson from "./Lesson";
-import Files from "./Files";
-import Quizzes from "./Quizzes";
+// import Files from "./Files";
+// import Quizzes from "./Quizzes";
 
 const Courses = () => {
   const [activeTab, setActiveTab] = useState("Specialization");

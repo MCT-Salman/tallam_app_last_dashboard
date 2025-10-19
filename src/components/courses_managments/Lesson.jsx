@@ -129,6 +129,7 @@ const Lesson = () => {
             isFreePreview: false
         })
         setEditItem(null)
+        // ✅ إعادة تعيين حالة فحص الروابط
         setLinkValidation({
             youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
             googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
@@ -411,7 +412,7 @@ const Lesson = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return "غير محدد"
-        return new Date(dateString).toLocaleDateString('ar-SA')
+        return new Date(dateString).toLocaleDateString('en-US')
     }
 
     const getFileUrl = (fileUrl) => {
@@ -540,7 +541,7 @@ const Lesson = () => {
                 </div>
 
                 {/* معلومات إضافية */}
-                <div className="border-t pt-4">
+                {/* <div className="border-t pt-4">
                     <h3 className="font-bold mb-2">معلومات إضافية:</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -556,7 +557,7 @@ const Lesson = () => {
                             <p>{formatDate(file.updatedAt)}</p>
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
         )
     }
@@ -678,6 +679,7 @@ const Lesson = () => {
 
     const handleYoutubeUrlChange = async (url) => {
         handleFormChange("youtubeUrl", url);
+
         if (!url) {
             setLinkValidation(prev => ({
                 ...prev,
@@ -685,6 +687,7 @@ const Lesson = () => {
             }));
             return;
         }
+
         const validation = validateYouTubeUrl(url);
         if (!validation.isValid) {
             setLinkValidation(prev => ({
@@ -693,15 +696,27 @@ const Lesson = () => {
             }));
             return;
         }
+
+        // ✅ بدء التحقق
         setLinkValidation(prev => ({
             ...prev,
-            youtubeUrl: { ...validation, checking: true }
+            youtubeUrl: { ...validation, checking: true, message: "جاري التحقق من وجود الفيديو..." }
         }));
+
+        // محاكاة التحقق من وجود الفيديو
         await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // ✅ بعد النجاح، إخفاء الرسالة أو تغييرها
         setLinkValidation(prev => ({
             ...prev,
-            youtubeUrl: { ...validation, checking: false, exists: true }
+            youtubeUrl: {
+                ...validation,
+                checking: false,
+                exists: true,
+                message: "✅ رابط YouTube صحيح والفيديو متاح" // رسالة نجاح
+            }
         }));
+
         if (validation.youtubeId) {
             setForm(prev => ({
                 ...prev,
@@ -808,6 +823,12 @@ const Lesson = () => {
         }
         setDeleteDialog({ isOpen: false, itemId: null, itemName: "", type: "" })
     }
+
+    useEffect(() => {
+        if (isDialogOpen && editItem && form.youtubeUrl) {
+            handleYoutubeUrlChange(form.youtubeUrl);
+        }
+    }, [isDialogOpen, editItem]);
 
     // دوال الأسئلة
     const handleOptionChange = (index, field, value) => {
@@ -1228,22 +1249,22 @@ const Lesson = () => {
                 )}
 
                 <div className="grid grid-cols-1 gap-4">
-                    {lesson.youtubeUrl && (
-                        <div>
-                            <Label className="font-bold">رابط YouTube:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <Youtube className="w-4 h-4 text-red-600" />
-                                <a
-                                    href={lesson.youtubeUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline break-all"
-                                >
-                                    {lesson.youtubeUrl}
-                                </a>
-                            </div>
+                {lesson.youtubeUrl && (
+                    <div>
+                        <Label className="font-bold">رابط YouTube:</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Youtube className="w-4 h-4 text-red-600" />
+                            <a
+                                href={lesson.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline break-all"
+                            >
+                                {lesson.youtubeUrl}
+                            </a>
                         </div>
-                    )}
+                    </div>
+                )}
                     {lesson.googleDriveUrl && (
                         <div>
                             <Label className="font-bold">رابط Google Drive:</Label>
@@ -1277,10 +1298,10 @@ const Lesson = () => {
                             <Label className="font-medium">آخر تحديث:</Label>
                             <p>{lesson.updatedAt || "غير محدد"}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <Label className="font-medium">معرف الدرس:</Label>
                             <p>{lesson.id || "غير محدد"}</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -1304,10 +1325,10 @@ const Lesson = () => {
                             <Badge variant="secondary">{question.order}</Badge>
                         </p>
                     </div>
-                    <div>
+                    {/* <div>
                         <Label className="font-bold">معرف السؤال:</Label>
                         <p className="mt-1">{question.id}</p>
-                    </div>
+                    </div> */}
                     <div>
                         <Label className="font-bold">عدد الخيارات:</Label>
                         <p className="mt-1">{question.options?.length || 0}</p>
@@ -1843,7 +1864,7 @@ const Lesson = () => {
                                         </TableHead>
                                         <TableHead className="table-header cursor-pointer hover:bg-gray-100" onClick={() => handleSort("orderIndex")}>
                                             <div className="flex items-center gap-1">
-                                                الترتيب
+                                                المستوى
                                                 {sortBy === "orderIndex" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
                                             </div>
                                         </TableHead>
@@ -1888,20 +1909,31 @@ const Lesson = () => {
                                                 <Button size="icon" variant="ghost" onClick={() => handleToggleActive(item.id, item.isActive)} title={item.isActive ? "تعطيل" : "تفعيل"}>
                                                     {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                                 </Button>
-                                                <Button size="icon" variant="ghost" onClick={() => {
-                                                    setEditItem(item)
-                                                    setForm({
-                                                        title: item.title || "",
-                                                        description: item.description || "",
-                                                        youtubeUrl: item.youtubeUrl || "",
-                                                        youtubeId: item.youtubeId || "",
-                                                        googleDriveUrl: item.googleDriveUrl || "",
-                                                        durationSec: item.durationSec || "",
-                                                        orderIndex: item.orderIndex || "",
-                                                        isFreePreview: Boolean(item.isFreePreview)
-                                                    })
-                                                    setIsDialogOpen(true)
-                                                }} title="تعديل">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        setEditItem(item)
+                                                        setForm({
+                                                            title: item.title || "",
+                                                            description: item.description || "",
+                                                            youtubeUrl: item.youtubeUrl || "",
+                                                            youtubeId: item.youtubeId || "",
+                                                            googleDriveUrl: item.googleDriveUrl || "",
+                                                            durationSec: item.durationSec || "",
+                                                            orderIndex: item.orderIndex || "",
+                                                            isFreePreview: Boolean(item.isFreePreview)
+                                                        })
+
+                                                        // ✅ تفعيل فحص الرابط تلقائياً عند التعديل
+                                                        if (item.youtubeUrl) {
+                                                            handleYoutubeUrlChange(item.youtubeUrl);
+                                                        }
+
+                                                        setIsDialogOpen(true)
+                                                    }}
+                                                    title="تعديل"
+                                                >
                                                     <Edit className="w-4 h-4" />
                                                 </Button>
                                                 <Button size="icon" variant="ghost" onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title, type: "lesson" })} title="حذف">

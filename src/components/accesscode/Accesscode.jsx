@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
@@ -22,6 +22,8 @@ import {
 import { getAllUsers } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getCourseLevels } from "@/api/api";
+import { getSpecializations } from "@/api/api";
+import { getInstructorsByCourse } from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
 import { BASE_URL } from "@/api/api";
 import { imageConfig } from "@/utils/corsConfig";
@@ -36,6 +38,10 @@ const AccessCode = () => {
     const [coupons, setCoupons] = useState([]);
     const [loading, setLoading] = useState(false);
     const [priceLoading, setPriceLoading] = useState(false);
+
+    // ✅ الهيكلية الجديدة
+    const [specializations, setSpecializations] = useState([]);
+    const [instructors, setInstructors] = useState([]);
 
     // حالة النموذج
     const [form, setForm] = useState({
@@ -65,8 +71,25 @@ const AccessCode = () => {
     const [statusFilter, setStatusFilter] = useState("all");
     const [userFilter, setUserFilter] = useState("all");
     const [courseFilter, setCourseFilter] = useState("all");
+    const [levelFilter, setLevelFilter] = useState("all"); // ✅ فلترة جديدة بالمستوى
     const [sortBy, setSortBy] = useState("issuedAt");
     const [sortOrder, setSortOrder] = useState("desc");
+
+    // 🔍 حالات البحث للهيكلية الجديدة
+    const [specializationSearch, setSpecializationSearch] = useState("");
+    const [courseSearch, setCourseSearch] = useState("");
+    const [instructorSearch, setInstructorSearch] = useState("");
+    const [levelSearch, setLevelSearch] = useState("");
+
+    // 🎯 حالات التحديد للهيكلية الجديدة
+    const [selectedSpecialization, setSelectedSpecialization] = useState("");
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [selectedInstructor, setSelectedInstructor] = useState("");
+    const [selectedLevel, setSelectedLevel] = useState("");
+
+    // 📊 قوائم الفلترة
+    const [filterCourses, setFilterCourses] = useState([]);
+    const [filterLevels, setFilterLevels] = useState([]);
 
     // 🔄 دوال جلب البيانات
     const fetchUsers = async () => {
@@ -81,41 +104,119 @@ const AccessCode = () => {
         }
     };
 
-    const fetchCourses = async () => {
+    const fetchSpecializations = async () => {
+        try {
+            const res = await getSpecializations();
+            const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+                Array.isArray(res.data?.data?.data) ? res.data.data.data :
+                    Array.isArray(res.data?.data) ? res.data.data : [];
+            setSpecializations(data);
+        } catch (err) {
+            console.error("❌ فشل تحميل الاختصاصات:", err);
+            showErrorToast("فشل تحميل الاختصاصات");
+        }
+    };
+
+    // جلب الكورسات بناءً على الاختصاص المحدد
+    const fetchCourses = async (specializationId) => {
+        if (!specializationId) {
+            setCourses([]);
+            setSelectedCourse("");
+            return;
+        }
+
         try {
             const res = await getCourses();
-            const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
+            let allCourses = Array.isArray(res.data?.data?.items) ? res.data.data.items :
                 Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
-            setCourses(data);
+
+            const filteredCourses = allCourses.filter(course =>
+                course.specializationId === parseInt(specializationId)
+            );
+            setCourses(filteredCourses);
         } catch (err) {
             console.error("❌ فشل تحميل الكورسات:", err);
             showErrorToast("فشل تحميل الكورسات");
         }
     };
 
-    const fetchCourseLevels = async (courseId) => {
+    // ✅ جلب المدرسين بناءً على الكورس المحدد
+    const fetchInstructorsByCourse = async (courseId) => {
         if (!courseId) {
-            setLevels([]);
-            setCoupons([]);
+            setInstructors([]);
+            setSelectedInstructor("");
             return;
         }
 
         try {
-            const res = await getCourseLevels(courseId);
-            let data = [];
+            console.log("🔄 جلب المدرسين للكورس:", courseId);
+            const res = await getInstructorsByCourse(courseId);
+            console.log("📊 استجابة المدرسين:", res);
 
-            if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
+            let data = [];
+            if (Array.isArray(res.data?.data?.instructors)) {
+                data = res.data.data.instructors;
             } else if (Array.isArray(res.data?.data?.data)) {
                 data = res.data.data.data;
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data;
+            } else if (Array.isArray(res.data)) {
+                data = res.data;
             }
 
-            setLevels(data || []);
+            console.log("✅ المدرسين المستلمون:", data);
+            setInstructors(data || []);
         } catch (err) {
-            console.error("❌ فشل تحميل مستويات الكورس:", err);
-            showErrorToast("فشل تحميل مستويات الكورس");
+            console.error("❌ فشل تحميل المدرسين:", err);
+            showErrorToast("فشل تحميل المدرسين");
+            setInstructors([]);
+        }
+    };
+
+    // ✅ جلب المستويات بناءً على المدرس المحدد
+    const fetchLevelsByInstructor = async (instructorId) => {
+        if (!instructorId) {
+            setLevels([]);
+            setSelectedLevel("");
+            return;
+        }
+
+        try {
+            // البحث عن المدرس المحدد للحصول على levelIds
+            const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
+
+            if (!selectedInstructorData || !selectedInstructorData.levelIds) {
+                setLevels([]);
+                return;
+            }
+
+            // جلب كل المستويات للكورس أولاً
+            const res = await getCourseLevels(selectedCourse);
+            console.log("استجابة المستويات الكاملة:", res);
+
+            let allLevels = [];
+            if (Array.isArray(res.data?.data)) {
+                if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                    allLevels = res.data.data[0];
+                } else {
+                    allLevels = res.data.data;
+                }
+            } else if (Array.isArray(res.data?.data?.items)) {
+                allLevels = res.data.data.items;
+            } else if (Array.isArray(res.data?.data?.data)) {
+                allLevels = res.data.data.data;
+            }
+
+            // ✅ فلترة المستويات حسب levelIds الخاص بالمدرس
+            const filteredLevels = allLevels.filter(level =>
+                selectedInstructorData.levelIds.includes(level.id)
+            );
+
+            console.log("المستويات المفلترة حسب المدرس:", filteredLevels);
+            setLevels(filteredLevels || []);
+        } catch (err) {
+            console.error("❌ فشل تحميل مستويات المدرس:", err);
+            showErrorToast("فشل تحميل مستويات المدرس");
             setLevels([]);
         }
     };
@@ -184,6 +285,30 @@ const AccessCode = () => {
             const data = Array.isArray(res.data?.data) ? res.data.data : [];
             setAllCodes(data);
             setCodes(data);
+
+            // ✅ استخراج الكورسات والمستويات الفريدة للفلترة
+            const uniqueCourses = [];
+            const uniqueLevels = [];
+            const courseMap = new Map();
+            const levelMap = new Map();
+
+            data.forEach(item => {
+                // استخراج الكورسات
+                if (item.courseLevel?.course && !courseMap.has(item.courseLevel.course.id)) {
+                    courseMap.set(item.courseLevel.course.id, item.courseLevel.course);
+                    uniqueCourses.push(item.courseLevel.course);
+                }
+
+                // استخراج المستويات
+                if (item.courseLevel && !levelMap.has(item.courseLevel.id)) {
+                    levelMap.set(item.courseLevel.id, item.courseLevel);
+                    uniqueLevels.push(item.courseLevel);
+                }
+            });
+
+            setFilterCourses(uniqueCourses);
+            setFilterLevels(uniqueLevels);
+
         } catch (err) {
             console.error("❌ فشل تحميل الأكواد:", err);
             showErrorToast("فشل تحميل الأكواد");
@@ -215,42 +340,138 @@ const AccessCode = () => {
         }
     };
 
+    // 🔄 فلترة البيانات للاختيارات
+    const filteredSpecializations = useMemo(() => {
+        if (!specializationSearch) return specializations;
+        return specializations.filter(spec =>
+            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
+            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
+        );
+    }, [specializations, specializationSearch]);
+
+    const filteredCoursesForSelect = useMemo(() => {
+        if (!courseSearch) return courses;
+        return courses.filter(course =>
+            course.title?.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [courses, courseSearch]);
+
+    const filteredInstructorsForSelect = useMemo(() => {
+        if (!instructorSearch) return instructors;
+        return instructors.filter(instructor =>
+            instructor.name?.toLowerCase().includes(instructorSearch.toLowerCase())
+        );
+    }, [instructors, instructorSearch]);
+
+    const filteredLevelsForSelect = useMemo(() => {
+        if (!levelSearch) return levels;
+        return levels.filter(level =>
+            level.name?.toLowerCase().includes(levelSearch.toLowerCase())
+        );
+    }, [levels, levelSearch]);
+
+    // 🗑️ دوال مساعدة للحصول على الأسماء
+    const getSpecializationName = (specializationId) => {
+        const specialization = specializations.find(spec => spec.id === parseInt(specializationId));
+        return specialization ? (specialization.name || specialization.title) : "غير محدد";
+    };
+
+    const getCourseName = (courseId) => {
+        const course = courses.find(crs => crs.id === parseInt(courseId));
+        return course ? course.title : "غير محدد";
+    };
+
+    const getInstructorName = (instructorId) => {
+        const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
+        return instructor ? instructor.name : "غير محدد";
+    };
+
+    const getLevelName = (levelId) => {
+        const level = levels.find(lvl => lvl.id === parseInt(levelId));
+        return level ? level.name : "غير محدد";
+    };
+
+    // 🔄 إعادة تعيين جميع الاختيارات
+    const resetAllSelections = () => {
+        setSelectedSpecialization("");
+        setSelectedCourse("");
+        setSelectedInstructor("");
+        setSelectedLevel("");
+        setSpecializationSearch("");
+        setCourseSearch("");
+        setInstructorSearch("");
+        setLevelSearch("");
+        setForm(prev => ({
+            ...prev,
+            courseId: "",
+            courseLevelId: "",
+            originalPrice: "",
+            discountAmount: "0",
+            finalPrice: "",
+            amountPaid: "",
+            couponId: ""
+        }));
+        setCoupons([]);
+    };
+
     // 📥 useEffect للبيانات الأساسية
     useEffect(() => {
         fetchAccessCodes();
         fetchUsers();
-        fetchCourses();
+        fetchSpecializations();
     }, []);
 
-    // 🔄 عند تغيير الكورس
+    // 🔄 useEffect للتسلسل الهرمي
+
+    // ✅ عند تغيير الاختصاص المحدد
     useEffect(() => {
-        if (form.courseId) {
-            fetchCourseLevels(form.courseId);
+        if (selectedSpecialization) {
+            fetchCourses(selectedSpecialization);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
+        } else {
+            setCourses([]);
+            setSelectedCourse("");
+            setSelectedInstructor("");
+            setSelectedLevel("");
+        }
+    }, [selectedSpecialization]);
+
+    // ✅ عند تغيير الكورس المحدد
+    useEffect(() => {
+        if (selectedCourse) {
+            fetchInstructorsByCourse(selectedCourse);
+            setSelectedInstructor("");
+            setSelectedLevel("");
+        } else {
+            setInstructors([]);
+            setSelectedInstructor("");
+            setSelectedLevel("");
+        }
+    }, [selectedCourse]);
+
+    // ✅ عند تغيير المدرس المحدد
+    useEffect(() => {
+        if (selectedInstructor) {
+            fetchLevelsByInstructor(selectedInstructor);
+            setSelectedLevel("");
         } else {
             setLevels([]);
-            setCoupons([]);
-            setForm(prev => ({
-                ...prev,
-                courseLevelId: "",
-                originalPrice: "",
-                discountAmount: "0",
-                finalPrice: "",
-                amountPaid: "",
-                couponId: ""
-            }));
+            setSelectedLevel("");
         }
-    }, [form.courseId]);
+    }, [selectedInstructor, selectedCourse]);
 
-    // 🔄 عند تغيير المستوى
+    // ✅ عند تغيير المستوى المحدد
     useEffect(() => {
-        if (form.courseLevelId) {
-            fetchActiveCoupons(form.courseLevelId);
-
+        if (selectedLevel) {
+            handleFormChange("courseLevelId", selectedLevel);
+            fetchActiveCoupons(selectedLevel);
+            
             // جلب سعر المستوى من البيانات الفعلية
-            const selectedLevel = levels.find(level => level.id === parseInt(form.courseLevelId));
-            if (selectedLevel) {
-                // استخدام السعر السوري (priceSAR) كسعر أساسي
-                const price = selectedLevel.priceSAR || selectedLevel.priceUSD || "0";
+            const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
+            if (selectedLevelData) {
+                const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
                 setForm(prev => ({
                     ...prev,
                     originalPrice: price.toString(),
@@ -262,6 +483,7 @@ const AccessCode = () => {
             setCoupons([]);
             setForm(prev => ({
                 ...prev,
+                courseLevelId: "",
                 originalPrice: "",
                 discountAmount: "0",
                 finalPrice: "",
@@ -269,7 +491,7 @@ const AccessCode = () => {
                 couponId: ""
             }));
         }
-    }, [form.courseLevelId, levels]);
+    }, [selectedLevel, levels]);
 
     // 🔄 عند تغيير الكوبون
     useEffect(() => {
@@ -298,7 +520,6 @@ const AccessCode = () => {
         const cleanImageUrl = imageUrl.replace(/^\//, "");
         return `${cleanBaseUrl}/${cleanImageUrl}`;
     };
-
 
     const getAmountPaid = (item) => {
         if (!item.transaction || item.transaction.length === 0) {
@@ -353,7 +574,8 @@ const AccessCode = () => {
             filtered = filtered.filter(item =>
                 item.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.courseLevel?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+                item.courseLevel?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.courseLevel?.name?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -375,6 +597,13 @@ const AccessCode = () => {
             );
         }
 
+        // ✅ فلترة جديدة بالمستوى
+        if (levelFilter !== "all") {
+            filtered = filtered.filter(item =>
+                item.courseLevel?.id?.toString() === levelFilter
+            );
+        }
+
         filtered.sort((a, b) => {
             let aValue, bValue;
 
@@ -390,6 +619,10 @@ const AccessCode = () => {
                 case "course":
                     aValue = a.courseLevel?.course?.title?.toLowerCase() || "";
                     bValue = b.courseLevel?.course?.title?.toLowerCase() || "";
+                    break;
+                case "level":
+                    aValue = a.courseLevel?.name?.toLowerCase() || "";
+                    bValue = b.courseLevel?.name?.toLowerCase() || "";
                     break;
                 case "issuedAt":
                     aValue = new Date(a.issuedAt);
@@ -410,7 +643,7 @@ const AccessCode = () => {
         });
 
         return filtered;
-    }, [allCodes, searchTerm, statusFilter, userFilter, courseFilter, sortBy, sortOrder]);
+    }, [allCodes, searchTerm, statusFilter, userFilter, courseFilter, levelFilter, sortBy, sortOrder]);
 
     const paginatedCodes = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -420,7 +653,7 @@ const AccessCode = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, statusFilter, userFilter, courseFilter, itemsPerPage]);
+    }, [searchTerm, statusFilter, userFilter, courseFilter, levelFilter, itemsPerPage]);
 
     // ✏️ دوال النموذج
     const handleFormChange = (key, value) => {
@@ -454,14 +687,14 @@ const AccessCode = () => {
     };
 
     const handleGenerateCode = async () => {
-        if (!form.courseLevelId) return showErrorToast("يرجى اختيار مستوى الكورس");
+        if (!selectedLevel) return showErrorToast("يرجى اختيار مستوى الكورس");
         if (!form.userId) return showErrorToast("يرجى اختيار المستخدم");
         if (!receiptFile) return showErrorToast("يرجى رفع صورة الإيصال");
         if (!form.amountPaid || parseFloat(form.amountPaid) <= 0) return showErrorToast("يرجى إدخال مبلغ مدفوع صحيح");
 
         try {
             const formData = new FormData();
-            formData.append('courseLevelId', form.courseLevelId);
+            formData.append('courseLevelId', selectedLevel);
             formData.append('userId', form.userId);
             formData.append('validityInMonths', form.validityInMonths);
             formData.append('amountPaid', form.amountPaid);
@@ -487,6 +720,7 @@ const AccessCode = () => {
             });
             setReceiptFile(null);
             setReceiptPreview(null);
+            resetAllSelections();
             setIsDialogOpen(false);
             fetchAccessCodes();
         } catch (err) {
@@ -532,10 +766,18 @@ const AccessCode = () => {
         setStatusFilter("all");
         setUserFilter("all");
         setCourseFilter("all");
+        setLevelFilter("all");
         setSortBy("issuedAt");
         setSortOrder("desc");
         setCurrentPage(1);
     };
+
+    // 🔄 إعادة تعيين فلترة المستوى عند تغيير الكورس
+    useEffect(() => {
+        if (courseFilter === "all") {
+            setLevelFilter("all");
+        }
+    }, [courseFilter]);
 
     // 💰 مكون عرض معلومات السعر
     const PriceDisplay = ({ item }) => {
@@ -709,7 +951,7 @@ const AccessCode = () => {
                         )}
                     </div>
                 </div>
-                <div>
+
                 {/* صورة الإيصال */}
                 {item.transaction && item.transaction.length > 0 && item.transaction[0].receiptImageUrl && (
                     <div className="mt-6">
@@ -742,7 +984,6 @@ const AccessCode = () => {
                     </div>
                 )}
             </div>
-            </div >
         );
     };
 
@@ -841,6 +1082,145 @@ const AccessCode = () => {
         );
     };
 
+    // 🔍 مكون الفلترة المتقدمة
+    const FilterSection = () => {
+        const hasActiveFilters = searchTerm || statusFilter !== "all" || userFilter !== "all" || courseFilter !== "all" || levelFilter !== "all";
+
+        return (
+            <div className="space-y-4">
+                {/* 🔍 شريط البحث والفلترة الأساسية */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="relative">
+                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="بحث بالكود أو المستخدم أو الكورس..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pr-10"
+                        />
+                    </div>
+
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="فلترة بالحالة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">جميع الحالات</SelectItem>
+                            <SelectItem value="active">نشط</SelectItem>
+                            <SelectItem value="used">مستخدم</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={userFilter} onValueChange={setUserFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="فلترة بالمستخدم" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">جميع المستخدمين</SelectItem>
+                            {users.map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="عدد العناصر" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5 عناصر</SelectItem>
+                            <SelectItem value="10">10 عناصر</SelectItem>
+                            <SelectItem value="20">20 عنصر</SelectItem>
+                            <SelectItem value="50">50 عنصر</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* ✅ فلترة الكورس والمستوى */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">فلترة بالكورس</Label>
+                        <Select value={courseFilter} onValueChange={setCourseFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="جميع الكورسات" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">جميع الكورسات</SelectItem>
+                                {filterCourses.map((course) => (
+                                    <SelectItem key={course.id} value={course.id.toString()}>
+                                        {course.title}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">فلترة بالمستوى</Label>
+                        <Select 
+                            value={levelFilter} 
+                            onValueChange={setLevelFilter}
+                            disabled={courseFilter === "all"}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder={
+                                    courseFilter === "all" ? "اختر كورس أولاً" : "جميع المستويات"
+                                } />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">جميع المستويات</SelectItem>
+                                {filterLevels
+                                    .filter(level => 
+                                        courseFilter === "all" || 
+                                        level.courseId?.toString() === courseFilter
+                                    )
+                                    .map((level) => (
+                                        <SelectItem key={level.id} value={level.id.toString()}>
+                                            {level.name}
+                                        </SelectItem>
+                                    ))
+                                }
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-end">
+                        {hasActiveFilters && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={resetFilters}
+                                className="w-full"
+                            >
+                                <X className="w-4 h-4 ml-1" />
+                                إعادة تعيين الفلترة
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 📊 معلومات النتائج */}
+                <div className="flex justify-between items-center">
+                    <div className="text-sm text-muted-foreground">
+                        عرض {filteredAndSortedCodes.length} من أصل {allCodes.length} كود
+                        {hasActiveFilters && ` (مفلتر)`}
+                    </div>
+
+                    {hasActiveFilters && (
+                        <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                <Filter className="w-3 h-3" />
+                                مفعل
+                            </Badge>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
@@ -879,6 +1259,40 @@ const AccessCode = () => {
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
+                                {/* ✅ مسار الاختيار */}
+                                {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+                                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+                                            <span className="text-blue-700">المسار المختار:</span>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge variant="outline" className="bg-white">
+                                                    {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                                </Badge>
+                                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                                <Badge variant="outline" className="bg-white">
+                                                    {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                                </Badge>
+                                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                                <Badge variant="outline" className="bg-white">
+                                                    {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                                                </Badge>
+                                                <ChevronRight className="h-4 w-4 text-blue-500" />
+                                                <Badge variant="outline" className="bg-white">
+                                                    {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                                </Badge>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={resetAllSelections}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    إعادة تعيين الكل
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2">
                                     <Label>المستخدم *</Label>
                                     <Select
@@ -898,45 +1312,128 @@ const AccessCode = () => {
                                     </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>الكورس *</Label>
-                                    <Select
-                                        value={form.courseId}
-                                        onValueChange={(value) => handleFormChange("courseId", value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="اختر الكورس" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {courses.map((course) => (
-                                                <SelectItem key={course.id} value={course.id.toString()}>
-                                                    {course.title}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                {/* ✅ الهيكلية الجديدة: اختصاص ← كورس ← مدرس ← مستوى */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* اختيار الاختصاص */}
+                                    <div className="space-y-2">
+                                        <Label>الاختصاص</Label>
+                                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="اختر الاختصاص" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <div className="p-2">
+                                                    <Input
+                                                        placeholder="ابحث عن اختصاص..."
+                                                        value={specializationSearch}
+                                                        onChange={(e) => setSpecializationSearch(e.target.value)}
+                                                        className="mb-2"
+                                                    />
+                                                </div>
+                                                {filteredSpecializations.map((spec) => (
+                                                    <SelectItem key={spec.id} value={spec.id.toString()}>
+                                                        {spec.name || spec.title}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* اختيار الكورس */}
+                                    <div className="space-y-2">
+                                        <Label>الكورس</Label>
+                                        <Select
+                                            value={selectedCourse}
+                                            onValueChange={setSelectedCourse}
+                                            disabled={!selectedSpecialization}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <div className="p-2">
+                                                    <Input
+                                                        placeholder="ابحث عن كورس..."
+                                                        value={courseSearch}
+                                                        onChange={(e) => setCourseSearch(e.target.value)}
+                                                        className="mb-2"
+                                                    />
+                                                </div>
+                                                {filteredCoursesForSelect.map((course) => (
+                                                    <SelectItem key={course.id} value={course.id.toString()}>
+                                                        {course.title}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>المستوى *</Label>
-                                    <Select
-                                        value={form.courseLevelId}
-                                        onValueChange={(value) => handleFormChange("courseLevelId", value)}
-                                        disabled={!form.courseId}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={form.courseId ? "اختر المستوى" : "اختر الكورس أولاً"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {levels.map((level) => (
-                                                <SelectItem key={level.id} value={level.id.toString()}>
-                                                    {level.name}
-                                                    {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`}
-                                                    {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* اختيار المدرس */}
+                                    <div className="space-y-2">
+                                        <Label>المدرس</Label>
+                                        <Select
+                                            value={selectedInstructor}
+                                            onValueChange={setSelectedInstructor}
+                                            disabled={!selectedCourse}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <div className="p-2">
+                                                    <Input
+                                                        placeholder="ابحث عن مدرس..."
+                                                        value={instructorSearch}
+                                                        onChange={(e) => setInstructorSearch(e.target.value)}
+                                                        className="mb-2"
+                                                    />
+                                                </div>
+                                                {filteredInstructorsForSelect.map((instructor) => (
+                                                    <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                                        {instructor.name}
+                                                    </SelectItem>
+                                                ))}
+                                                {filteredInstructorsForSelect.length === 0 && selectedCourse && (
+                                                    <div className="p-2 text-sm text-muted-foreground text-center">
+                                                        لا توجد مدرسين لهذا الكورس
+                                                    </div>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* اختيار المستوى */}
+                                    <div className="space-y-2">
+                                        <Label>المستوى *</Label>
+                                        <Select
+                                            value={selectedLevel}
+                                            onValueChange={setSelectedLevel}
+                                            disabled={!selectedInstructor}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <div className="p-2">
+                                                    <Input
+                                                        placeholder="ابحث عن مستوى..."
+                                                        value={levelSearch}
+                                                        onChange={(e) => setLevelSearch(e.target.value)}
+                                                        className="mb-2"
+                                                    />
+                                                </div>
+                                                {filteredLevelsForSelect.map((level) => (
+                                                    <SelectItem key={level.id} value={level.id.toString()}>
+                                                        {level.name} 
+                                                        {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`}
+                                                        {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
                                 {/* 🎯 عرض الكوبونات النشطة */}
@@ -974,7 +1471,7 @@ const AccessCode = () => {
                                         </p>
                                     </div>
                                 ) : (
-                                    form.courseLevelId && (
+                                    selectedLevel && (
                                         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                             <p className="text-sm text-yellow-800 text-center">
                                                 ⚠️ لا توجد كوبونات متاحة لهذا المستوى
@@ -1138,7 +1635,10 @@ const AccessCode = () => {
                                     )}
                                 </div>
 
-                                <Button onClick={handleGenerateCode} disabled={priceLoading}>
+                                <Button 
+                                    onClick={handleGenerateCode} 
+                                    disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid}
+                                >
                                     {priceLoading ? "جاري حساب السعر..." : "توليد الكود"}
                                 </Button>
                             </div>
@@ -1147,67 +1647,7 @@ const AccessCode = () => {
                 </div>
 
                 {/* 🔍 قسم الفلترة */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="بحث بالكود أو المستخدم أو الكورس..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pr-10"
-                        />
-                    </div>
-
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالحالة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع الحالات</SelectItem>
-                            <SelectItem value="active">نشط</SelectItem>
-                            <SelectItem value="used">مستخدم</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={userFilter} onValueChange={setUserFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالمستخدم" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع المستخدمين</SelectItem>
-                            {users.map((user) => (
-                                <SelectItem key={user.id} value={user.id.toString()}>
-                                    {user.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="عدد العناصر" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5 عناصر</SelectItem>
-                            <SelectItem value="10">10 عناصر</SelectItem>
-                            <SelectItem value="20">20 عنصر</SelectItem>
-                            <SelectItem value="50">50 عنصر</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <div className="text-sm text-muted-foreground">
-                        عرض {filteredAndSortedCodes.length} من أصل {allCodes.length} كود
-                        {(searchTerm || statusFilter !== "all" || userFilter !== "all" || courseFilter !== "all") && ` (مفلتر)`}
-                    </div>
-
-                    {(searchTerm || statusFilter !== "all" || userFilter !== "all" || courseFilter !== "all") && (
-                        <Button variant="outline" size="sm" onClick={resetFilters}>
-                            إعادة تعيين الفلترة
-                        </Button>
-                    )}
-                </div>
+                <FilterSection />
             </CardHeader>
 
             <CardContent>
@@ -1255,7 +1695,17 @@ const AccessCode = () => {
                                                 )}
                                             </div>
                                         </TableHead>
-                                        <TableHead className="table-header">المستوى</TableHead>
+                                        <TableHead
+                                            className="table-header cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handleSort("level")}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                المستوى
+                                                {sortBy === "level" && (
+                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                                )}
+                                            </div>
+                                        </TableHead>
                                         <TableHead className="table-header">المدة</TableHead>
                                         <TableHead className="table-header">
                                             <div className="space-y-1">
@@ -1457,6 +1907,7 @@ const AccessCode = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-right">تأكيد الحذف</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
+                             سيتم حذف الفاتورة الخاصة به أيضا
                             هل أنت متأكد من أنك تريد حذف الكود "{deleteDialog.itemName}"؟ هذا الإجراء لا يمكن التراجع عنه.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
