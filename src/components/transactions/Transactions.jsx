@@ -9,16 +9,18 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { Search, ChevronLeft, ChevronRight, Eye, Download, Filter, RefreshCw, Calendar as CalendarIcon, DollarSign, Receipt, User, BookOpen, Loader2, Image, FileText, CreditCard } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Eye, Download, Filter, RefreshCw, Calendar as CalendarIcon, DollarSign, Receipt, User, BookOpen, Loader2, Image, FileText, CreditCard, FileSpreadsheet, X } from "lucide-react"
 import { getTransactions, getTransactionStats } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, subWeeks, subMonths, subYears } from "date-fns"
 import { ar } from "date-fns/locale"
+import * as XLSX from 'xlsx'
 
 const Transactions = () => {
     const [transactions, setTransactions] = useState([])
     const [stats, setStats] = useState({})
     const [loading, setLoading] = useState(false)
+    const [exportLoading, setExportLoading] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState(null)
     const [detailDialog, setDetailDialog] = useState(false)
 
@@ -38,7 +40,8 @@ const Transactions = () => {
         from: null,
         to: null
     })
-    const [quickDateFilter, setQuickDateFilter] = useState("all") // all, daily, weekly, monthly, yearly
+    const [quickDateFilter, setQuickDateFilter] = useState("all")
+    const [datePickerOpen, setDatePickerOpen] = useState(false)
 
     // جلب البيانات
     const fetchData = async (overrideDateParams = null) => {
@@ -129,6 +132,152 @@ const Transactions = () => {
         }
     };
 
+    // تصدير البيانات إلى Excel
+    const handleExportToExcel = async () => {
+        try {
+            setExportLoading(true);
+
+            // جلب جميع البيانات بدون pagination للتصدير
+            const params = {
+                limit: 10000,
+                sortBy,
+                sortOrder,
+                ...(searchTerm && { search: searchTerm }),
+            };
+
+            // إضافة فلاتر التاريخ إذا كانت موجودة
+            if (quickDateFilter !== "all") {
+                const now = new Date();
+                let startDate, endDate;
+
+                switch (quickDateFilter) {
+                    case "daily":
+                        startDate = startOfDay(now);
+                        endDate = endOfDay(now);
+                        break;
+                    case "weekly":
+                        startDate = startOfWeek(now, { locale: ar });
+                        endDate = endOfWeek(now, { locale: ar });
+                        break;
+                    case "monthly":
+                        startDate = startOfMonth(now);
+                        endDate = endOfMonth(now);
+                        break;
+                    case "yearly":
+                        startDate = startOfYear(now);
+                        endDate = endOfYear(now);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (startDate && endDate) {
+                    params.startDate = startDate.toISOString();
+                    params.endDate = endDate.toISOString();
+                }
+            } else if (dateRange.from && dateRange.to) {
+                params.startDate = startOfDay(dateRange.from).toISOString();
+                params.endDate = endOfDay(dateRange.to).toISOString();
+            }
+
+            console.log("📤 Exporting with params:", params);
+
+            const response = await getTransactions(params);
+            const transactionsData = response.data?.success
+                ? response.data.data?.transactions || []
+                : [];
+
+            if (transactionsData.length === 0) {
+                showErrorToast("لا توجد بيانات للتصدير");
+                return;
+            }
+
+            // تحضير البيانات للتصدير
+            const excelData = transactionsData.map((transaction, index) => ({
+                '#': index + 1,
+                'رقم المعاملة': transaction.id,
+                'اسم المستخدم': transaction.accessCode?.user?.name || 'غير محدد',
+                'هاتف المستخدم': transaction.accessCode?.user?.phone || 'غير محدد',
+                'اسم الكورس': transaction.accessCode?.courseLevel?.course?.title || 'غير محدد',
+                'اسم المستوى': transaction.accessCode?.courseLevel?.name || 'غير محدد',
+                'المبلغ المدفوع': getAmountValue(transaction.amountPaid),
+                'المبلغ المدفوع (ل.س)': `${getAmountValue(transaction.amountPaid).toLocaleString()} ل.س`,
+                'كود الدخول': transaction.accessCode?.code || 'غير محدد',
+                'تاريخ الإنشاء': formatDate(transaction.createdAt),
+                'آخر تحديث': formatDate(transaction.updatedAt),
+                'البلد': transaction.accessCode?.user?.country || 'غير محدد',
+                'الجنس': transaction.accessCode?.user?.sex || 'غير محدد',
+                'الدور': transaction.accessCode?.user?.role || 'غير محدد',
+                'ملاحظات': transaction.notes || 'لا توجد',
+                'يوجد إيصال': transaction.receiptImageUrl ? 'نعم' : 'لا'
+            }));
+
+            // إنشاء workbook جديد
+            const wb = XLSX.utils.book_new();
+
+            // إنشاء worksheet من البيانات
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // تنسيق الأعمدة
+            const colWidths = [
+                { wch: 5 },
+                { wch: 12 },
+                { wch: 20 },
+                { wch: 15 },
+                { wch: 25 },
+                { wch: 20 },
+                { wch: 15 },
+                { wch: 20 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 10 },
+                { wch: 15 },
+                { wch: 30 },
+                { wch: 10 }
+            ];
+            ws['!cols'] = colWidths;
+
+            // إضافة worksheet إلى workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'الفواتير');
+
+            // إنشاء ورقة إضافية للإحصائيات
+            const statsData = [
+                ['إحصائيات الفواتير'],
+                [''],
+                ['إجمالي عدد الفواتير', transactionsData.length],
+                ['إجمالي المبالغ', `${getAmountValue(stats.totalAmount).toLocaleString()} ل.س`],
+                ['متوسط المبلغ', `${getAmountValue(stats.averageAmount).toLocaleString()} ل.س`],
+                ['أعلى مبلغ', `${getAmountValue(stats.maxAmount).toLocaleString()} ل.س`],
+                [''],
+                ['تاريخ التصدير', new Date().toLocaleDateString('ar-SA')],
+                ['وقت التصدير', new Date().toLocaleTimeString('ar-SA')]
+            ];
+
+            const wsStats = XLSX.utils.aoa_to_sheet(statsData);
+            const statsColWidths = [
+                { wch: 25 },
+                { wch: 25 }
+            ];
+            wsStats['!cols'] = statsColWidths;
+            XLSX.utils.book_append_sheet(wb, wsStats, 'الإحصائيات');
+
+            // إنشاء اسم الملف
+            const fileName = `فواتير_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+            // حفظ الملف
+            XLSX.writeFile(wb, fileName);
+
+            showSuccessToast(`تم تصدير ${transactionsData.length} فاتورة إلى ملف Excel`);
+
+        } catch (error) {
+            console.error("❌ Error exporting to Excel:", error);
+            showErrorToast("فشل في تصدير البيانات إلى Excel");
+        } finally {
+            setExportLoading(false);
+        }
+    };
 
     // إعادة جلب البيانات عند تغيير أي من المعلمات
     useEffect(() => {
@@ -139,7 +288,6 @@ const Transactions = () => {
     useEffect(() => {
         if (dateRange.from && dateRange.to) {
             setCurrentPage(1)
-            // سنستخدم useEffect منفصل للتأكد من تطبيق التغييرات
             const timer = setTimeout(() => {
                 fetchData()
             }, 100)
@@ -158,8 +306,8 @@ const Transactions = () => {
         if (dateRange.from && dateRange.to) {
             setQuickDateFilter("custom");
             setCurrentPage(1);
+            setDatePickerOpen(false);
 
-            // نستخدم startOfDay و endOfDay لضمان شمول اليومين بالكامل
             const startDate = startOfDay(dateRange.from);
             const endDate = endOfDay(dateRange.to);
 
@@ -169,18 +317,23 @@ const Transactions = () => {
             };
 
             console.log("📅 Applying custom date filter:", dateParams);
-
-            fetchData(dateParams); // نمررها للدالة مباشرة
+            fetchData(dateParams);
         } else {
             showErrorToast("يرجى اختيار تاريخ البداية والنهاية");
         }
     };
 
-
     // Reset filters
     const resetFilters = () => {
         setSearchTerm("")
         setStatusFilter("all")
+        setDateRange({ from: null, to: null })
+        setQuickDateFilter("all")
+        setCurrentPage(1)
+    }
+
+    // Reset date filter only
+    const resetDateFilter = () => {
         setDateRange({ from: null, to: null })
         setQuickDateFilter("all")
         setCurrentPage(1)
@@ -223,8 +376,6 @@ const Transactions = () => {
         }).format(amount || 0)
     }
 
-
-
     // تنسيق التاريخ بـ en-US
     const formatDate = (dateString) => {
         if (!dateString) return "غير محدد"
@@ -237,10 +388,15 @@ const Transactions = () => {
         return new Date(dateString).toLocaleDateString('en-US')
     }
 
+    // تنسيق التاريخ للعرض في الزر
+    const formatDateForDisplay = (date) => {
+        if (!date) return null
+        return format(date, 'yyyy/MM/dd')
+    }
+
     // الحصول على صورة الإيصال
     const getReceiptImageUrl = (receiptImageUrl) => {
         if (!receiptImageUrl) return null
-        // إذا كان الرابط نسبياً، نضيف الـ base URL
         if (receiptImageUrl.startsWith('/')) {
             return `https://dev.tallaam.com${receiptImageUrl}`
         }
@@ -458,7 +614,7 @@ const Transactions = () => {
         </div>
     )
 
-    // مكون فلاتر التاريخ
+    // مكون فلاتر التاريخ المحسّن
     const DateFilters = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* فلتر التاريخ السريع */}
@@ -469,6 +625,7 @@ const Transactions = () => {
                     onValueChange={(value) => {
                         setQuickDateFilter(value)
                         setDateRange({ from: null, to: null })
+                        setCurrentPage(1)
                     }}
                 >
                     <SelectTrigger className="w-full">
@@ -476,64 +633,88 @@ const Transactions = () => {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">جميع التواريخ</SelectItem>
-                        <SelectItem value="daily">يومي (اليوم فقط)</SelectItem>
-                        <SelectItem value="weekly">أسبوعي (آخر 7 أيام)</SelectItem>
-                        <SelectItem value="monthly">شهري (هذا الشهر)</SelectItem>
-                        <SelectItem value="yearly">سنوي (هذه السنة)</SelectItem>
+                        <SelectItem value="daily">اليوم</SelectItem>
+                        <SelectItem value="weekly">هذا الأسبوع</SelectItem>
+                        <SelectItem value="monthly">هذا الشهر</SelectItem>
+                        <SelectItem value="yearly">هذه السنة</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
 
-            {/* فلتر التاريخ من - إلى */}
+            {/* فلتر التاريخ من - إلى - محسّن */}
             <div className="space-y-2">
-                <Label className="text-sm">فلتر مخصص (من - إلى)</Label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start text-right font-normal"
-                            >
-                                <CalendarIcon className="ml-2 h-4 w-4" />
-                                {dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "من تاريخ"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                <Label className="text-sm">فلتر مخصص</Label>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-between"
+                        >
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4" />
+                                <span>
+                                    {dateRange.from && dateRange.to ? (
+                                        `${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+                                    ) : (
+                                        "اختر الفترة الزمنية"
+                                    )}
+                                </span>
+                            </div>
+                            {dateRange.from && dateRange.to && (
+                                <X
+                                    className="h-4 w-4 text-muted-foreground hover:text-foreground"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        resetDateFilter()
+                                    }}
+                                />
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-4 border-b">
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-medium">اختر الفترة الزمنية</h4>
+                                {dateRange.from && dateRange.to && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={resetDateFilter}
+                                        className="h-8 text-xs"
+                                    >
+                                        مسح
+                                    </Button>
+                                )}
+                            </div>
                             <Calendar
-                                mode="single"
-                                selected={dateRange.from}
-                                onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                                initialFocus
+                                mode="range"
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                                defaultMonth={dateRange.from || new Date()}
+                                locale={ar}
                             />
-                        </PopoverContent>
-                    </Popover>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start text-right font-normal"
-                            >
-                                <CalendarIcon className="ml-2 h-4 w-4" />
-                                {dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : "إلى تاريخ"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={dateRange.to}
-                                onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                    <Button
-                        onClick={applyCustomDateFilter}
-                        disabled={!dateRange.from || !dateRange.to}
-                        className="whitespace-nowrap"
-                    >
-                        تطبيق
-                    </Button>
-                </div>
+                        </div>
+                        <div className="p-3 border-t bg-muted/50">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="text-sm text-muted-foreground">
+                                    {dateRange.from && dateRange.to ? (
+                                        `المحدد: ${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+                                    ) : (
+                                        "اختر تاريخ البداية والنهاية"
+                                    )}
+                                </div>
+                                <Button
+                                    onClick={applyCustomDateFilter}
+                                    disabled={!dateRange.from || !dateRange.to}
+                                    size="sm"
+                                >
+                                    تطبيق
+                                </Button>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
     )
@@ -625,7 +806,6 @@ const Transactions = () => {
         </Card>
     )
 
-
     // عرض التفاصيل الكاملة للمعاملة
     const renderTransactionDetails = (transaction) => {
         if (!transaction) return null
@@ -658,20 +838,6 @@ const Transactions = () => {
                         <Label className="font-semibold text-gray-600 block mb-2">آخر تحديث</Label>
                         <p className="text-lg text-gray-900">{formatDate(transaction.updatedAt)}</p>
                     </div>
-
-                    {/* {transaction.accessCodeId && (
-                        <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <Label className="font-semibold text-gray-600 block mb-2">معرف كود الدخول</Label>
-                            <p className="text-lg text-gray-900">{transaction.accessCodeId}</p>
-                        </div>
-                    )} */}
-
-                    {/* {transaction.couponId && (
-                        <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <Label className="font-semibold text-gray-600 block mb-2">معرف الكوبون</Label>
-                            <p className="text-lg text-gray-900">{transaction.couponId}</p>
-                        </div>
-                    )} */}
                 </div>
 
                 {/* صورة الإيصال */}
@@ -741,7 +907,6 @@ const Transactions = () => {
                             value={user?.isActive ? 'نشط' : 'غير نشط'}
                             isActive={user?.isActive}
                         />
-                        {/* <InfoCard label="معرف المستخدم" value={user?.id} /> */}
                     </div>
 
                     {user?.avatarUrl && (
@@ -770,8 +935,6 @@ const Transactions = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <InfoCard label="اسم الكورس" value={course?.title} />
                         <InfoCard label="اسم المستوى" value={courseLevel?.name} />
-                        {/* <InfoCard label="معرف الكورس" value={course?.id} /> */}
-                        {/* <InfoCard label="معرف المستوى" value={courseLevel?.id} /> */}
                     </div>
                 </div>
 
@@ -793,12 +956,6 @@ const Transactions = () => {
                                 </p>
                             </div>
                         </div>
-
-                        {/* <InfoCard
-                            label="معرف كود الدخول"
-                            value={transaction.accessCode?.id}
-                            className="bg-white border border-gray-200 rounded-xl p-4"
-                        /> */}
                     </div>
                 </div>
 
@@ -816,8 +973,8 @@ const Transactions = () => {
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                             <Label className="font-semibold text-gray-700 block mb-3">ملاحظات</Label>
                             <p className={`p-3 rounded-lg ${transaction.notes
-                                    ? "bg-white border border-gray-300 text-gray-900"
-                                    : "bg-gray-100 text-gray-500 border border-gray-200"
+                                ? "bg-white border border-gray-300 text-gray-900"
+                                : "bg-gray-100 text-gray-500 border border-gray-200"
                                 }`}>
                                 {transaction.notes || "لا توجد ملاحظات"}
                             </p>
@@ -871,7 +1028,7 @@ const Transactions = () => {
     }
 
     // مكونات مساعدة للتصميم
-    const InfoCard = ({ label, value, className = "", dir=""}) => (
+    const InfoCard = ({ label, value, className = "", dir = "" }) => (
         <div className={`bg-gray-50 rounded-lg p-4 border border-gray-200 text-right ${className}`} >
             <Label className="font-semibold text-gray-700 block mb-2">{label}</Label>
             <p className="text-gray-900" dir={dir}>{value || "غير محدد"}</p>
@@ -882,8 +1039,8 @@ const Transactions = () => {
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-right">
             <Label className="font-semibold text-gray-700 block mb-2">{label}</Label>
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
                 }`}>
                 {value}
             </span>
@@ -934,8 +1091,14 @@ const Transactions = () => {
                         </SelectContent>
                     </Select>
 
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="flex-1">
+                    <div className="flex gap-2 flex-wrap">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={fetchData}
+                            disabled={loading}
+                            className="flex-1 min-w-[120px]"
+                        >
                             {loading ? (
                                 <Loader2 className="w-4 h-4 ml-2 animate-spin" />
                             ) : (
@@ -943,13 +1106,31 @@ const Transactions = () => {
                             )}
                             تحديث
                         </Button>
+
+                        {/* زر التصدير إلى Excel */}
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={handleExportToExcel}
+                            disabled={exportLoading || transactions.length === 0}
+                            className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700"
+                        >
+                            {exportLoading ? (
+                                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                            ) : (
+                                <FileSpreadsheet className="w-4 h-4 ml-2" />
+                            )}
+                            تصدير Excel
+                        </Button>
+
                         {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
-                            <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1">
+                            <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1 min-w-[120px]">
                                 <Filter className="w-4 h-4 ml-2" />
                                 إعادة تعيين
                             </Button>
                         )}
                     </div>
+                    {/* </div> */}
                 </div>
 
                 {/* Results Count */}
@@ -1049,7 +1230,7 @@ const Transactions = () => {
                                                         <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                                         <div className="min-w-0">
                                                             <div className="truncate">{item.accessCode?.user?.name || "غير محدد"}</div>
-                                                            <div className="text-sm text-muted-foreground truncate"dir='ltr'>
+                                                            <div className="text-sm text-muted-foreground truncate" dir='ltr'>
                                                                 {item.accessCode?.user?.phone}
                                                             </div>
                                                         </div>

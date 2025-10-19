@@ -4,12 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-   "dev": "vite --host 0.0.0.0",
-   "build": "vite build",
-   "preview": "vite preview --host 0.0.0.0",
-   "lint": "eslint ."
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint": "eslint ."
   },
-
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -65,6 +64,7 @@
     "tailwindcss": "^4.1.13",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.9"
   },
   "devDependencies": {
