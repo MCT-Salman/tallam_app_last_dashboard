@@ -601,7 +601,7 @@ const calculateProgressPercentage = (story) => {
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل القصة" : "إضافة قصة جديدة"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل القصة" : "إضافة قصة جديدة"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">

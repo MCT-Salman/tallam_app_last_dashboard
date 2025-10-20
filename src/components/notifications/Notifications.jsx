@@ -662,8 +662,8 @@ const calculateTimeAgo = (dateString) => {
 
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>إرسال إشعار جديد</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-right">إرسال إشعار جديد</DialogTitle>
+                <DialogDescription className="text-right">
                   اختر نوع الإرسال وأدخل بيانات الإشعار
                 </DialogDescription>
               </DialogHeader>

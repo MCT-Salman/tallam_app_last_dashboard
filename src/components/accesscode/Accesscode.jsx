@@ -1286,8 +1286,8 @@ const calculateTimeAgo = (dateString) => {
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle>توليد كود وصول جديد</DialogTitle>
-                                <DialogDescription>
+                                <DialogTitle className="text-right">توليد كود وصول جديد</DialogTitle>
+                                <DialogDescription className="text-right">
                                     أدخل المعلومات المطلوبة لتوليد كود وصول جديد
                                 </DialogDescription>
                             </DialogHeader>

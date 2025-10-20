@@ -864,7 +864,7 @@ const calculateTimeAgo = (dateString) => {
 
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editItem ? "تعديل الكوبون" : "إضافة كوبون جديد"}</DialogTitle>
+                <DialogTitle className="text-right">{editItem ? "تعديل الكوبون" : "إضافة كوبون جديد"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div className="space-y-2">

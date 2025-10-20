@@ -560,7 +560,7 @@ const Account = () => {
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل المستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل المستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">
