@@ -1134,11 +1134,11 @@ const calculateProgressPercentage = (story) => {
                     <span className="font-medium text-gray-900 block">
                       {formatDate(detailDialog.story.startedAt) || 'غير محدد'}
                     </span>
-                    {detailDialog.story.startedAt && (
+                    {/* {detailDialog.story.startedAt && (
                       <span className="text-xs text-gray-500">
                         {new Date(detailDialog.story.startedAt).toLocaleTimeString('ar-SA')}
                       </span>
-                    )}
+                    )} */}
                   </div>
                 </div>
                 
@@ -1153,11 +1153,11 @@ const calculateProgressPercentage = (story) => {
                     <span className="font-medium text-gray-900 block">
                       {formatDate(detailDialog.story.endedAt) || 'غير محدد'}
                     </span>
-                    {detailDialog.story.endedAt && (
+                    {/* {detailDialog.story.endedAt && (
                       <span className="text-xs text-gray-500">
                         {new Date(detailDialog.story.endedAt).toLocaleTimeString('ar-SA')}
                       </span>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>

@@ -337,13 +337,7 @@ const Notifications = () => {
   // تنسيق التاريخ
   const formatDate = (dateString) => {
     if (!dateString) return "غير محدد";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   // الحصول على لون البادج حسب النوع
@@ -1336,9 +1330,9 @@ const calculateTimeAgo = (dateString) => {
                   </div>
                   <div className="text-right">
                     <span className="font-medium text-gray-900 block">{formatDate(detailDialog.notification.createdAt)}</span>
-                    <span className="text-xs text-gray-500">
+                    {/* <span className="text-xs text-gray-500">
                       {new Date(detailDialog.notification.createdAt).toLocaleTimeString('ar-SA')}
-                    </span>
+                    </span> */}
                   </div>
                 </div>
                 

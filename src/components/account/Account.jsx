@@ -579,6 +579,7 @@ const Account = () => {
                                         onChange={(e) => handleFormChange("phone", e.target.value)}
                                         placeholder="أدخل رقم الهاتف..."
                                         className="dir-ltr text-left"
+                                        dir="ltr"
                                     />
                                 </div>
 
