@@ -1213,11 +1213,29 @@ const Transactions = () => {
                                 {/* الهيدر مع المعلومات الأساسية */}
                                 <div className="bg-gradient-to-l from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
                                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                                        {/* أيقونة المعاملة */}
+                                        {/* صورة الإيصال */}
                                         <div className="relative flex-shrink-0">
-                                            <div className="w-32 h-32 lg:w-40 lg:h-40 bg-blue-600 rounded-2xl shadow-lg border-4 border-white flex items-center justify-center">
-                                                <DollarSign className="w-16 h-16 text-white" />
-                                            </div>
+                                            {selectedTransaction.receiptImageUrl ? (
+                                                <div className="w-32 h-32 lg:w-40 lg:h-40 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={getReceiptImageUrl(selectedTransaction.receiptImageUrl)}
+                                                        alt="صورة الإيصال"
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            // إذا فشل تحميل الصورة، عرض أيقونة بديلة
+                                                            e.target.style.display = 'none';
+                                                            e.target.nextSibling.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                    <div className="hidden w-full h-full items-center justify-center bg-gray-100">
+                                                        <Receipt className="w-16 h-16 text-gray-400" />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="w-32 h-32 lg:w-40 lg:h-40 bg-blue-600 rounded-2xl shadow-lg border-4 border-white flex items-center justify-center">
+                                                    <Receipt className="w-16 h-16 text-white" />
+                                                </div>
+                                            )}
                                             {/* شارة رقم المعاملة */}
                                             <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold shadow-lg">
                                                 #{selectedTransaction.id}
@@ -1267,7 +1285,7 @@ const Transactions = () => {
                                     <Card className="border border-gray-200 shadow-sm">
                                         <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
                                             <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                                                <DollarSign className="w-5 h-5 text-green-600" />
+                                                <Receipt className="w-5 h-5 text-green-600" />
                                                 معلومات المبلغ والدفع
                                             </CardTitle>
                                         </CardHeader>
