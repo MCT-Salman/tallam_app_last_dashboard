@@ -614,7 +614,7 @@ const Course = () => {
 
                         <DialogContent className="sm:max-w-md">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل المادة" : "إضافة مادة جديد"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل المادة" : "إضافة مادة جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">

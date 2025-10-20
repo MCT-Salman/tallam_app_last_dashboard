@@ -1097,7 +1097,7 @@ const Account = () => {
             <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog(prev => ({ ...prev, isOpen }))}>
                 <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-xl">تفاصيل المستخدم</DialogTitle>
+                        <DialogTitle className="text-xl text-right">تفاصيل الطالب</DialogTitle>
                     </DialogHeader>
                     {renderUserDetails(detailDialog.user)}
                 </DialogContent>

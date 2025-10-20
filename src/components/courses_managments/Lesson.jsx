@@ -1733,7 +1733,7 @@ const Lesson = () => {
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                                         <DialogHeader>
-                                            <DialogTitle>{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
+                                            <DialogTitle className="text-right">{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
                                         </DialogHeader>
                                         <div className="space-y-4 mt-2">
                                             <div className="space-y-2">
@@ -1937,7 +1937,7 @@ const Lesson = () => {
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </Button>
-                                                <Button size="icon" variant="ghost" onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title, type: "lesson" })} title="حذف">
+                                                <Button size="icon" variant="destructive" onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title, type: "lesson" })} title="حذف">
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
@@ -1989,7 +1989,7 @@ const Lesson = () => {
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
-                                            <DialogTitle>رفع ملف جديد</DialogTitle>
+                                            <DialogTitle className="text-right">رفع ملف جديد</DialogTitle>
                                         </DialogHeader>
                                         <div className="space-y-4 mt-2">
                                             <div className="space-y-2">
@@ -2244,7 +2244,7 @@ const Lesson = () => {
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                                             <DialogHeader>
-                                                <DialogTitle>{editQuestionId ? "تعديل السؤال" : "إضافة سؤال جديد"}</DialogTitle>
+                                                <DialogTitle className="text-right">{editQuestionId ? "تعديل السؤال" : "إضافة سؤال جديد"}</DialogTitle>
                                             </DialogHeader>
                                             <div className="space-y-4 mt-2">
                                                 <div className="space-y-2">
@@ -2322,7 +2322,7 @@ const Lesson = () => {
                                                     </div>
 
                                                     <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-lg">
-                                                        💡 يجب تحديد إجابة صحيحة واحدة على الأقل وإدخال خيارين على الأقل
+                                                         يجب تحديد إجابة صحيحة واحدة على الأقل وإدخال خيارين على الأقل
                                                     </div>
                                                 </div>
 
@@ -2587,7 +2587,7 @@ const Lesson = () => {
             <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ isOpen: open, lesson: null })}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>تفاصيل الدرس</DialogTitle>
+                        <DialogTitle className="text-right">تفاصيل الدرس</DialogTitle>
                     </DialogHeader>
                     {renderLessonDetails(detailDialog.lesson)}
                 </DialogContent>
@@ -2614,10 +2614,10 @@ const Lesson = () => {
             </Dialog>
 
             <AlertDialog open={deleteDialog.isOpen} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, isOpen: open })}>
-                <AlertDialogContent>
+                <AlertDialogContent className="text-right" dir="rtl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-                        <AlertDialogDescription>هل أنت متأكد من حذف: "{deleteDialog.itemName}"؟</AlertDialogDescription>
+                        <AlertDialogTitle className="text-right">تأكيد الحذف</AlertDialogTitle>
+                        <AlertDialogDescription className="text-right">هل أنت متأكد من حذف: "{deleteDialog.itemName}"؟</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>إلغاء</AlertDialogCancel>

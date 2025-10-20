@@ -911,9 +911,9 @@ const handlePreviewUrlChange = (value) => {
                             </DialogTrigger>
 
                             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>{editItem ? "تعديل المستوى" : "إضافة مستوى جديد"}</DialogTitle>
-                                    <DialogDescription>
+                                <DialogHeader >
+                                    <DialogTitle className="text-right">{editItem ? "تعديل المستوى" : "إضافة مستوى جديد"}</DialogTitle>
+                                    <DialogDescription className="text-right">
                                         {editItem ? "قم بتعديل بيانات المستوى" : "أدخل بيانات المستوى الجديد"}
                                     </DialogDescription>
                                 </DialogHeader>

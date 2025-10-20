@@ -510,7 +510,7 @@ const Specialization = () => {
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-md">
                             <DialogHeader>
-                                <DialogTitle>{editItem ? "تعديل التخصص" : "إضافة تخصص جديد"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل التخصص" : "إضافة تخصص جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">
