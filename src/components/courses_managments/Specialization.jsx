@@ -224,7 +224,7 @@ const Specialization = () => {
     // تنسيق التاريخ
     const formatDate = (dateString) => {
         if (!dateString) return "غير محدد";
-        return new Date(dateString).toLocaleDateString('ar-SA');
+        return new Date(dateString).toLocaleDateString('en-US');
     };
 
     // Pagination calculations

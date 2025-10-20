@@ -535,7 +535,7 @@ const Account = () => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة المستخدمين</CardTitle>
+                    <CardTitle>إدارة الطلاب</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -554,13 +554,13 @@ const Account = () => {
                                     })
                                 }}
                             >
-                                إضافة مستخدم <Plus className="w-4 h-4 cursor-pointer" />
+                                إضافة طالب <Plus className="w-4 h-4 cursor-pointer" />
                             </Button>
                         </DialogTrigger>
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle className="text-right">{editItem ? "تعديل المستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل الحساب" : "إضافة حساب جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">
@@ -610,7 +610,7 @@ const Account = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>الدور *</Label>
                                         <Select
@@ -622,21 +622,21 @@ const Account = () => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="STUDENT">طالب</SelectItem>
-                                                {/* <SelectItem value="SUBADMIN">مساعد مدير</SelectItem> */}
-                                                {/* <SelectItem value="ADMIN">مدير</SelectItem> */}
+                                                <SelectItem value="SUBADMIN">مساعد مدير</SelectItem>
+                                                <SelectItem value="ADMIN">مدير</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
 
-                                    {/* <div className="space-y-2">
+                                    <div className="space-y-2">
                                         <Label>البلد</Label>
                                         <Input
                                             value={form.country}
                                             onChange={(e) => handleFormChange("country", e.target.value)}
                                             placeholder="أدخل اسم البلد..."
                                         />
-                                    </div> */}
-                                </div>
+                                    </div>
+                                </div> */}
 
                                 {/* <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -892,7 +892,7 @@ const Account = () => {
                                     )) : (
                                         <TableRow>
                                             <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
-                                                {allUsers.length === 0 ? "لا توجد مستخدمين" : "لا توجد نتائج مطابقة للبحث"}
+                                                {allUsers.length === 0 ? "لا توجد حسابات متاحة" : "لا توجد نتائج مطابقة للبحث"}
                                             </TableCell>
                                         </TableRow>
                                     )}
