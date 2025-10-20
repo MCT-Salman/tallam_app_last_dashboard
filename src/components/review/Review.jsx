@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { Star, Search, Filter, User, MessageCircle, Calendar, BookOpen, Eye, Trash2 } from "lucide-react"
-import { getReviews, getCourses, getCourseLevels, getInstructorsByCourse } from "@/api/api"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Star, Search, Filter, User, MessageCircle, Calendar, BookOpen, Eye } from "lucide-react"
+import { getReviews, getCourses, getCourseLevels } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Review = () => {
@@ -22,6 +22,22 @@ const Review = () => {
   const [selectedCourse, setSelectedCourse] = useState("")
   const [selectedLevel, setSelectedLevel] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+
+  // حالة لعرض التفاصيل
+  const [detailDialog, setDetailDialog] = useState({ isOpen: false, review: null })
+
+  // دالة لتنظيف وعرض الصورة
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null
+    // إذا كانت الصورة تحتوي على مسار كامل
+    if (imageUrl.startsWith('http')) return imageUrl
+    // إذا كانت الصورة تبدأ بـ /uploads
+    if (imageUrl.startsWith('/uploads')) {
+      return `https://dev.tallaam.com${imageUrl}`
+    }
+    // إذا كانت الصورة تحتوي على مسار نسبي فقط
+    return `https://dev.tallaam.com/uploads${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+  }
 
   // جلب الكورسات
   const fetchCourses = async () => {
@@ -135,10 +151,222 @@ const Review = () => {
     )
   }
 
+  // تنسيق التاريخ
+  const formatDate = (dateString) => {
+    if (!dateString) return "غير محدد"
+    return new Date(dateString).toLocaleDateString('en-US')
+  }
+
   // تحميل البيانات الأولية
   useEffect(() => {
     fetchCourses()
   }, [])
+
+  // عرض تفاصيل التقييم
+  const renderReviewDetails = (review) => {
+    if (!review) return null
+
+    return (
+      <div className="space-y-6 text-right">
+        {/* الهيدر مع المعلومات الأساسية */}
+        <div className="bg-gradient-to-l from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            {/* صورة المستخدم */}
+            <div className="relative flex-shrink-0">
+              <div className="w-32 h-32 bg-gray-200 rounded-2xl shadow-lg border-4 border-white overflow-hidden">
+                {review.user?.avatarUrl ? (
+                  <img 
+                    src={getImageUrl(review.user.avatarUrl)} 
+                    alt={review.user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300 rounded-2xl flex items-center justify-center">
+                    <User className="w-12 h-12 text-gray-500" />
+                  </div>
+                )}
+              </div>
+              {/* شارة رقم التقييم */}
+              <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold shadow-lg">
+                #{review.id}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                تقييم #{review.id}
+              </h2>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                  ⭐ {review.rating}/5
+                </Badge>
+                
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                  <BookOpen className="w-3 h-3 ml-1" />
+                  {review.courseLevel?.course?.title}
+                </Badge>
+                
+                {review.comment && (
+                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                    💬 يحتوي على تعليق
+                  </Badge>
+                )}
+              </div>
+              
+              {/* معلومات سريعة */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <span>المستخدم: {review.user?.name || "غير محدد"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>التاريخ: {formatDate(review.createdAt)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* الشبكة الرئيسية للمعلومات */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* معلومات التقييم */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-yellow-50 to-amber-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <Star className="w-5 h-5 text-yellow-600" />
+                معلومات التقييم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-gray-700">التقييم</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-2xl text-yellow-600 block">
+                      {review.rating}/5
+                    </span>
+                    {renderStars(review.rating)}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700">تاريخ التقييم</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium text-gray-900 block">
+                      {formatDate(review.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* معلومات المستخدم */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <User className="w-5 h-5 text-purple-600" />
+                معلومات المستخدم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">الاسم الكامل</span>
+                  <span className="font-medium text-gray-900">
+                    {review.user?.name || "غير محدد"}
+                  </span>
+                </div>
+                
+                {/* <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">معرف المستخدم</span>
+                  <span className="font-medium text-gray-900">
+                    #{review.userId}
+                  </span>
+                </div> */}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* معلومات الكورس */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+              <BookOpen className="w-5 h-5 text-green-600" />
+              معلومات الكورس
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">اسم الكورس</span>
+                  <span className="font-medium text-gray-900">
+                    {review.courseLevel?.course?.title || "غير محدد"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">المستوى</span>
+                  <span className="font-medium text-gray-900">
+                    {review.courseLevel?.name || "غير محدد"}
+                  </span>
+                </div>
+              </div>
+              
+              {/* <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">معرف المستوى</span>
+                  <span className="font-medium text-gray-900">
+                    #{review.courseLevelId}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">معرف التقييم</span>
+                  <span className="font-medium text-gray-900">
+                    #{review.id}
+                  </span>
+                </div>
+              </div> */}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* التعليق */}
+        {review.comment && (
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-l from-blue-50 to-cyan-50 rounded-t-lg">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                <MessageCircle className="w-5 h-5 text-blue-600" />
+                التعليق
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {review.comment}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    )
+  }
 
   // بطاقة التقييم للعرض على الجوال
   const ReviewCard = ({ review }) => (
@@ -148,12 +376,16 @@ const Review = () => {
           {/* رأس البطاقة */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                 {review.user?.avatarUrl ? (
                   <img 
-                    src={review.user.avatarUrl} 
+                    src={getImageUrl(review.user.avatarUrl)} 
                     alt={review.user.name}
                     className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"
+                    }}
                   />
                 ) : (
                   <User className="w-5 h-5 text-gray-500" />
@@ -187,7 +419,7 @@ const Review = () => {
               <div className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 <span>
-                  {review.createdAt ? new Date(review.createdAt).toLocaleDateString('ar-SA') : '---'}
+                  {formatDate(review.createdAt)}
                 </span>
               </div>
               <div className="flex items-center gap-1">
@@ -207,19 +439,10 @@ const Review = () => {
             size="sm"
             variant="outline"
             className="flex-1"
-            onClick={() => {/* يمكن إضافة وظيفة عرض التفاصيل */}}
+            onClick={() => setDetailDialog({ isOpen: true, review })}
           >
             <Eye className="w-4 h-4 ml-1" />
             التفاصيل
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="flex-1"
-            onClick={() => {/* يمكن إضافة وظيفة الحذف */}}
-          >
-            <Trash2 className="w-4 h-4 ml-1" />
-            حذف
           </Button>
         </div>
       </CardContent>
@@ -387,12 +610,16 @@ const Review = () => {
                               <div className="font-medium">{review.user?.name}</div>
                               <div className="text-sm text-gray-500">#{review.userId}</div>
                             </div>
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                               {review.user?.avatarUrl ? (
                                 <img 
-                                  src={review.user.avatarUrl} 
+                                  src={getImageUrl(review.user.avatarUrl)} 
                                   alt={review.user.name}
                                   className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null
+                                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"
+                                  }}
                                 />
                               ) : (
                                 <User className="w-4 h-4 text-gray-500" />
@@ -421,25 +648,17 @@ const Review = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          {review.createdAt ? new Date(review.createdAt).toLocaleDateString('ar-SA') : '---'}
+                          {formatDate(review.createdAt)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {/* عرض التفاصيل */}}
+                              onClick={() => setDetailDialog({ isOpen: true, review })}
                             >
                               <Eye className="w-4 h-4 ml-1" />
-                              عرض
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {/* حذف التقييم */}}
-                            >
-                              <Trash2 className="w-4 h-4 ml-1" />
-                              حذف
+                              عرض التفاصيل
                             </Button>
                           </div>
                         </TableCell>
@@ -469,6 +688,21 @@ const Review = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* ديالوج التفاصيل */}
+      <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, review: null })}>
+        <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+              <div className="flex items-center gap-2">
+                <Star className="w-6 h-6 text-yellow-600" />
+                تفاصيل التقييم
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          {renderReviewDetails(detailDialog.review)}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
