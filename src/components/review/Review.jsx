@@ -528,7 +528,8 @@ const Review = () => {
                 <SelectContent>
                   {levels.map((level) => (
                     <SelectItem key={level.id} value={level.id.toString()}>
-                      {level.name} (ترتيب: {level.order})
+                      {level.name}
+                       {/* (ترتيب: {level.order}) */}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -89,8 +89,8 @@ const Transactions = () => {
             const params = {
                 page: currentPage,
                 limit: itemsPerPage,
-                sortBy,
-                sortOrder,
+                // sortBy,
+                // sortOrder,
                 ...(searchTerm && { search: searchTerm }),
                 ...dateParams,
             };
@@ -133,6 +133,63 @@ const Transactions = () => {
         }
     };
 
+     // Handle sort
+    const handleSort = (field) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+        } else {
+            setSortBy(field)
+            setSortOrder("asc")
+        }
+        setCurrentPage(1)
+    }
+
+    // استخراج قيمة المبلغ من الكائن
+    const getAmountValue = (amountObj) => {
+        if (!amountObj) return 0
+        if (typeof amountObj === 'number') return amountObj
+        if (amountObj.d && Array.isArray(amountObj.d)) {
+            return amountObj.d[0] || 0
+        }
+        return 0
+    }
+
+    // تنسيق المبلغ بالليرة السورية
+    const formatAmount = (amountObj) => {
+        const amount = getAmountValue(amountObj)
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'SYP'
+        }).format(amount || 0)
+    }
+
+    // تنسيق التاريخ بـ en-US
+    const formatDate = (dateString) => {
+        if (!dateString) return "غير محدد"
+        return new Date(dateString).toLocaleDateString('en-US')
+    }
+
+    // تنسيق التاريخ بشكل مختصر بـ en-US
+    const formatShortDate = (dateString) => {
+        if (!dateString) return "غير محدد"
+        return new Date(dateString).toLocaleDateString('en-US')
+    }
+
+    // تنسيق التاريخ للعرض في الزر
+    const formatDateForDisplay = (date) => {
+        if (!date) return null
+        return format(date, 'yyyy/MM/dd')
+    }
+
+    // الحصول على صورة الإيصال
+    const getReceiptImageUrl = (receiptImageUrl) => {
+        if (!receiptImageUrl) return null
+        if (receiptImageUrl.startsWith('/')) {
+            return `https://dev.tallaam.com${receiptImageUrl}`
+        }
+        return receiptImageUrl
+    }
+
     // فلترة وترتيب البيانات تلقائياً (للعرض فقط)
     const filteredAndSortedTransactions = useMemo(() => {
         let filtered = [...transactions];
@@ -144,9 +201,11 @@ const Transactions = () => {
                 item.accessCode?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.accessCode?.courseLevel?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.accessCode?.user?.phone?.includes(searchTerm) ||
-                item.accessCode?.code?.includes(searchTerm)
+                item.accessCode?.code?.includes(searchTerm) ||
+                item.coupon?.code?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
+
 
         // الترتيب المحلي الإضافي
         filtered.sort((a, b) => {
@@ -206,7 +265,7 @@ const Transactions = () => {
     // إعادة جلب البيانات عند تغيير أي من المعلمات
     useEffect(() => {
         fetchData()
-    }, [currentPage, itemsPerPage, sortBy, sortOrder, quickDateFilter])
+    }, [currentPage, itemsPerPage, quickDateFilter])
 
     // إعادة جلب البيانات عند تغيير نطاق التاريخ المخصص
     useEffect(() => {
@@ -290,6 +349,9 @@ const Transactions = () => {
                 'اسم المستوى': transaction.accessCode?.courseLevel?.name || 'غير محدد',
                 'المبلغ المدفوع': getAmountValue(transaction.amountPaid),
                 'المبلغ المدفوع (ل.س)': `${getAmountValue(transaction.amountPaid).toLocaleString()} ل.س`,
+                'كود الكوبون': transaction.coupon?.code || '-',
+'قيمة الخصم': transaction.coupon ? `${transaction.coupon.discount}${transaction.coupon.isPercent ? '%' : ' ل.س'}` : '-',
+'نوع الخصم': transaction.coupon?.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة',
                 'كود الدخول': transaction.accessCode?.code || 'غير محدد',
                 'تاريخ الإنشاء': formatDate(transaction.createdAt),
                 'آخر تحديث': formatDate(transaction.updatedAt),
@@ -412,62 +474,7 @@ const Transactions = () => {
         }
     }
 
-    // Handle sort
-    const handleSort = (field) => {
-        if (sortBy === field) {
-            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-        } else {
-            setSortBy(field)
-            setSortOrder("asc")
-        }
-        setCurrentPage(1)
-    }
-
-    // استخراج قيمة المبلغ من الكائن
-    const getAmountValue = (amountObj) => {
-        if (!amountObj) return 0
-        if (typeof amountObj === 'number') return amountObj
-        if (amountObj.d && Array.isArray(amountObj.d)) {
-            return amountObj.d[0] || 0
-        }
-        return 0
-    }
-
-    // تنسيق المبلغ بالليرة السورية
-    const formatAmount = (amountObj) => {
-        const amount = getAmountValue(amountObj)
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'SYP'
-        }).format(amount || 0)
-    }
-
-    // تنسيق التاريخ بـ en-US
-    const formatDate = (dateString) => {
-        if (!dateString) return "غير محدد"
-        return new Date(dateString).toLocaleDateString('en-US')
-    }
-
-    // تنسيق التاريخ بشكل مختصر بـ en-US
-    const formatShortDate = (dateString) => {
-        if (!dateString) return "غير محدد"
-        return new Date(dateString).toLocaleDateString('en-US')
-    }
-
-    // تنسيق التاريخ للعرض في الزر
-    const formatDateForDisplay = (date) => {
-        if (!date) return null
-        return format(date, 'yyyy/MM/dd')
-    }
-
-    // الحصول على صورة الإيصال
-    const getReceiptImageUrl = (receiptImageUrl) => {
-        if (!receiptImageUrl) return null
-        if (receiptImageUrl.startsWith('/')) {
-            return `https://dev.tallaam.com${receiptImageUrl}`
-        }
-        return receiptImageUrl
-    }
+   
 
     // Pagination calculations
     const totalPages = Math.ceil(totalCount / itemsPerPage)
@@ -520,6 +527,23 @@ const Transactions = () => {
                             <span class="label">المبلغ:</span>
                             <span class="value">${formatAmount(transaction.amountPaid)}</span>
                         </div>
+                        ${transaction.coupon ? `
+<div class="section">
+    <h3>معلومات الكوبون</h3>
+    <div class="row">
+        <span class="label">كود الكوبون:</span>
+        <span class="value">${transaction.coupon.code}</span>
+    </div>
+    <div class="row">
+        <span class="label">قيمة الخصم:</span>
+        <span class="value">${transaction.coupon.discount} ${transaction.coupon.isPercent ? '%' : 'ل.س'}</span>
+    </div>
+    <div class="row">
+        <span class="label">نوع الخصم:</span>
+        <span class="value">${transaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</span>
+    </div>
+</div>
+` : ''}
                         <div class="row">
                             <span class="label">تاريخ الإنشاء:</span>
                             <span class="value">${formatDate(transaction.createdAt)}</span>
@@ -570,7 +594,7 @@ const Transactions = () => {
                         </div>
                         <div class="row">
                             <span class="label">المدرس:</span>
-                            <span class="value">${transaction.accessCode?.courseLevel?.instructor?.name|| "غير محدد"}</span>
+                            <span class="value">${transaction.accessCode?.courseLevel?.instructor?.name || "غير محدد"}</span>
                         </div>
                         <div class="row">
                             <span class="label">المستوى:</span>
@@ -838,6 +862,16 @@ const Transactions = () => {
                             </div>
                         </div>
 
+                        {/* معلومات الكوبون */}
+{transaction.coupon && (
+    <div className="flex justify-between items-center text-sm">
+        <span className="text-muted-foreground">الكوبون:</span>
+        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+            {transaction.coupon.code} ({transaction.coupon.discount}{transaction.coupon.isPercent ? '%' : 'ل.س'})
+        </Badge>
+    </div>
+)}
+
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">التاريخ:</span>
                             <span>{formatShortDate(transaction.createdAt)}</span>
@@ -1039,6 +1073,7 @@ const Transactions = () => {
                                                 </div>
                                             </TableHead>
                                             <TableHead className="whitespace-nowrap">الإيصال</TableHead>
+                                            <TableHead className="whitespace-nowrap">الكوبون</TableHead>
                                             <TableHead
                                                 className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
                                                 onClick={() => handleSort("createdAt")}
@@ -1101,7 +1136,16 @@ const Transactions = () => {
                                                     ) : (
                                                         <span className="text-gray-500">لا يوجد</span>
                                                     )}
-                                                </TableCell>
+                                                        </TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+    {item.coupon ? (
+        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+            {item.coupon.code} ({item.coupon.discount}{item.coupon.isPercent ? '%' : 'ل.س'})
+        </Badge>
+    ) : (
+        <span className="text-gray-500">-</span>
+    )}
+</TableCell>
                                                 <TableCell className="whitespace-nowrap">
                                                     {formatDate(item.createdAt)}
                                                 </TableCell>
@@ -1437,7 +1481,7 @@ const Transactions = () => {
                                                             {selectedTransaction.accessCode?.courseLevel?.name || "غير محدد"}
                                                         </span>
                                                     </div>
-                                                    
+
                                                 </div>
                                             </div>
 
@@ -1468,6 +1512,54 @@ const Transactions = () => {
                                     </CardContent>
                                 </Card>
 
+                                {/* معلومات الكوبون */}
+                               <Card className="border border-gray-200 shadow-sm">
+    <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+            <DollarSign className="w-5 h-5 text-orange-600" />
+            معلومات الكوبون
+        </CardTitle>
+    </CardHeader>
+    <CardContent className="pt-4">
+        {selectedTransaction.coupon ? (
+            <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-purple-700">معلومات الكوبون</span>
+                    <Badge variant="default" className="bg-purple-600">
+                        خصم مطبق
+                    </Badge>
+                </div>
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-purple-600">كود الكوبون:</span>
+                        <span className="font-mono font-bold text-purple-800">
+                            {selectedTransaction.coupon.code}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-purple-600">قيمة الخصم:</span>
+                        <span className="font-bold text-purple-800">
+                            {selectedTransaction.coupon.discount}
+                            {selectedTransaction.coupon.isPercent ? '%' : ' ل.س'}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-purple-600">نوع الخصم:</span>
+                        <span className="text-purple-800">
+                            {selectedTransaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        ) : (
+            <div className="text-center py-8">
+                <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 text-lg">لا يوجد كوبون</p>
+                <p className="text-gray-400 text-sm mt-1">لم يتم استخدام أي كوبون في هذه المعاملة</p>
+            </div>
+        )}
+    </CardContent>
+</Card>
                                 {/* معلومات إضافية */}
                                 <Card className="border border-gray-200 shadow-sm">
                                     <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
