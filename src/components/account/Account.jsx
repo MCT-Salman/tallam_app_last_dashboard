@@ -72,7 +72,7 @@ const Account = () => {
                 skip: 0,
                 take: 10000, // رقم كبير لضمان جلب كل شيء
                 q: "",
-                role: undefined,
+                role: 'STUDENT',
                 country: undefined, 
                 isActive: undefined
             }
@@ -463,13 +463,13 @@ const Account = () => {
                                         <span className="font-medium">{formatDate(user.createdAt)}</span>
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span className="text-sm font-medium text-gray-600">تاريخ الانتهاء</span>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-4 h-4 text-gray-500" />
                                         <span className="font-medium">{formatDate(user.expiresAt) || "غير محدد"}</span>
                                     </div>
-                                </div>
+                                </div> */}
                                 {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span className="text-sm font-medium text-gray-600">معرف المستخدم</span>
                                     <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{user.id || "غير محدد"}</span>
@@ -573,7 +573,7 @@ const Account = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>رقم الهاتف *</Label>
+                                    <Label>رقم الهاتف *[مع رمز البلد]</Label>
                                     <Input
                                         value={form.phone}
                                         onChange={(e) => handleFormChange("phone", e.target.value)}
@@ -622,23 +622,23 @@ const Account = () => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="STUDENT">طالب</SelectItem>
-                                                <SelectItem value="SUBADMIN">مساعد مدير</SelectItem>
-                                                <SelectItem value="ADMIN">مدير</SelectItem>
+                                                {/* <SelectItem value="SUBADMIN">مساعد مدير</SelectItem> */}
+                                                {/* <SelectItem value="ADMIN">مدير</SelectItem> */}
                                             </SelectContent>
                                         </Select>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label>البلد</Label>
                                         <Input
                                             value={form.country}
                                             onChange={(e) => handleFormChange("country", e.target.value)}
                                             placeholder="أدخل اسم البلد..."
                                         />
-                                    </div>
+                                    </div> */}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>تاريخ الانتهاء</Label>
                                         <Input
@@ -647,7 +647,7 @@ const Account = () => {
                                             onChange={(e) => handleFormChange("expiresAt", e.target.value)}
                                         />
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <Button onClick={handleSave}>
                                     {editItem ? "حفظ التعديل" : "حفظ"}
@@ -683,7 +683,7 @@ const Account = () => {
                     </Select>
 
                     {/* Role Filter */}
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    {/* <Select value={roleFilter} onValueChange={setRoleFilter}>
                         <SelectTrigger>
                             <SelectValue placeholder="فلترة بالدور" />
                         </SelectTrigger>
@@ -693,7 +693,7 @@ const Account = () => {
                             <SelectItem value="SUBADMIN">مساعد مدير</SelectItem>
                             <SelectItem value="ADMIN">مدير</SelectItem>
                         </SelectContent>
-                    </Select>
+                    </Select> */}
 
                     {/* Country Filter - ديناميكي */}
                     <Select value={countryFilter} onValueChange={setCountryFilter}>

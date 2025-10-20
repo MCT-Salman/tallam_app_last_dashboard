@@ -444,9 +444,9 @@ const Admins_Accounts = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-right">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">إدارة حسابات المدراء</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
+          {/* <p className="text-muted-foreground text-sm sm:text-base">
             إدارة وتفعيل وتعطيل حسابات المدراء في النظام
-          </p>
+          </p> */}
         </div>
         
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>

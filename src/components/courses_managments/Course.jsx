@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, BookOpen, Calendar, Shield, Clock, Image, FileText } from "lucide-react";
 import { getCourses, createCourse, updateCourse, deleteCourse, toggleCourseStatus, BASE_URL } from "@/api/api";
 import { getSpecializations } from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
@@ -30,6 +30,7 @@ const Course = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" });
+    const [detailDialog, setDetailDialog] = useState({ isOpen: false, course: null });
 
     // Pagination & Filtering states
     const [currentPage, setCurrentPage] = useState(1);
@@ -42,7 +43,13 @@ const Course = () => {
 
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return "/tallaam_logo2.png";
+        if (!imageUrl) return "/default-avatar.png";
+        
+        // إذا كان الرابط يحتوي على النطاق الأساسي بالفعل
+        if (imageUrl.includes('http')) {
+            return imageUrl;
+        }
+        
         const cleanBaseUrl = BASE_URL.replace(/\/$/, "");
         const cleanImageUrl = imageUrl.replace(/^\//, "");
         return `${cleanBaseUrl}/${cleanImageUrl}`;
@@ -259,6 +266,12 @@ const Course = () => {
         return specialization ? specialization.name : "غير محدد";
     };
 
+    // تنسيق التاريخ
+    const formatDate = (dateString) => {
+        if (!dateString) return "غير محدد";
+        return new Date(dateString).toLocaleDateString('en-US');
+    };
+
     // Pagination calculations
     const totalItems = filteredAndSortedCourses.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -298,7 +311,195 @@ const Course = () => {
         setCurrentPage(1);
     };
 
-    // مكون البطاقة للعنصر الواحد
+    // مكون عرض الصورة
+    const CourseImage = ({ course, size = "medium", className = "" }) => {
+        const [imgError, setImgError] = useState(false);
+        const imageUrl = course.imageUrl ? getImageUrl(course.imageUrl) : null;
+        const sizeClass = size === "large" ? "w-32 h-32" : size === "small" ? "w-8 h-8" : "w-16 h-16";
+        
+        const handleImageError = (e) => {
+            console.warn(`Failed to load image: ${imageUrl}`);
+            setImgError(true);
+            e.target.style.display = 'none';
+        };
+
+        return (
+            <div className={`${sizeClass} ${className} bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden border`}>
+                {imageUrl && !imgError ? (
+                    <img 
+                        src={imageUrl} 
+                        alt={course.title}
+                        className={`${sizeClass} object-cover`}
+                        crossOrigin="anonymous"
+                        referrerPolicy="no-referrer"
+                        onError={handleImageError}
+                        loading="lazy"
+                    />
+                ) : (
+                    <BookOpen className={size === "large" ? "w-12 h-12 text-gray-500" : "w-6 h-6 text-gray-500"} />
+                )}
+            </div>
+        );
+    };
+
+    // عرض التفاصيل الكاملة للمادة
+    const renderCourseDetails = (course) => {
+        if (!course) return null;
+
+        return (
+            <div className="space-y-6 text-right">
+                {/* الهيدر مع الصورة والمعلومات الأساسية */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-gradient-to-l from-gray-50 to-white rounded-lg border">
+                    <CourseImage course={course} size="large" className="flex-shrink-0" />
+                    <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">{course.title || "بدون عنوان"}</h3>
+                        <div className="flex flex-wrap gap-2">
+                            <Badge variant={course.isActive ? "default" : "secondary"} className="text-sm">
+                                {course.isActive ? "نشط" : "معطل"}
+                            </Badge>
+                            <Badge variant="outline" className="text-sm">
+                                <BookOpen className="w-3 h-3 ml-1" />
+                                {getSpecializationName(course.specializationId)}
+                            </Badge>
+                        </div>
+                    </div>
+                </div>
+
+                {/* الشبكة الرئيسية للمعلومات */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* المعلومات الأساسية */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <FileText className="w-5 h-5" />
+                                المعلومات الأساسية
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">عنوان المادة</span>
+                                    <span className="font-medium">{course.title}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">التخصص</span>
+                                    <div className="flex items-center gap-2">
+                                        <BookOpen className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">{getSpecializationName(course.specializationId)}</span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">حالة المادة</span>
+                                    <Badge variant={course.isActive ? "default" : "secondary"}>
+                                        {course.isActive ? "نشط" : "معطل"}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* معلومات التوقيت */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Clock className="w-5 h-5" />
+                                معلومات التوقيت
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء</span>
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">{formatDate(course.createdAt)}</span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">آخر تحديث</span>
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">{formatDate(course.updatedAt)}</span>
+                                    </div>
+                                </div>
+                                {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">معرف المادة</span>
+                                    <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{course.id || "غير محدد"}</span>
+                                </div> */}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* الوصف */}
+                {course.description && (
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <FileText className="w-5 h-5" />
+                                وصف المادة
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                    {course.description}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* الإجراءات */}
+                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                    <Button
+                        variant="outline"
+                        onClick={() => handleToggleActive(course.id, course.isActive)}
+                        className="flex items-center gap-2"
+                    >
+                        {course.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        {course.isActive ? "تعطيل المادة" : "تفعيل المادة"}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            setEditItem(course)
+                            setForm({
+                                title: course.title || "",
+                                description: course.description || "",
+                                specializationId: course.specializationId || ""
+                            })
+                            setImageFile(null);
+                            setImagePreview(course.imageUrl ? getImageUrl(course.imageUrl) : null);
+                            setIsDialogOpen(true)
+                            setDetailDialog({ isOpen: false, course: null })
+                        }}
+                        className="flex items-center gap-2"
+                    >
+                        <Edit className="w-4 h-4" />
+                        تعديل المادة
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={() => {
+                            setDeleteDialog({
+                                isOpen: true,
+                                itemId: course.id,
+                                itemName: course.title || "بدون عنوان"
+                            })
+                            setDetailDialog({ isOpen: false, course: null })
+                        }}
+                        className="flex items-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        حذف المادة
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    // مكون البطاقة للعنصر الواحد مع تصميم محسن
     const CourseCard = ({ item }) => (
         <Card className="mb-4 overflow-hidden">
             {/* الصورة تأخذ رأس البطاقة كامل */}
@@ -310,7 +511,7 @@ const Course = () => {
                     {...imageConfig}
                     onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "/tallaam_logo2.png";
+                        e.target.src = "/default-avatar.png";
                     }}
                 />
                 {/* حالة الكورس في الزاوية */}
@@ -339,19 +540,28 @@ const Course = () => {
                     )}
                 </div>
                 
-                <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
+                <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t">
                     <Button 
                         size="sm" 
-                        variant="ghost" 
-                        onClick={() => handleToggleActive(item.id, item.isActive)}
-                        className="flex-1"
+                        variant="outline"
+                        onClick={() => setDetailDialog({ isOpen: true, course: item })}
+                        className="text-xs"
                     >
-                        {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        <span className="mr-2">{item.isActive ? "إيقاف" : "تفعيل"}</span>
+                        <Eye className="w-3 h-3 ml-1" />
+                        التفاصيل
+                    </Button>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleToggleActive(item.id, item.isActive)}
+                        className="text-xs"
+                    >
+                        {item.isActive ? <Pause className="w-3 h-3 ml-1" /> : <Play className="w-3 h-3 ml-1" />}
+                        <span className="mr-1">{item.isActive ? "إيقاف" : "تفعيل"}</span>
                     </Button>
                     <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => {
                             setEditItem(item);
                             setForm({ 
@@ -363,19 +573,19 @@ const Course = () => {
                             setImagePreview(item.imageUrl ? getImageUrl(item.imageUrl) : null);
                             setIsDialogOpen(true);
                         }}
-                        className="flex-1"
+                        className="text-xs"
                     >
-                        <Edit className="w-4 h-4" />
-                        <span className="mr-2">تعديل</span>
+                        <Edit className="w-3 h-3 ml-1" />
+                        <span className="mr-1">تعديل</span>
                     </Button>
                     <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title })}
-                        className="flex-1"
+                        className="text-xs"
                     >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="mr-2">حذف</span>
+                        <Trash2 className="w-3 h-3 ml-1" />
+                        <span className="mr-1">حذف</span>
                     </Button>
                 </div>
             </CardContent>
@@ -462,7 +672,7 @@ const Course = () => {
                                                 {...imageConfig}
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = "/tallaam_logo2.png";
+                                                    e.target.src = "/default-avatar.png";
                                                 }}
                                             />
                                         </div>
@@ -531,7 +741,7 @@ const Course = () => {
                 </div>
 
                 {/* Reset Filters & Results Count */}
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div className="text-sm text-muted-foreground">
                         عرض {filteredAndSortedCourses.length} من أصل {allCourses.length} مادة
                         {(searchTerm || statusFilter !== "all" || specializationFilter !== "all") && ` (مفلتر)`}
@@ -589,16 +799,7 @@ const Course = () => {
                                     {paginatedCourses.length > 0 ? paginatedCourses.map(item => (
                                         <TableRow key={item.id}>
                                             <TableCell className="table-cell">
-                                                <img
-                                                    src={getImageUrl(item.imageUrl)}
-                                                    alt={item.title}
-                                                    className="w-12 h-12 object-contain rounded-md"
-                                                    {...imageConfig}
-                                                    onError={(e) => {
-                                                        e.target.onerror = null;
-                                                        e.target.src = "/tallaam_logo2.png";
-                                                    }}
-                                                />
+                                                <CourseImage course={item} size="small" />
                                             </TableCell>
                                             <TableCell className="table-cell font-medium">{item.title}</TableCell>
                                             <TableCell className="table-cell">
@@ -618,7 +819,16 @@ const Course = () => {
                                                 <Button 
                                                     size="icon" 
                                                     variant="ghost" 
+                                                    onClick={() => setDetailDialog({ isOpen: true, course: item })}
+                                                    title="عرض التفاصيل"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
                                                     onClick={() => handleToggleActive(item.id, item.isActive)}
+                                                    title={item.isActive ? "تعطيل" : "تفعيل"}
                                                 >
                                                     {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                                                 </Button>
@@ -636,6 +846,7 @@ const Course = () => {
                                                         setImagePreview(item.imageUrl ? getImageUrl(item.imageUrl) : null);
                                                         setIsDialogOpen(true);
                                                     }}
+                                                    title="تعديل"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </Button>
@@ -647,6 +858,7 @@ const Course = () => {
                                                         itemId: item.id, 
                                                         itemName: item.title 
                                                     })}
+                                                    title="حذف"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -735,6 +947,7 @@ const Course = () => {
                 )}
             </CardContent>
 
+            {/* Delete Confirmation Dialog */}
             <AlertDialog
                 open={deleteDialog.isOpen}
                 onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
@@ -762,6 +975,16 @@ const Course = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Course Details Dialog */}
+            <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog(prev => ({ ...prev, isOpen }))}>
+                <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl text-right">تفاصيل المادة</DialogTitle>
+                    </DialogHeader>
+                    {renderCourseDetails(detailDialog.course)}
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 };

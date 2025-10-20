@@ -120,7 +120,7 @@
 import { 
   Home, BookOpen, Users, Settings, DollarSign, 
   Ticket, Percent, Image, Bell, Star, User2, Shield,
-  CreditCard, BarChart3
+  CreditCard, BarChart3, Book
 } from "lucide-react"
 
 // العناصر المفردة (خارج الأكورديون)
@@ -140,7 +140,7 @@ export const sidebarGroups = [
     icon: Settings,
     items: [
       {
-        title: "الحسابات",
+        title: "حسابات الطلاب",
         href: "/accounts",
         icon: User2
       },
@@ -148,16 +148,6 @@ export const sidebarGroups = [
         title: "حسابات المدراء",
         href: "/admin-accounts",
         icon: Shield
-      },
-      {
-        title: "القصص",
-        href: "/stories",
-        icon: Image
-      },
-      {
-        title: "الإشعارات",
-        href: "/notifications",
-        icon: Bell
       },
       {
         title: "الإعدادات",
@@ -169,7 +159,7 @@ export const sidebarGroups = [
   {
     id: "sales",
     title: "المبيعات والخصومات",
-    icon: Ticket,
+    icon: DollarSign,
     items: [
       {
         title: "أكواد الشراء",
@@ -185,14 +175,24 @@ export const sidebarGroups = [
   },
   {
     id: "courses",
-    title: "الدورات",
-    icon: BookOpen,
+    title: "إدارة المحتوى",
+    icon: Book,
     items: [
       {
         title: "إدارة الدورات",
         href: "/courses",
         icon: BookOpen
-      }
+      },
+      {
+        title: "القصص",
+        href: "/stories",
+        icon: Image
+      },
+      {
+        title: "الإشعارات",
+        href: "/notifications",
+        icon: Bell
+      },
     ]
   },
   {
