@@ -1727,8 +1727,8 @@ const Lesson = () => {
                                                 setIsDialogOpen(true)
                                             }}
                                         >
-                                            <Plus className="w-4 h-4 mr-1" />
                                             إضافة درس
+                                            <Plus className="w-4 h-4 mr-1" />
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1983,8 +1983,8 @@ const Lesson = () => {
                                 <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button size="sm">
-                                            <Upload className="w-4 h-4 mr-1" />
                                             إضافة ملف
+                                            <Upload className="w-4 h-4 mr-1" />
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
@@ -2238,8 +2238,8 @@ const Lesson = () => {
                                                     setIsQuestionDialogOpen(true)
                                                 }}
                                             >
-                                                <Plus className="w-4 h-4 ml-1" />
                                                 إضافة سؤال
+                                                <Plus className="w-4 h-4 ml-1" />
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -2281,8 +2281,8 @@ const Lesson = () => {
                                                                 }))
                                                             }}
                                                         >
-                                                            <Plus className="w-4 h-4 ml-1" />
                                                             إضافة خيار
+                                                            <Plus className="w-4 h-4 ml-1" />
                                                         </Button>
                                                     </div>
 

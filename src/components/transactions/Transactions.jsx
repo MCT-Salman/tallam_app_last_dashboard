@@ -278,14 +278,15 @@ const Transactions = () => {
                 showErrorToast("لا توجد بيانات للتصدير");
                 return;
             }
-
             // تحضير البيانات للتصدير
             const excelData = transactionsData.map((transaction, index) => ({
                 '#': index + 1,
                 'رقم المعاملة': transaction.id,
                 'اسم المستخدم': transaction.accessCode?.user?.name || 'غير محدد',
                 'هاتف المستخدم': transaction.accessCode?.user?.phone || 'غير محدد',
+                'الاختصاص': transaction.accessCode?.courseLevel?.course?.specialization?.name || 'غير محدد',
                 'اسم الكورس': transaction.accessCode?.courseLevel?.course?.title || 'غير محدد',
+                'اسم المدرس': transaction.accessCode?.courseLevel?.instructor?.name || 'غير محدد',
                 'اسم المستوى': transaction.accessCode?.courseLevel?.name || 'غير محدد',
                 'المبلغ المدفوع': getAmountValue(transaction.amountPaid),
                 'المبلغ المدفوع (ل.س)': `${getAmountValue(transaction.amountPaid).toLocaleString()} ل.س`,
@@ -560,8 +561,16 @@ const Transactions = () => {
                     <div class="section">
                         <h3>معلومات الكورس</h3>
                         <div class="row">
+                            <span class="label">الاختصاص:</span>
+                            <span class="value">${transaction.accessCode?.courseLevel?.course?.specialization?.name || "غير محدد"}</span>
+                        </div>
+                        <div class="row">
                             <span class="label">الكورس:</span>
                             <span class="value">${transaction.accessCode?.courseLevel?.course?.title || "غير محدد"}</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">المدرس:</span>
+                            <span class="value">${transaction.accessCode?.courseLevel?.instructor?.name|| "غير محدد"}</span>
                         </div>
                         <div class="row">
                             <span class="label">المستوى:</span>
@@ -1405,9 +1414,21 @@ const Transactions = () => {
                                                 <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الكورس</h4>
                                                 <div className="space-y-3">
                                                     <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">الاختصاص:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {selectedTransaction.accessCode?.courseLevel?.course?.specialization?.name || "غير محدد"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
                                                         <span className="text-sm text-gray-600">اسم الكورس:</span>
                                                         <span className="font-medium text-gray-900">
                                                             {selectedTransaction.accessCode?.courseLevel?.course?.title || "غير محدد"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">اسم المدرس:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {selectedTransaction.accessCode?.courseLevel?.instructor?.name || "غير محدد"}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
@@ -1416,12 +1437,7 @@ const Transactions = () => {
                                                             {selectedTransaction.accessCode?.courseLevel?.name || "غير محدد"}
                                                         </span>
                                                     </div>
-                                                    {/* <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">نوع الكورس:</span>
-                    <span className="font-medium text-gray-900">
-                      {selectedTransaction.accessCode?.courseLevel?.course?.type || "غير محدد"}
-                    </span>
-                  </div> */}
+                                                    
                                                 </div>
                                             </div>
 
@@ -1534,7 +1550,7 @@ const Transactions = () => {
                                         </Button>
                                     )}
 
-                                    <Button
+                                    {/* <Button
                                         variant="outline"
                                         onClick={() => {
                                             // إمكانية إضافة وظيفة الطباعة المباشرة
@@ -1544,7 +1560,7 @@ const Transactions = () => {
                                     >
                                         <FileText className="w-4 h-4" />
                                         طباعة التفاصيل
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             </div>
                         )}

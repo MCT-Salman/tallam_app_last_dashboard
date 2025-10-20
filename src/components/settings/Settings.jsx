@@ -38,6 +38,7 @@ const SettingsComp = () => {
   // قاموس لترجمة المفاتيح إلى العربية
   const keyTranslations = {
     'allowRating': 'سماح عرض التقييمات',
+    'isDollar': 'العملة بالدولار',
     'whatsapp': 'رقم واتساب',
     'telegram': 'اسم مستخدم تليجرام',
     'allowComments': 'سماح التعليقات',
@@ -475,9 +476,9 @@ const SettingsComp = () => {
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="flex-1 sm:flex-none">
-                      <Plus className="w-4 h-4 ml-1" />
+                    <Button  className="flex-1 sm:flex-none">
                       إضافة إعداد
+                      <Plus className="w-4 h-4 ml-1" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
@@ -507,8 +508,8 @@ const SettingsComp = () => {
                         onClick={handleAddSetting}
                         className="w-full flex items-center gap-2"
                       >
-                        <Plus className="w-4 h-4" />
                         إضافة الإعداد
+                        <Plus className="w-4 h-4" />
                       </Button>
                     </div>
                   </DialogContent>
@@ -519,8 +520,8 @@ const SettingsComp = () => {
                   disabled={saving}
                   className="flex-1 sm:flex-none flex items-center gap-2"
                 >
-                  <Save className="w-4 h-4" />
                   {saving ? "جاري الحفظ..." : "حفظ الكل"}
+                  <Save className="w-4 h-4" />
                 </Button>
               </div>
             </CardHeader>

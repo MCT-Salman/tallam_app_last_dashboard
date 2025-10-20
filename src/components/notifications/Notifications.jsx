@@ -655,8 +655,8 @@ const calculateTimeAgo = (dateString) => {
                   setImagePreview(null);
                 }}
               >
-                <Send className="w-4 h-4 ml-1" />
                 إرسال إشعار
+                <Send className="w-4 h-4 ml-1" />
               </Button>
             </DialogTrigger>
 
