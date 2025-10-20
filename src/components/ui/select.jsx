@@ -148,10 +148,10 @@ export {
   SelectScrollDownButton
 }
 
-
 // import * as React from "react"
 // import * as SelectPrimitive from "@radix-ui/react-select"
-// import { Check, ChevronDown, ChevronUp } from "lucide-react"
+// import { Check, ChevronDown, ChevronUp, Search } from "lucide-react"
+
 // import { cn } from "@/lib/utils"
 
 // const Select = SelectPrimitive.Root
@@ -160,6 +160,183 @@ export {
 
 // const SelectValue = SelectPrimitive.Value
 
+// const SelectTrigger = React.forwardRef(
+//   ({ className, children, ...props }, ref) => (
+//     <SelectPrimitive.Trigger
+//       ref={ref}
+//       className={cn(
+//         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+//         className
+//       )}
+//       dir="rtl"
+//       {...props}
+//     >
+//       <div className="flex items-center gap-2 flex-1 text-right">
+//         {/* <span className="text-lg">[^]</span> */}
+//         {children}
+//       </div>
+//       <SelectPrimitive.Icon asChild>
+//         <ChevronDown className="h-4 w-4 opacity-50" />
+//       </SelectPrimitive.Icon>
+//     </SelectPrimitive.Trigger>
+//   )
+// )
+// SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+
+// const SelectContent = React.forwardRef(
+//   ({ className, children, position = "popper", ...props }, ref) => {
+//     const [searchValue, setSearchValue] = React.useState("")
+//     const searchInputRef = React.useRef(null)
+    
+//     // إصلاح مشكلة التركيز - إعادة التركيز عند تغيير القيمة
+//     React.useEffect(() => {
+//       if (searchInputRef.current) {
+//         searchInputRef.current.focus()
+//       }
+//     }, [searchValue])
+
+//     const filteredChildren = React.Children.map(children, child => {
+//       if (!React.isValidElement(child)) return child
+      
+//       if (child.type === SelectGroup) {
+//         const filteredItems = React.Children.map(child.props.children, item => {
+//           if (!React.isValidElement(item)) return item
+//           const itemText = item.props.children?.toLowerCase() || ""
+//           return itemText.includes(searchValue.toLowerCase()) ? item : null
+//         }).filter(Boolean)
+        
+//         return filteredItems.length > 0 
+//           ? React.cloneElement(child, {}, filteredItems)
+//           : null
+//       }
+      
+//       if (child.type === SelectItem) {
+//         const itemText = child.props.children?.toLowerCase() || ""
+//         return itemText.includes(searchValue.toLowerCase()) ? child : null
+//       }
+      
+//       return child
+//     }).filter(Boolean)
+
+//     return (
+//       <SelectPrimitive.Portal>
+//         <SelectPrimitive.Content
+//           ref={ref}
+//           className={cn(
+//             "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+//             position === "popper" &&
+//               "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+//             className
+//           )}
+//           position={position}
+//           {...props}
+//         >
+//           {/* Search Input */}
+//           <div className="sticky top-0 bg-popover p-2 border-b z-10">
+//             <div className="relative">
+//               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//               <input
+//                 ref={searchInputRef}
+//                 type="text"
+//                 placeholder="....بحث"
+//                 value={searchValue}
+//                 onChange={(e) => setSearchValue(e.target.value)}
+//                 className="w-full h-9 rounded-md border border-input bg-background px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-1 focus:ring-ring"
+//                 dir="rtl"
+//                 autoFocus
+//                 onMouseDown={(e) => {
+//                   // منع إغلاق القائمة عند النقر على حقل البحث
+//                   e.stopPropagation()
+//                 }}
+//                 onClick={(e) => {
+//                   // منع إغلاق القائمة عند النقر على حقل البحث
+//                   e.stopPropagation()
+//                 }}
+//               />
+//             </div>
+//           </div>
+
+//           <SelectScrollUpButton />
+//           <SelectPrimitive.Viewport
+//             className={cn(
+//               "p-1",
+//               position === "popper" &&
+//                 "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+//             )}
+//           >
+//             {filteredChildren && filteredChildren.length > 0 ? filteredChildren : (
+//               <div className="py-2 px-3 text-sm text-muted-foreground text-center">
+//                 لا توجد نتائج
+//               </div>
+//             )}
+//           </SelectPrimitive.Viewport>
+//           <SelectScrollDownButton />
+//         </SelectPrimitive.Content>
+//       </SelectPrimitive.Portal>
+//     )
+//   }
+// )
+// SelectContent.displayName = SelectPrimitive.Content.displayName
+
+// // إذا كنت تريد حقل البحث بجانب الـ trigger وليس داخل القائمة، يمكنك استخدام هذا المكون المخصص:
+
+// const SearchableSelect = React.forwardRef(
+//   ({ 
+//     className,
+//     children,
+//     searchPlaceholder = "....بحث",
+//     onSearchChange,
+//     ...props 
+//   }, ref) => {
+//     const [searchValue, setSearchValue] = React.useState("")
+//     const [isOpen, setIsOpen] = React.useState(false)
+
+//     const handleSearchChange = (e) => {
+//       const value = e.target.value
+//       setSearchValue(value)
+//       onSearchChange?.(value)
+//     }
+
+//     return (
+//       <div className={cn("flex gap-2 items-center", className)} dir="rtl">
+//         {/* Search Input بجانب ال Select */}
+//         <div className="relative flex-1">
+//           <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//           <input
+//             type="text"
+//             placeholder={searchPlaceholder}
+//             value={searchValue}
+//             onChange={handleSearchChange}
+//             className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+//             dir="rtl"
+//           />
+//         </div>
+
+//         {/* Select العادي */}
+//         <Select 
+//           {...props} 
+//           open={isOpen}
+//           onOpenChange={setIsOpen}
+//         >
+//           <SelectTrigger className="w-40">
+//             <SelectValue placeholder="اختر" />
+//           </SelectTrigger>
+//           <SelectContent>
+//             {React.Children.map(children, child => {
+//               if (!React.isValidElement(child)) return child
+              
+//               const childText = child.props.children?.toLowerCase() || ""
+//               return childText.includes(searchValue.toLowerCase()) ? child : null
+//             }).filter(Boolean)}
+//           </SelectContent>
+//         </Select>
+//       </div>
+//     )
+//   }
+// )
+// SearchableSelect.displayName = "SearchableSelect"
+
+// // بقية المكونات تبقى كما هي
 // const SelectScrollUpButton = React.forwardRef(
 //   ({ className, ...props }, ref) => (
 //     <SelectPrimitive.ScrollUpButton
@@ -191,65 +368,6 @@ export {
 //   )
 // )
 // SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
-
-// // Context للتواصل بين Trigger و Content
-// const SelectContext = React.createContext(undefined)
-
-// const SelectContent = React.forwardRef(
-//   ({ className, children, position = "popper", ...props }, ref) => {
-//     const context = React.useContext(SelectContext)
-    
-//     // فلترة Children بناءً على search value
-//     const filteredChildren = React.useMemo(() => {
-//       if (!context?.searchValue) return children
-      
-//       return React.Children.map(children, child => {
-//         if (React.isValidElement(child) && child.type === SelectItem) {
-//           const childText = child.props.children?.toString().toLowerCase() || ""
-//           const searchText = context.searchValue.toLowerCase()
-//           if (childText.includes(searchText)) {
-//             return child
-//           }
-//           return null
-//         }
-//         return child
-//       }).filter(Boolean)
-//     }, [children, context?.searchValue])
-
-//     return (
-//       <SelectPrimitive.Portal>
-//         <SelectPrimitive.Content
-//           ref={ref}
-//           className={cn(
-//             "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-//             position === "popper" &&
-//               "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-//             className
-//           )}
-//           position={position}
-//           {...props}
-//         >
-//           <SelectScrollUpButton />
-//           <SelectPrimitive.Viewport
-//             className={cn(
-//               "p-1",
-//               position === "popper" &&
-//                 "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
-//             )}
-//           >
-//             {filteredChildren.length > 0 ? filteredChildren : (
-//               <div className="py-6 text-center text-sm text-muted-foreground">
-//                 لا توجد نتائج
-//               </div>
-//             )}
-//           </SelectPrimitive.Viewport>
-//           <SelectScrollDownButton />
-//         </SelectPrimitive.Content>
-//       </SelectPrimitive.Portal>
-//     )
-//   }
-// )
-// SelectContent.displayName = SelectPrimitive.Content.displayName
 
 // const SelectLabel = React.forwardRef(({ className, ...props }, ref) => (
 //   <SelectPrimitive.Label
@@ -292,153 +410,8 @@ export {
 // ))
 // SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
-// // Select الجديد الذي يدير الـ state
-// const SelectWithSearch = React.forwardRef(
-//   ({ children, onValueChange, value, ...props }, ref) => {
-//     const [searchValue, setSearchValue] = React.useState("")
-//     const [open, setOpen] = React.useState(false)
-//     const [selectedValue, setSelectedValue] = React.useState(value || "")
-//     const inputRef = React.useRef(null)
-    
-//     const handleSearchChange = (newSearchValue) => {
-//       setSearchValue(newSearchValue)
-//       // فتح القائمة تلقائياً عند البدء بالكتابة
-//       if (newSearchValue && !open) {
-//         setOpen(true)
-//       }
-//     }
-
-//     const handleValueChange = (newValue) => {
-//       setSelectedValue(newValue)
-//       setSearchValue("") // مسح البحث بعد الاختيار
-//       setOpen(false) // إغلاق القائمة بعد الاختيار
-//       onValueChange?.(newValue)
-//     }
-
-//     // تحديث القيمة المختارة عندما تتغير القيمة من الخارج
-//     React.useEffect(() => {
-//       setSelectedValue(value || "")
-//     }, [value])
-    
-//     return (
-//       <SelectContext.Provider value={{ 
-//         searchValue, 
-//         setSearchValue: handleSearchChange,
-//         open,
-//         setOpen,
-//         inputRef,
-//         selectedValue,
-//         onValueChange: handleValueChange
-//       }}>
-//         <SelectPrimitive.Root 
-//           {...props} 
-//           value={selectedValue}
-//           onValueChange={handleValueChange}
-//           open={open} 
-//           onOpenChange={setOpen}
-//         >
-//           {children}
-//         </SelectPrimitive.Root>
-//       </SelectContext.Provider>
-//     )
-//   }
-// )
-// SelectWithSearch.displayName = "SelectWithSearch"
-
-// // SelectTrigger الجديد مع البحث
-// const SelectTrigger = React.forwardRef(
-//   ({ className, children, ...props }, ref) => {
-//     const context = React.useContext(SelectContext)
-    
-//     if (!context) {
-//       throw new Error("SelectTrigger must be used within Select component")
-//     }
-
-//     const { searchValue, setSearchValue, setOpen, inputRef, selectedValue } = context
-    
-//     const handleInputChange = (e) => {
-//       const value = e.target.value
-//       setSearchValue(value)
-      
-//       // فتح القائمة تلقائياً عند البدء بالكتابة
-//       if (value && !context.open) {
-//         setOpen(true)
-//       }
-//     }
-
-//     const handleInputFocus = (e) => {
-//       // فتح القائمة عند التركيز على حقل البحث
-//       if (!context.open) {
-//         setOpen(true)
-//       }
-//     }
-
-//     const handleInputKeyDown = (e) => {
-//       // السماح بالكتابة الطبيعية دون تدخل
-//       if (e.key === "Escape" && context.open) {
-//         setOpen(false)
-//         e.currentTarget.blur()
-//       }
-//     }
-
-//     const handleContainerClick = (e) => {
-//       // فتح القائمة عند النقر على أي مكان في الحاوية
-//       if (!context.open) {
-//         setOpen(true)
-//         // إعطاء التركيز لحقل الإدخال
-//         setTimeout(() => {
-//           inputRef.current?.focus()
-//         }, 0)
-//       }
-//     }
-
-//     return (
-//       <div 
-//         className={cn(
-//           "flex items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-text",
-//           className
-//         )}
-//         onClick={handleContainerClick}
-//       >
-//         {/* عرض القيمة المختارة عندما لا يكون هناك بحث */}
-//         {!searchValue && selectedValue && (
-//           <div className="flex-1 h-10 px-3 py-2 text-sm text-right pointer-events-none">
-//             <SelectValue />
-//           </div>
-//         )}
-        
-//         {/* حقل الإدخال للبحث - يكون مرئياً فقط عند البحث أو عندما لا تكون هناك قيمة مختارة */}
-//         {(searchValue || !selectedValue) && (
-//           <input
-//             ref={inputRef}
-//             type="text"
-//             value={searchValue}
-//             onChange={handleInputChange}
-//             onFocus={handleInputFocus}
-//             placeholder={selectedValue ? "ابحث..." : "اختر خيار..."}
-//             className="flex-1 h-10 px-3 py-2 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground text-right"
-//             dir="rtl"
-//             onKeyDown={handleInputKeyDown}
-//           />
-//         )}
-        
-//         {/* زر فتح/إغلاق القائمة */}
-//         <SelectPrimitive.Trigger 
-//           ref={ref}
-//           className="flex items-center justify-center h-10 px-3 border-r border-input text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none"
-//           {...props}
-//         >
-//           <ChevronDown className="h-4 w-4 opacity-50" />
-//         </SelectPrimitive.Trigger>
-//       </div>
-//     )
-//   }
-// )
-// SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
-
-// // تصدير الـ Select الجديد بدلاً من القديم
 // export {
-//   SelectWithSearch as Select,
+//   Select,
 //   SelectGroup,
 //   SelectValue,
 //   SelectTrigger,
@@ -447,5 +420,6 @@ export {
 //   SelectItem,
 //   SelectSeparator,
 //   SelectScrollUpButton,
-//   SelectScrollDownButton
+//   SelectScrollDownButton,
+//   SearchableSelect
 // }

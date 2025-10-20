@@ -126,11 +126,98 @@ const Transactions = () => {
             console.error("❌ Error fetching transactions:", err);
             showErrorToast(err.response?.data?.message || "فشل في جلب بيانات المعاملات");
             setTransactions([]);
+            setTotalCount(0);
             setStats({});
         } finally {
             setLoading(false);
         }
     };
+
+    // فلترة وترتيب البيانات تلقائياً (للعرض فقط)
+    const filteredAndSortedTransactions = useMemo(() => {
+        let filtered = [...transactions];
+
+        // البحث برقم المعاملة أو اسم المستخدم أو الكورس (فلترة محلية إضافية)
+        if (searchTerm.trim()) {
+            filtered = filtered.filter(item =>
+                item.id?.toString().includes(searchTerm) ||
+                item.accessCode?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.accessCode?.courseLevel?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.accessCode?.user?.phone?.includes(searchTerm) ||
+                item.accessCode?.code?.includes(searchTerm)
+            );
+        }
+
+        // الترتيب المحلي الإضافي
+        filtered.sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortBy) {
+                case "id":
+                    aValue = a.id;
+                    bValue = b.id;
+                    break;
+                case "user":
+                    aValue = a.accessCode?.user?.name?.toLowerCase() || "";
+                    bValue = b.accessCode?.user?.name?.toLowerCase() || "";
+                    break;
+                case "course":
+                    aValue = a.accessCode?.courseLevel?.course?.title?.toLowerCase() || "";
+                    bValue = b.accessCode?.courseLevel?.course?.title?.toLowerCase() || "";
+                    break;
+                case "amountPaid":
+                    aValue = getAmountValue(a.amountPaid);
+                    bValue = getAmountValue(b.amountPaid);
+                    break;
+                case "createdAt":
+                default:
+                    aValue = new Date(a.createdAt) || new Date(0);
+                    bValue = new Date(b.createdAt) || new Date(0);
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
+
+        return filtered;
+    }, [transactions, searchTerm, sortBy, sortOrder]);
+
+    // تطبيق البحث تلقائياً مع Debounce (لجلب بيانات جديدة من السيرفر)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm) {
+                setCurrentPage(1);
+                fetchData();
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // إعادة جلب البيانات عند مسح البحث
+    useEffect(() => {
+        if (searchTerm === "") {
+            setCurrentPage(1);
+            fetchData();
+        }
+    }, [searchTerm]);
+
+    // إعادة جلب البيانات عند تغيير أي من المعلمات
+    useEffect(() => {
+        fetchData()
+    }, [currentPage, itemsPerPage, sortBy, sortOrder, quickDateFilter])
+
+    // إعادة جلب البيانات عند تغيير نطاق التاريخ المخصص
+    useEffect(() => {
+        if (dateRange.from && dateRange.to) {
+            setCurrentPage(1)
+            const timer = setTimeout(() => {
+                fetchData()
+            }, 100)
+            return () => clearTimeout(timer)
+        }
+    }, [dateRange.from, dateRange.to])
 
     // تصدير البيانات إلى Excel
     const handleExportToExcel = async () => {
@@ -279,28 +366,6 @@ const Transactions = () => {
         }
     };
 
-    // إعادة جلب البيانات عند تغيير أي من المعلمات
-    useEffect(() => {
-        fetchData()
-    }, [currentPage, itemsPerPage, sortBy, sortOrder, quickDateFilter])
-
-    // إعادة جلب البيانات عند تغيير نطاق التاريخ المخصص
-    useEffect(() => {
-        if (dateRange.from && dateRange.to) {
-            setCurrentPage(1)
-            const timer = setTimeout(() => {
-                fetchData()
-            }, 100)
-            return () => clearTimeout(timer)
-        }
-    }, [dateRange.from, dateRange.to])
-
-    // تطبيق فلاتر البحث
-    const applySearchFilters = () => {
-        setCurrentPage(1)
-        fetchData()
-    }
-
     // تطبيق فلاتر التاريخ المخصص
     const applyCustomDateFilter = () => {
         if (dateRange.from && dateRange.to) {
@@ -407,6 +472,9 @@ const Transactions = () => {
     const totalPages = Math.ceil(totalCount / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalCount)
+
+    // استخدام البيانات المفلترة محلياً للعرض
+    const displayTransactions = filteredAndSortedTransactions;
 
     // عرض تفاصيل المعاملة
     const handleViewDetails = async (transaction) => {
@@ -806,247 +874,6 @@ const Transactions = () => {
         </Card>
     )
 
-    // عرض التفاصيل الكاملة للمعاملة
-    const renderTransactionDetails = (transaction) => {
-        if (!transaction) return null
-
-        const receiptUrl = getReceiptImageUrl(transaction.receiptImageUrl)
-        const user = transaction.accessCode?.user
-        const courseLevel = transaction.accessCode?.courseLevel
-        const course = courseLevel?.course
-
-        return (
-            <div className="space-y-6 text-right">
-                {/* المعلومات الأساسية */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                    <div className="bg-white p-4 text-right rounded-lg shadow-sm border">
-                        <Label className="font-semibold text-gray-600 block mb-2">رقم المعاملة</Label>
-                        <p className="text-xl font-bold text-gray-900">#{transaction.id}</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                        <Label className="font-semibold text-gray-600 block mb-2">المبلغ المدفوع</Label>
-                        <p className="text-xl font-bold text-green-600">{formatAmount(transaction.amountPaid)}</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                        <Label className="font-semibold text-gray-600 block mb-2">تاريخ الإنشاء</Label>
-                        <p className="text-lg text-gray-900">{formatDate(transaction.createdAt)}</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                        <Label className="font-semibold text-gray-600 block mb-2">آخر تحديث</Label>
-                        <p className="text-lg text-gray-900">{formatDate(transaction.updatedAt)}</p>
-                    </div>
-                </div>
-
-                {/* صورة الإيصال */}
-                {receiptUrl && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 text-right">
-                        <div className="flex items-center gap-3 mb-4 justify-end">
-                            <h3 className="text-xl font-bold text-gray-900">صورة الإيصال</h3>
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Image className="w-5 h-5 text-blue-600" />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col lg:flex-row gap-6 items-start">
-                            <div className="flex-1">
-                                <div className="w-full max-w-xs mx-auto lg:mx-0 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 hover:shadow-lg transition-shadow">
-                                    <img
-                                        src={receiptUrl}
-                                        alt="صورة الإيصال"
-                                        className="w-full h-64 object-contain cursor-pointer hover:scale-105 transition-transform"
-                                        onClick={() => handleViewReceipt(transaction.receiptImageUrl)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-3 w-full lg:w-auto">
-                                <Button
-                                    onClick={() => handleViewReceipt(transaction.receiptImageUrl)}
-                                    variant="outline"
-                                    className="w-full lg:w-64 justify-center"
-                                    size="lg"
-                                >
-                                    <Image className="w-4 h-4 ml-2" />
-                                    عرض صورة الإيصال في نافذة جديدة
-                                </Button>
-                                <Button
-                                    onClick={() => handleExportInvoice(transaction)}
-                                    className="w-full lg:w-64 justify-center bg-green-600 hover:bg-green-700"
-                                    size="lg"
-                                >
-                                    <FileText className="w-4 h-4 ml-2" />
-                                    تصدير الفاتورة
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* معلومات المستخدم */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 text-right">
-                    <div className="flex items-center gap-3 mb-6 justify-end">
-                        <h3 className="text-xl font-bold text-gray-900">معلومات المستخدم</h3>
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <User className="w-5 h-5 text-purple-600" />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <InfoCard label="الاسم الكامل" value={user?.name} />
-                        <InfoCard label="رقم الهاتف" value={user?.phone} dir={"ltr"} />
-                        <InfoCard label="الجنس" value={user?.sex} />
-                        <InfoCard label="تاريخ الميلاد" value={formatDate(user?.birthDate)} />
-                        <InfoCard label="البلد" value={user?.country} />
-                        <InfoCard label="رمز الدولة" value={user?.countryCode} dir={"ltr"} />
-                        <InfoCard label="الدور" value={user?.role} />
-                        <StatusCard
-                            label="الحالة"
-                            value={user?.isActive ? 'نشط' : 'غير نشط'}
-                            isActive={user?.isActive}
-                        />
-                    </div>
-
-                    {user?.avatarUrl && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded-lg border text-right">
-                            <Label className="font-semibold text-gray-700 block mb-3">الصورة الشخصية</Label>
-                            <div className="w-32 h-32 border-2 border-gray-300 rounded-xl overflow-hidden bg-white mr-auto">
-                                <img
-                                    src={`https://dev.tallaam.com${user.avatarUrl}`}
-                                    alt="الصورة الشخصية"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* معلومات الكورس والمستوى */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 text-right">
-                    <div className="flex items-center gap-3 mb-6 justify-end">
-                        <h3 className="text-xl font-bold text-gray-900">معلومات الكورس والمستوى</h3>
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <BookOpen className="w-5 h-5 text-green-600" />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <InfoCard label="اسم الكورس" value={course?.title} />
-                        <InfoCard label="اسم المستوى" value={courseLevel?.name} />
-                    </div>
-                </div>
-
-                {/* معلومات كود الدخول */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 text-right">
-                    <div className="flex items-center gap-3 mb-6 justify-end">
-                        <h3 className="text-xl font-bold text-gray-900">معلومات كود الدخول</h3>
-                        <div className="p-2 bg-yellow-100 rounded-lg">
-                            <CreditCard className="w-5 h-5 text-yellow-600" />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <Label className="font-semibold text-gray-700 block mb-3">كود الدخول</Label>
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                                <p className="font-mono text-lg font-bold text-center text-gray-900">
-                                    {transaction.accessCode?.code || "غير محدد"}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* معلومات إضافية */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 text-right">
-                    <div className="flex items-center gap-3 mb-6 justify-end">
-                        <h3 className="text-xl font-bold text-gray-900">معلومات إضافية</h3>
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                            <FileText className="w-5 h-5 text-gray-600" />
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        {/* الملاحظات */}
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                            <Label className="font-semibold text-gray-700 block mb-3">ملاحظات</Label>
-                            <p className={`p-3 rounded-lg ${transaction.notes
-                                ? "bg-white border border-gray-300 text-gray-900"
-                                : "bg-gray-100 text-gray-500 border border-gray-200"
-                                }`}>
-                                {transaction.notes || "لا توجد ملاحظات"}
-                            </p>
-                        </div>
-
-                        {/* معلومات الكوبون */}
-                        {transaction.coupon && (
-                            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 text-right">
-                                <div className="flex items-center gap-3 mb-4 justify-end">
-                                    <h4 className="text-lg font-bold text-blue-900">معلومات الكوبون</h4>
-                                    <div className="p-2 bg-blue-100 rounded-lg">
-                                        <Badge className="w-5 h-5 text-blue-600" />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <InfoCard label="كود الكوبون" value={transaction.coupon.code} />
-                                    <div className="bg-white rounded-lg p-4 border border-blue-200">
-                                        <Label className="font-semibold text-gray-700 block mb-2">قيمة الخصم</Label>
-                                        <p className="text-lg font-bold text-red-600">
-                                            {transaction.coupon.discount}
-                                            {transaction.coupon.isPercent ? '%' : ' ل.س'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* تفاصيل المبلغ */}
-                        <div className="bg-green-50 rounded-xl p-6 border border-green-200 text-right">
-                            <div className="flex items-center gap-3 mb-4 justify-end">
-                                <h4 className="text-lg font-bold text-green-900">تفاصيل المبلغ</h4>
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                    <DollarSign className="w-5 h-5 text-green-600" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div className="bg-white rounded-lg p-4 border border-green-200">
-                                    <Label className="font-semibold text-gray-700 block mb-2">قيمة المبلغ</Label>
-                                    <p className="text-xl font-bold text-green-600 font-mono">
-                                        {getAmountValue(transaction.amountPaid)} ل.س
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    // مكونات مساعدة للتصميم
-    const InfoCard = ({ label, value, className = "", dir = "" }) => (
-        <div className={`bg-gray-50 rounded-lg p-4 border border-gray-200 text-right ${className}`} >
-            <Label className="font-semibold text-gray-700 block mb-2">{label}</Label>
-            <p className="text-gray-900" dir={dir}>{value || "غير محدد"}</p>
-        </div>
-    )
-
-    const StatusCard = ({ label, value, isActive }) => (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-right">
-            <Label className="font-semibold text-gray-700 block mb-2">{label}</Label>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${isActive
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-                }`}>
-                {value}
-            </span>
-        </div>
-    )
-
     return (
         <Card className="w-full overflow-hidden">
             <CardHeader className="flex flex-col gap-4 p-4 sm:p-6">
@@ -1067,7 +894,6 @@ const Transactions = () => {
                             placeholder="بحث برقم المعاملة أو المستخدم أو الكورس..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && applySearchFilters()}
                             className="pr-10"
                         />
                     </div>
@@ -1130,13 +956,12 @@ const Transactions = () => {
                             </Button>
                         )}
                     </div>
-                    {/* </div> */}
                 </div>
 
                 {/* Results Count */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div className="text-sm text-muted-foreground">
-                        عرض {transactions.length} من أصل {totalCount} معاملة
+                        عرض {displayTransactions.length} من أصل {totalCount} معاملة
                         {(searchTerm || quickDateFilter !== "all" || dateRange.from) && (
                             <span className="text-blue-600 mr-2">
                                 {getActiveFilterText() && ` - ${getActiveFilterText()}`}
@@ -1220,7 +1045,7 @@ const Transactions = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {transactions.length > 0 ? transactions.map(item => (
+                                        {displayTransactions.length > 0 ? displayTransactions.map(item => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium whitespace-nowrap">
                                                     #{item.id}
@@ -1306,8 +1131,8 @@ const Transactions = () => {
 
                         {/* عرض البطاقات للشاشات الصغيرة */}
                         <div className="md:hidden">
-                            {transactions.length > 0 ? (
-                                transactions.map(item => (
+                            {displayTransactions.length > 0 ? (
+                                displayTransactions.map(item => (
                                     <TransactionCard key={item.id} transaction={item} />
                                 ))
                             ) : (
@@ -1318,7 +1143,7 @@ const Transactions = () => {
                         </div>
 
                         {/* Pagination */}
-                        {transactions.length > 0 && (
+                        {displayTransactions.length > 0 && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                                 <div className="text-sm text-muted-foreground">
                                     عرض {startItem} - {endItem} من أصل {totalCount} معاملة
@@ -1372,341 +1197,341 @@ const Transactions = () => {
                 )}
 
                 {/* Transaction Details Dialog */}
-<Dialog open={detailDialog} onOpenChange={setDetailDialog}>
-  <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
-        <div className="flex items-center gap-2">
-          <Receipt className="w-6 h-6 text-blue-600" />
-          تفاصيل المعاملة
-        </div>
-      </DialogTitle>
-    </DialogHeader>
-    
-    {selectedTransaction && (
-      <div className="space-y-6 text-right">
-        {/* الهيدر مع المعلومات الأساسية */}
-        <div className="bg-gradient-to-l from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            {/* أيقونة المعاملة */}
-            <div className="relative flex-shrink-0">
-              <div className="w-32 h-32 lg:w-40 lg:h-40 bg-blue-600 rounded-2xl shadow-lg border-4 border-white flex items-center justify-center">
-                <DollarSign className="w-16 h-16 text-white" />
-              </div>
-              {/* شارة رقم المعاملة */}
-              <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold shadow-lg">
-                #{selectedTransaction.id}
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
-                معاملة #{selectedTransaction.id}
-              </h2>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
-                   مدفوعة
-                </Badge>
-                
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                  <DollarSign className="w-3 h-3 ml-1" />
-                  {formatAmount(selectedTransaction.amountPaid)}
-                </Badge>
-                
-                {selectedTransaction.receiptImageUrl && (
-                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                     يوجد إيصال
-                  </Badge>
-                )}
-              </div>
-              
-              {/* معلومات سريعة */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
-                  <span>تاريخ المعاملة: {formatDate(selectedTransaction.createdAt)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <span>المستخدم: {selectedTransaction.accessCode?.user?.name || "غير محدد"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                <Dialog open={detailDialog} onOpenChange={setDetailDialog}>
+                    <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+                                <div className="flex items-center gap-2">
+                                    <Receipt className="w-6 h-6 text-blue-600" />
+                                    تفاصيل المعاملة
+                                </div>
+                            </DialogTitle>
+                        </DialogHeader>
 
-        {/* الشبكة الرئيسية للمعلومات */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* معلومات المبلغ والدفع */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <DollarSign className="w-5 h-5 text-green-600" />
-                معلومات المبلغ والدفع
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">المبلغ المدفوع</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-2xl text-green-600 block">
-                      {formatAmount(selectedTransaction.amountPaid)}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {getAmountValue(selectedTransaction.amountPaid).toLocaleString()} ليرة سورية
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
-                    <span className="text-sm font-medium text-gray-700">تاريخ الدفع</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">
-                      {formatDate(selectedTransaction.createdAt)}
-                    </span>
-                    {/* <span className="text-xs text-gray-500">
+                        {selectedTransaction && (
+                            <div className="space-y-6 text-right">
+                                {/* الهيدر مع المعلومات الأساسية */}
+                                <div className="bg-gradient-to-l from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+                                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                                        {/* أيقونة المعاملة */}
+                                        <div className="relative flex-shrink-0">
+                                            <div className="w-32 h-32 lg:w-40 lg:h-40 bg-blue-600 rounded-2xl shadow-lg border-4 border-white flex items-center justify-center">
+                                                <DollarSign className="w-16 h-16 text-white" />
+                                            </div>
+                                            {/* شارة رقم المعاملة */}
+                                            <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold shadow-lg">
+                                                #{selectedTransaction.id}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                                                معاملة #{selectedTransaction.id}
+                                            </h2>
+
+                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
+                                                    مدفوعة
+                                                </Badge>
+
+                                                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                                    <DollarSign className="w-3 h-3 ml-1" />
+                                                    {formatAmount(selectedTransaction.amountPaid)}
+                                                </Badge>
+
+                                                {selectedTransaction.receiptImageUrl && (
+                                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                                        يوجد إيصال
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            {/* معلومات سريعة */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                                <div className="flex items-center gap-2 text-gray-700">
+                                                    {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
+                                                    <span>تاريخ المعاملة: {formatDate(selectedTransaction.createdAt)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-gray-700">
+                                                    <User className="w-4 h-4 text-blue-600" />
+                                                    <span>المستخدم: {selectedTransaction.accessCode?.user?.name || "غير محدد"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* الشبكة الرئيسية للمعلومات */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* معلومات المبلغ والدفع */}
+                                    <Card className="border border-gray-200 shadow-sm">
+                                        <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+                                            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                                <DollarSign className="w-5 h-5 text-green-600" />
+                                                معلومات المبلغ والدفع
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 pt-4">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
+                                                    <div className="flex items-center gap-2">
+                                                        <DollarSign className="w-4 h-4 text-green-600" />
+                                                        <span className="text-sm font-medium text-gray-700">المبلغ المدفوع</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="font-bold text-2xl text-green-600 block">
+                                                            {formatAmount(selectedTransaction.amountPaid)}
+                                                        </span>
+                                                        <span className="text-sm text-gray-500">
+                                                            {getAmountValue(selectedTransaction.amountPaid).toLocaleString()} ليرة سورية
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                                                    <div className="flex items-center gap-2">
+                                                        {/* <Calendar className="w-4 h-4 text-blue-600" /> */}
+                                                        <span className="text-sm font-medium text-gray-700">تاريخ الدفع</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="font-medium text-gray-900 block">
+                                                            {formatDate(selectedTransaction.createdAt)}
+                                                        </span>
+                                                        {/* <span className="text-xs text-gray-500">
                       {new Date(selectedTransaction.createdAt).toLocaleTimeString('ar-SA')}
                     </span> */}
-                  </div>
-                </div>
-              </div>
-              
-              {/* حالة الإيصال */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">حالة الإيصال</span>
-                  <Badge 
-                    variant={selectedTransaction.receiptImageUrl ? "default" : "secondary"}
-                    className={selectedTransaction.receiptImageUrl ? "bg-green-600" : "bg-gray-500"}
-                  >
-                    {selectedTransaction.receiptImageUrl ? "🟢 مرفق" : "🔴 غير مرفق"}
-                  </Badge>
-                </div>
-                {selectedTransaction.receiptImageUrl && (
-                  <div className="text-center mt-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
-                      className="w-full"
-                    >
-                      <Image className="w-4 h-4 ml-2" />
-                      عرض صورة الإيصال
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-          {/* معلومات المستخدم */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <User className="w-5 h-5 text-purple-600" />
-                معلومات المستخدم
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium text-gray-700">الاسم الكامل</span>
-                  <span className="font-medium text-gray-900">
-                    {selectedTransaction.accessCode?.user?.name || "غير محدد"}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
-                  <span className="font-medium text-gray-900" dir="ltr">
-                    {selectedTransaction.accessCode?.user?.phone || "غير محدد"}
-                  </span>
-                </div>
-                
-                {/* <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                                            {/* حالة الإيصال */}
+                                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-sm font-medium text-gray-700">حالة الإيصال</span>
+                                                    <Badge
+                                                        variant={selectedTransaction.receiptImageUrl ? "default" : "secondary"}
+                                                        className={selectedTransaction.receiptImageUrl ? "bg-green-600" : "bg-gray-500"}
+                                                    >
+                                                        {selectedTransaction.receiptImageUrl ? "🟢 مرفق" : "🔴 غير مرفق"}
+                                                    </Badge>
+                                                </div>
+                                                {selectedTransaction.receiptImageUrl && (
+                                                    <div className="text-center mt-3">
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
+                                                            className="w-full"
+                                                        >
+                                                            <Image className="w-4 h-4 ml-2" />
+                                                            عرض صورة الإيصال
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* معلومات المستخدم */}
+                                    <Card className="border border-gray-200 shadow-sm">
+                                        <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-t-lg">
+                                            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                                <User className="w-5 h-5 text-purple-600" />
+                                                معلومات المستخدم
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="pt-4">
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                                                    <span className="text-sm font-medium text-gray-700">الاسم الكامل</span>
+                                                    <span className="font-medium text-gray-900">
+                                                        {selectedTransaction.accessCode?.user?.name || "غير محدد"}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                                                    <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
+                                                    <span className="font-medium text-gray-900" dir="ltr">
+                                                        {selectedTransaction.accessCode?.user?.phone || "غير محدد"}
+                                                    </span>
+                                                </div>
+
+                                                {/* <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
                   <span className="text-sm font-medium text-gray-700">البريد الإلكتروني</span>
                   <span className="font-medium text-gray-900">
                     {selectedTransaction.accessCode?.user?.email || "غير محدد"}
                   </span>
                 </div> */}
-                
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium text-gray-700">البلد</span>
-                  <span className="font-medium text-gray-900">
-                    {selectedTransaction.accessCode?.user?.country || "غير محدد"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* معلومات الكورس والوصول */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <BookOpen className="w-5 h-5 text-orange-600" />
-              معلومات الكورس والوصول
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الكورس</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">اسم الكورس:</span>
-                    <span className="font-medium text-gray-900">
-                      {selectedTransaction.accessCode?.courseLevel?.course?.title || "غير محدد"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">المستوى:</span>
-                    <span className="font-medium text-gray-900">
-                      {selectedTransaction.accessCode?.courseLevel?.name || "غير محدد"}
-                    </span>
-                  </div>
-                  {/* <div className="flex justify-between items-center">
+                                                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                                                    <span className="text-sm font-medium text-gray-700">البلد</span>
+                                                    <span className="font-medium text-gray-900">
+                                                        {selectedTransaction.accessCode?.user?.country || "غير محدد"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* معلومات الكورس والوصول */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <BookOpen className="w-5 h-5 text-orange-600" />
+                                            معلومات الكورس والوصول
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الكورس</h4>
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">اسم الكورس:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {selectedTransaction.accessCode?.courseLevel?.course?.title || "غير محدد"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">المستوى:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {selectedTransaction.accessCode?.courseLevel?.name || "غير محدد"}
+                                                        </span>
+                                                    </div>
+                                                    {/* <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">نوع الكورس:</span>
                     <span className="font-medium text-gray-900">
                       {selectedTransaction.accessCode?.courseLevel?.course?.type || "غير محدد"}
                     </span>
                   </div> */}
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الوصول</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">كود الدخول:</span>
-                    <Badge variant="secondary" className="font-mono text-lg font-bold">
-                      {selectedTransaction.accessCode?.code || "غير محدد"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">حالة الكود:</span>
-                    <Badge variant="default" className="bg-green-600">
-                      🟢 نشط
-                    </Badge>
-                  </div>
-                  {/* <div className="flex justify-between items-center">
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الوصول</h4>
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">كود الدخول:</span>
+                                                        <Badge variant="secondary" className="font-mono text-lg font-bold">
+                                                            {selectedTransaction.accessCode?.code || "غير محدد"}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600">حالة الكود:</span>
+                                                        <Badge variant="default" className="bg-green-600">
+                                                            🟢 نشط
+                                                        </Badge>
+                                                    </div>
+                                                    {/* <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">تاريخ الإنشاء:</span>
                     <span className="font-medium text-gray-900 text-sm">
                       {formatDate(selectedTransaction.accessCode?.createdAt)}
                     </span>
                   </div> */}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-        {/* معلومات إضافية */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <FileText className="w-5 h-5 text-gray-600" />
-              معلومات إضافية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                {/* معلومات إضافية */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <FileText className="w-5 h-5 text-gray-600" />
+                                            معلومات إضافية
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-700">معرف المعاملة</span>
                 <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
                   {selectedTransaction.id}
                 </span>
               </div> */}
-              
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
-                <div className="text-right">
-                  <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.createdAt)}</span>
-                  {/* <span className="text-xs text-gray-500">
+
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                                <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.createdAt)}</span>
+                                                    {/* <span className="text-xs text-gray-500">
                     {new Date(selectedTransaction.createdAt).toLocaleTimeString('ar-SA')}
                   </span> */}
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
-                <div className="text-right">
-                  <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.updatedAt)}</span>
-                  {/* <span className="text-xs text-gray-500">
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                                <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">{formatDate(selectedTransaction.updatedAt)}</span>
+                                                    {/* <span className="text-xs text-gray-500">
                     {new Date(selectedTransaction.updatedAt).toLocaleTimeString('ar-SA')}
                   </span> */}
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">نوع المعاملة</span>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  شراء كورس
-                </Badge>
-              </div>
-            </div>
-            
-            {/* الملاحظات */}
-            {selectedTransaction.notes && (
-              <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-yellow-600" />
-                  الملاحظات
-                </h4>
-                <p className="text-gray-700 bg-white p-3 rounded border border-yellow-300">
-                  {selectedTransaction.notes}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                                                </div>
+                                            </div>
 
-        {/* أزرار الإجراءات */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-          <Button
-            variant="default"
-            onClick={() => handleExportInvoice(selectedTransaction)}
-            className="flex items-center gap-2 flex-1 bg-green-600 hover:bg-green-700"
-          >
-            <FileText className="w-4 h-4" />
-            تصدير الفاتورة
-          </Button>
-          
-          {selectedTransaction.receiptImageUrl && (
-            <Button
-              variant="outline"
-              onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
-              className="flex items-center gap-2 flex-1"
-            >
-              <Image className="w-4 h-4" />
-              عرض الإيصال
-            </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              // إمكانية إضافة وظيفة الطباعة المباشرة
-              window.print();
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <FileText className="w-4 h-4" />
-            طباعة التفاصيل
-          </Button>
-        </div>
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                                <span className="text-sm font-medium text-gray-700">نوع المعاملة</span>
+                                                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                                    شراء كورس
+                                                </Badge>
+                                            </div>
+                                        </div>
+
+                                        {/* الملاحظات */}
+                                        {selectedTransaction.notes && (
+                                            <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <FileText className="w-4 h-4 text-yellow-600" />
+                                                    الملاحظات
+                                                </h4>
+                                                <p className="text-gray-700 bg-white p-3 rounded border border-yellow-300">
+                                                    {selectedTransaction.notes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* أزرار الإجراءات */}
+                                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                                    <Button
+                                        variant="default"
+                                        onClick={() => handleExportInvoice(selectedTransaction)}
+                                        className="flex items-center gap-2 flex-1 bg-green-600 hover:bg-green-700"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        تصدير الفاتورة
+                                    </Button>
+
+                                    {selectedTransaction.receiptImageUrl && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleViewReceipt(selectedTransaction.receiptImageUrl)}
+                                            className="flex items-center gap-2 flex-1"
+                                        >
+                                            <Image className="w-4 h-4" />
+                                            عرض الإيصال
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            // إمكانية إضافة وظيفة الطباعة المباشرة
+                                            window.print();
+                                        }}
+                                        className="flex items-center gap-2 flex-1"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        طباعة التفاصيل
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </CardContent>
         </Card>
     )

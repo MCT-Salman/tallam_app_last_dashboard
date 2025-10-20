@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -90,6 +90,16 @@ const AccessCode = () => {
     // 📊 قوائم الفلترة
     const [filterCourses, setFilterCourses] = useState([]);
     const [filterLevels, setFilterLevels] = useState([]);
+
+    // 🔧 الإصلاح: استخدام useRef لحقل البحث
+    const searchInputRef = useRef(null);
+
+    // 🔧 الإصلاح: الحفاظ على التركيز في حقل البحث
+    useEffect(() => {
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [searchTerm, statusFilter, userFilter, courseFilter, levelFilter]); // إعادة التركيز عند تغيير أي فلتر
 
     // 🔄 دوال جلب البيانات
     const fetchUsers = async () => {
@@ -816,39 +826,6 @@ const AccessCode = () => {
         );
     };
 
-    // دالة لتحسين تنسيق التاريخ
-// const formatDate = (dateString) => {
-//   if (!dateString) return "غير محدد";
-//   return new Date(dateString).toLocaleDateString('ar-SA', {
-//     year: 'numeric',
-//     month: 'long',
-//     day: 'numeric',
-//     hour: '2-digit',
-//     minute: '2-digit'
-//   });
-// };
-
-// دالة لحساب الوقت المنقضي
-const calculateTimeAgo = (dateString) => {
-  if (!dateString) return "غير محدد";
-  
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
-  if (diffMins < 1) return "الآن";
-  if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
-  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-  if (diffDays === 1) return "منذ يوم";
-  if (diffDays < 7) return `منذ ${diffDays} أيام`;
-  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
-  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} أشهر`;
-  return `منذ ${Math.floor(diffDays / 365)} سنوات`;
-};
-
     // 👁️ عرض التفاصيل
     const renderCodeDetails = (item) => {
         if (!item) return null;
@@ -1126,6 +1103,7 @@ const calculateTimeAgo = (dateString) => {
                     <div className="relative">
                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
+                            ref={searchInputRef} // 🔧 الإصلاح: إضافة المرجع هنا
                             placeholder="بحث بالكود أو المستخدم أو الكورس..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
