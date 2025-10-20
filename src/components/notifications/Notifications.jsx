@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search,BarChart3,Phone , ChevronLeft, ChevronRight, Eye, Trash2, Plus, Bell, Users, User, Send, Calendar, MessageCircle, Filter, RotateCcw, Image, Upload, X } from "lucide-react";
+import { Search, BarChart3, Phone, ChevronLeft, ChevronRight, Eye, Trash2, Plus, Bell, Users, User, Send, Calendar, MessageCircle, Filter, RotateCcw, Image, Upload, X } from "lucide-react";
 import { getNotifications, createNotification, createBroadcastNotification, createNotificationForUsers, deleteNotification } from "@/api/api";
 import { getAllUsers } from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
@@ -58,7 +58,6 @@ const Notifications = () => {
     { value: "COURSE_NEW", label: "دورة جديدة", color: "default" },
     { value: "COURSE_UPDATE", label: "تحديث دورة", color: "outline" },
     { value: "LESSON_NEW", label: "درس جديد", color: "secondary" },
-    { value: "QUIZ_AVAILABLE", label: "اختبار متاح", color: "default" },
     { value: "SYSTEM", label: "نظام", color: "secondary" }
   ];
 
@@ -400,37 +399,37 @@ const Notifications = () => {
   };
 
   // دالة لحساب الوقت المنقضي
-const calculateTimeAgo = (dateString) => {
-  if (!dateString) return "غير محدد";
-  
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
-  if (diffMins < 1) return "الآن";
-  if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
-  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-  if (diffDays === 1) return "منذ يوم";
-  if (diffDays < 7) return `منذ ${diffDays} أيام`;
-  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
-  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} أشهر`;
-  return `منذ ${Math.floor(diffDays / 365)} سنوات`;
-};
+  const calculateTimeAgo = (dateString) => {
+    if (!dateString) return "غير محدد";
 
-// دالة لتحسين تنسيق التاريخ
-// const formatDate = (dateString) => {
-//   if (!dateString) return "غير محدد";
-//   return new Date(dateString).toLocaleDateString('en-US', {
-//     year: 'numeric',
-//     month: 'long',
-//     day: 'numeric',
-//     hour: '2-digit',
-//     minute: '2-digit'
-//   });
-// };
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "الآن";
+    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+    if (diffDays === 1) return "منذ يوم";
+    if (diffDays < 7) return `منذ ${diffDays} أيام`;
+    if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
+    if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} أشهر`;
+    return `منذ ${Math.floor(diffDays / 365)} سنوات`;
+  };
+
+  // دالة لتحسين تنسيق التاريخ
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return "غير محدد";
+  //   return new Date(dateString).toLocaleDateString('en-US', {
+  //     year: 'numeric',
+  //     month: 'long',
+  //     day: 'numeric',
+  //     hour: '2-digit',
+  //     minute: '2-digit'
+  //   });
+  // };
 
   // عرض التفاصيل الكاملة للإشعار
   const renderNotificationDetails = (notification) => {
@@ -486,7 +485,7 @@ const calculateTimeAgo = (dateString) => {
                 <p className="font-semibold">{formatDate(notification.createdAt)}</p>
               </div>
             </div>
-{/* 
+            {/* 
             {notification.link && (
               <div>
                 <Label className="font-bold text-base">الرابط:</Label>
@@ -1095,7 +1094,6 @@ const calculateTimeAgo = (dateString) => {
             </div>
 
             {/* Pagination */}
-            {/* Pagination */}
             {filteredAndSortedNotifications.length > 0 && totalPages > 1 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
@@ -1139,7 +1137,7 @@ const calculateTimeAgo = (dateString) => {
                             >
                               {pageNumber}
                             </Button>
-                          </React.Fragment> 
+                          </React.Fragment>
                         );
                       })}
                   </div>
@@ -1189,112 +1187,112 @@ const calculateTimeAgo = (dateString) => {
       </AlertDialog>
 
       {/* Notification Details Dialog */}
-<Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog(prev => ({ ...prev, isOpen }))}>
-  <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
-        <div className="flex items-center gap-2">
-          <Bell className="w-6 h-6 text-blue-600" />
-          تفاصيل الإشعار
-        </div>
-      </DialogTitle>
-    </DialogHeader>
-    
-    {detailDialog.notification && (
-      <div className="space-y-6 text-right">
-        {/* الهيدر مع المعلومات الأساسية */}
-        <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            {/* أيقونة الإشعار */}
-            <div className="relative flex-shrink-0">
-              <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
-                {detailDialog.notification.imageUrl ? (
-                  <img
-                    src={getImageUrl(detailDialog.notification.imageUrl)}
-                    alt="صورة الإشعار"
-                    className="w-16 h-16 rounded-xl object-cover"
-                    {...imageConfig}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/tallaam_logo2.png";
-                    }}
-                  />
-                ) : (
-                  <Bell className="w-10 h-10 text-blue-600" />
-                )}
+      <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog(prev => ({ ...prev, isOpen }))}>
+        <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+              <div className="flex items-center gap-2">
+                <Bell className="w-6 h-6 text-blue-600" />
+                تفاصيل الإشعار
               </div>
-              {/* شارة النوع */}
-              <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
-                {getTypeText(detailDialog.notification.type).charAt(0)}
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
-                {detailDialog.notification.title}
-              </h2>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant={getTypeBadgeVariant(detailDialog.notification.type)} 
-                      className="text-sm font-medium">
-                  {getTypeText(detailDialog.notification.type)}
-                </Badge>
-                
-                {detailDialog.notification.user ? (
-                  <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
-                    <User className="w-3 h-3 ml-1" />
-                    {detailDialog.notification.user.name}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-                    <Users className="w-3 h-3 ml-1" />
-                    إشعار عام
-                  </Badge>
-                )}
-                
-                {detailDialog.notification.link && (
-                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
-                    <MessageCircle className="w-3 h-3 ml-1" />
-                    يحتوي على رابط
-                  </Badge>
-                )}
-              </div>
-              
-              {/* معلومات سريعة */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar className="w-4 h-4 text-blue-600" />
-                  <span>أرسل في: {formatDate(detailDialog.notification.createdAt)}</span>
-                </div>
-                {detailDialog.notification.user && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Phone className="w-4 h-4 text-blue-600" />
-                    <span dir="ltr">{detailDialog.notification.user.phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* الشبكة الرئيسية للمعلومات */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* محتوى الإشعار */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <MessageCircle className="w-5 h-5 text-green-600" />
-                محتوى الإشعار
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <div className="bg-white p-4 rounded-lg border border-gray-200 min-h-[120px]">
-                <p className="text-gray-800 leading-relaxed text-lg">
-                  {detailDialog.notification.body}
-                </p>
+          {detailDialog.notification && (
+            <div className="space-y-6 text-right">
+              {/* الهيدر مع المعلومات الأساسية */}
+              <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                  {/* أيقونة الإشعار */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
+                      {detailDialog.notification.imageUrl ? (
+                        <img
+                          src={getImageUrl(detailDialog.notification.imageUrl)}
+                          alt="صورة الإشعار"
+                          className="w-16 h-16 rounded-xl object-cover"
+                          {...imageConfig}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/tallaam_logo2.png";
+                          }}
+                        />
+                      ) : (
+                        <Bell className="w-10 h-10 text-blue-600" />
+                      )}
+                    </div>
+                    {/* شارة النوع */}
+                    <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
+                      {getTypeText(detailDialog.notification.type).charAt(0)}
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                      {detailDialog.notification.title}
+                    </h2>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant={getTypeBadgeVariant(detailDialog.notification.type)}
+                        className="text-sm font-medium">
+                        {getTypeText(detailDialog.notification.type)}
+                      </Badge>
+
+                      {detailDialog.notification.user ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                          <User className="w-3 h-3 ml-1" />
+                          {detailDialog.notification.user.name}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                          <Users className="w-3 h-3 ml-1" />
+                          إشعار عام
+                        </Badge>
+                      )}
+
+                      {detailDialog.notification.link && (
+                        <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
+                          <MessageCircle className="w-3 h-3 ml-1" />
+                          يحتوي على رابط
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* معلومات سريعة */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Calendar className="w-4 h-4 text-blue-600" />
+                        <span>أرسل في: {formatDate(detailDialog.notification.createdAt)}</span>
+                      </div>
+                      {detailDialog.notification.user && (
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <Phone className="w-4 h-4 text-blue-600" />
+                          <span dir="ltr">{detailDialog.notification.user.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              {/* {detailDialog.notification.link && (
+
+              {/* الشبكة الرئيسية للمعلومات */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* محتوى الإشعار */}
+                <Card className="border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                      <MessageCircle className="w-5 h-5 text-green-600" />
+                      محتوى الإشعار
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-4">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 min-h-[120px]">
+                      <p className="text-gray-800 leading-relaxed text-lg">
+                        {detailDialog.notification.body}
+                      </p>
+                    </div>
+
+                    {/* {detailDialog.notification.link && (
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="flex items-center gap-2 mb-2">
                     <Send className="w-4 h-4 text-blue-600" />
@@ -1310,53 +1308,53 @@ const calculateTimeAgo = (dateString) => {
                   </a>
                 </div>
               )} */}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
 
-          {/* معلومات الإرسال */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Send className="w-5 h-5 text-purple-600" />
-                معلومات الإرسال
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">تاريخ الإرسال</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">{formatDate(detailDialog.notification.createdAt)}</span>
-                    {/* <span className="text-xs text-gray-500">
+                {/* معلومات الإرسال */}
+                <Card className="border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
+                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                      <Send className="w-5 h-5 text-purple-600" />
+                      معلومات الإرسال
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">تاريخ الإرسال</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium text-gray-900 block">{formatDate(detailDialog.notification.createdAt)}</span>
+                          {/* <span className="text-xs text-gray-500">
                       {new Date(detailDialog.notification.createdAt).toLocaleTimeString('ar-SA')}
                     </span> */}
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">نوع المستلم</span>
-                  </div>
-                  <span className="font-medium text-gray-900">
-                    {detailDialog.notification.user ? "مستخدم محدد" : "جميع المستخدمين"}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">نوع الإشعار</span>
-                  </div>
-                  <Badge variant={getTypeBadgeVariant(detailDialog.notification.type)}>
-                    {getTypeText(detailDialog.notification.type)}
-                  </Badge>
-                </div>
-                
-                {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">نوع المستلم</span>
+                        </div>
+                        <span className="font-medium text-gray-900">
+                          {detailDialog.notification.user ? "مستخدم محدد" : "جميع المستخدمين"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">نوع الإشعار</span>
+                        </div>
+                        <Badge variant={getTypeBadgeVariant(detailDialog.notification.type)}>
+                          {getTypeText(detailDialog.notification.type)}
+                        </Badge>
+                      </div>
+
+                      {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">معرف الإشعار</span>
@@ -1365,104 +1363,104 @@ const calculateTimeAgo = (dateString) => {
                     {detailDialog.notification.id}
                   </span>
                 </div> */}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* معلومات المستخدم (إذا كان الإشعار لمستخدم محدد) */}
-        {detailDialog.notification.user && (
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <User className="w-5 h-5 text-orange-600" />
-                معلومات المستخدم
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">اسم المستخدم</span>
-                  <span className="font-medium text-gray-900">{detailDialog.notification.user.name}</span>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
-                  <span className="font-medium text-gray-900" dir="ltr">{detailDialog.notification.user.phone}</span>
-                </div>
-                
-                {detailDialog.notification.user.email && (
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">البريد الإلكتروني</span>
-                    <span className="font-medium text-gray-900">{detailDialog.notification.user.email}</span>
+              {/* معلومات المستخدم (إذا كان الإشعار لمستخدم محدد) */}
+              {detailDialog.notification.user && (
+                <Card className="border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                      <User className="w-5 h-5 text-orange-600" />
+                      معلومات المستخدم
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-700">اسم المستخدم</span>
+                        <span className="font-medium text-gray-900">{detailDialog.notification.user.name}</span>
+                      </div>
+
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-700">رقم الهاتف</span>
+                        <span className="font-medium text-gray-900" dir="ltr">{detailDialog.notification.user.phone}</span>
+                      </div>
+
+                      {detailDialog.notification.user.email && (
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-700">البريد الإلكتروني</span>
+                          <span className="font-medium text-gray-900">{detailDialog.notification.user.email}</span>
+                        </div>
+                      )}
+
+                      {detailDialog.notification.user.role && (
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-700">الدور</span>
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                            {detailDialog.notification.user.role}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* الإحصائيات السريعة */}
+              <Card className="border border-gray-200 shadow-sm">
+                <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+                  <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                    <BarChart3 className="w-5 h-5 text-gray-600" />
+                    ملخص الإشعار
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <div className="text-2xl font-bold text-blue-600">📱</div>
+                      <div className="text-sm font-medium text-gray-700 mt-1">النوع</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {getTypeText(detailDialog.notification.type)}
+                      </div>
+                    </div>
+
+                    <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
+                      <div className="text-2xl font-bold text-green-600">
+                        {detailDialog.notification.user ? "👤" : "👥"}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 mt-1">المستلم</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {detailDialog.notification.user ? "مفرد" : "جميع"}
+                      </div>
+                    </div>
+
+                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                      <div className="text-2xl font-bold text-purple-600">🕒</div>
+                      <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {calculateTimeAgo(detailDialog.notification.createdAt)}
+                      </div>
+                    </div>
+
+                    <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {detailDialog.notification.link ? "🔗" : "📄"}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 mt-1">المحتوى</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {detailDialog.notification.link ? "مع رابط" : "نص فقط"}
+                      </div>
+                    </div>
                   </div>
-                )}
-                
-                {detailDialog.notification.user.role && (
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">الدور</span>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                      {detailDialog.notification.user.role}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
 
-        {/* الإحصائيات السريعة */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <BarChart3 className="w-5 h-5 text-gray-600" />
-              ملخص الإشعار
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="text-2xl font-bold text-blue-600">📱</div>
-                <div className="text-sm font-medium text-gray-700 mt-1">النوع</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {getTypeText(detailDialog.notification.type)}
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
-                <div className="text-2xl font-bold text-green-600">
-                  {detailDialog.notification.user ? "👤" : "👥"}
-                </div>
-                <div className="text-sm font-medium text-gray-700 mt-1">المستلم</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {detailDialog.notification.user ? "مفرد" : "جميع"}
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                <div className="text-2xl font-bold text-purple-600">🕒</div>
-                <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {calculateTimeAgo(detailDialog.notification.createdAt)}
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
-                <div className="text-2xl font-bold text-orange-600">
-                  {detailDialog.notification.link ? "🔗" : "📄"}
-                </div>
-                <div className="text-sm font-medium text-gray-700 mt-1">المحتوى</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {detailDialog.notification.link ? "مع رابط" : "نص فقط"}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* أزرار الإجراءات */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-          {/* {detailDialog.notification.link && (
+              {/* أزرار الإجراءات */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                {/* {detailDialog.notification.link && (
             <Button
               variant="outline"
               onClick={() => window.open(detailDialog.notification.link, '_blank')}
@@ -1472,40 +1470,40 @@ const calculateTimeAgo = (dateString) => {
               زيارة الرابط
             </Button>
           )} */}
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              // إعادة إرسال الإشعار أو نسخ المحتوى
-              navigator.clipboard.writeText(detailDialog.notification.body);
-              showSuccessToast("تم نسخ محتوى الإشعار");
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <MessageCircle className="w-4 h-4" />
-            نسخ المحتوى
-          </Button>
-          
-          <Button
-            variant="destructive"
-            onClick={() => {
-              setDeleteDialog({
-                isOpen: true,
-                itemId: detailDialog.notification.id,
-                itemName: detailDialog.notification.title
-              });
-              setDetailDialog({ isOpen: false, notification: null });
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Trash2 className="w-4 h-4" />
-            حذف الإشعار
-          </Button>
-        </div>
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // إعادة إرسال الإشعار أو نسخ المحتوى
+                    navigator.clipboard.writeText(detailDialog.notification.body);
+                    showSuccessToast("تم نسخ محتوى الإشعار");
+                  }}
+                  className="flex items-center gap-2 flex-1"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  نسخ المحتوى
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setDeleteDialog({
+                      isOpen: true,
+                      itemId: detailDialog.notification.id,
+                      itemName: detailDialog.notification.title
+                    });
+                    setDetailDialog({ isOpen: false, notification: null });
+                  }}
+                  className="flex items-center gap-2 flex-1"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  حذف الإشعار
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
