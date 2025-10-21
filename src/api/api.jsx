@@ -6,14 +6,14 @@ import axiosInstance, { setLogoutFunction } from './axiosInstance';
 const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com";
 const API_URL = import.meta.env.REACT_APP_API_URL || 'https://dev.tallaam.com/api';
 
-// const api = axios.create({
-//     baseURL: API_URL,
-//     headers: {
-//         'Content-Type': 'application/json',
-//     },
-// });
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 
-const api = axiosInstance;
+// const api = axiosInstance;
 
 // Interceptor لإضافة توكن JWT إلى كل طلب مصادق عليه
 api.interceptors.request.use(
