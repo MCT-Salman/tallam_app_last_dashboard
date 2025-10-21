@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
+import { Plus, Edit, BookOpen, Shield, FileText, Map, Link, Calendar, Clock , Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
 import { getCourseLevels, createCourseLevel, updateCourseLevel, deleteCourseLevel, toggleCourseLevelStatus, BASE_URL } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getInstructors } from "@/api/api";
@@ -648,150 +648,407 @@ const handlePreviewUrlChange = (value) => {
     );
 
     // مكون عرض التفاصيل
-    const LevelDetails = ({ item }) => (
-        <div className="space-y-6" dir="rtl">
-            {/* الصورة */}
-            <div className="flex justify-center">
-                <img
-                    src={getImageUrl(item.imageUrl)}
-                    alt={item.name}
-                    className="w-64 h-48 object-cover rounded-lg shadow-md"
-                    {...imageConfig}
-                    onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/tallaam_logo2.png";
-                    }}
-                />
-            </div>
+    // const LevelDetails = ({ item }) => (
+    //     <div className="space-y-6" dir="rtl">
+    //         {/* الصورة */}
+    //         <div className="flex justify-center">
+    //             <img
+    //                 src={getImageUrl(item.imageUrl)}
+    //                 alt={item.name}
+    //                 className="w-64 h-48 object-cover rounded-lg shadow-md"
+    //                 {...imageConfig}
+    //                 onError={(e) => {
+    //                     e.target.onerror = null;
+    //                     e.target.src = "/tallaam_logo2.png";
+    //                 }}
+    //             />
+    //         </div>
 
-            {/* المعلومات الأساسية */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <div>
-                        <Label className="font-semibold text-base">اسم المستوى:</Label>
-                        <p className="text-lg mt-1 font-medium">{item.name}</p>
-                    </div>
+    //         {/* المعلومات الأساسية */}
+    //         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    //             <div className="space-y-4">
+    //                 <div>
+    //                     <Label className="font-semibold text-base">اسم المستوى:</Label>
+    //                     <p className="text-lg mt-1 font-medium">{item.name}</p>
+    //                 </div>
 
-                    <div>
-                        <Label className="font-semibold text-base">الترتيب:</Label>
-                        <Badge variant="secondary" className="text-lg mt-1">
-                            {item.order || 0}
+    //                 <div>
+    //                     <Label className="font-semibold text-base">الترتيب:</Label>
+    //                     <Badge variant="secondary" className="text-lg mt-1">
+    //                         {item.order || 0}
+    //                     </Badge>
+    //                 </div>
+
+    //                 <div>
+    //                     <Label className="font-semibold text-base">الوصف:</Label>
+    //                     <p className="text-gray-700 mt-1 leading-relaxed">
+    //                         {item.description || "لا يوجد وصف"}
+    //                     </p>
+    //                 </div>
+    //             </div>
+
+    //             <div className="space-y-4">
+    //                 <div className="grid grid-cols-2 gap-4">
+    //                     <div>
+    //                         <Label className="font-semibold text-base">الحالة:</Label>
+    //                         <Badge variant={item.isActive ? "default" : "secondary"} className="mt-1">
+    //                             {item.isActive ? "نشط" : "معطل"}
+    //                         </Badge>
+    //                     </div>
+    //                     <div>
+    //                         <Label className="font-semibold text-base">النوع:</Label>
+    //                         <Badge variant={item.isFree ? "default" : "outline"} className="mt-1">
+    //                             {item.isFree ? "مجاني" : "مدفوع"}
+    //                         </Badge>
+    //                     </div>
+    //                 </div>
+
+    //                 <div className="grid grid-cols-2 gap-4">
+    //                     <div>
+    //                         <Label className="font-semibold text-base">السعر (USD):</Label>
+    //                         <p className="text-lg font-medium text-green-600 mt-1">
+    //                             ${item.priceUSD || 0}
+    //                         </p>
+    //                     </div>
+    //                     <div>
+    //                         <Label className="font-semibold text-base">السعر (SAR):</Label>
+    //                         <p className="text-lg font-medium text-green-600 mt-1">
+    //                             {item.priceSAR || 0} ل.س
+    //                         </p>
+    //                     </div>
+    //                 </div>
+
+    //                 <div>
+    //                     <Label className="font-semibold text-base">المدرب:</Label>
+    //                     <p className="text-gray-700 mt-1">{getInstructorName(item.instructorId)}</p>
+    //                 </div>
+    //             </div>
+    //         </div>
+
+    //         {/* معلومات المسار */}
+    //         <div className="border-t pt-4">
+    //             <h3 className="font-semibold text-lg mb-3">معلومات المسار</h3>
+    //             <div className="flex items-center gap-2 text-sm bg-gray-50 p-3 rounded-lg">
+    //                 <span className="font-medium">التخصص:</span>
+    //                 <span>{getSpecializationName(selectedSpecialization)}</span>
+    //                 <ChevronRightIcon className="h-4 w-4" />
+    //                 <span className="font-medium">الكورس:</span>
+    //                 <span>{getCourseName(selectedCourse)}</span>
+    //             </div>
+    //         </div>
+
+    //         {/* الروابط */}
+    //         {(item.previewUrl) && (
+    //             <div className="border-t pt-4">
+    //                 <h3 className="font-semibold text-lg mb-3">الروابط</h3>
+    //                 <div className="space-y-2">
+    //                     {item.previewUrl && (
+    //                         <div>
+    //                             <Label className="font-medium">رابط المعاينة:</Label>
+    //                             <a
+    //                                 href={item.previewUrl}
+    //                                 target="_blank"
+    //                                 rel="noopener noreferrer"
+    //                                 className="text-blue-600 hover:underline block mt-1 text-sm break-all"
+    //                             >
+    //                                 {item.previewUrl}
+    //                             </a>
+    //                         </div>
+    //                     )}
+    //                     {/* {item.downloadUrl && (
+    //                         <div>
+    //                             <Label className="font-medium">رابط التحميل:</Label>
+    //                             <a
+    //                                 href={item.downloadUrl}
+    //                                 target="_blank"
+    //                                 rel="noopener noreferrer"
+    //                                 className="text-blue-600 hover:underline block mt-1 text-sm break-all"
+    //                             >
+    //                                 {item.downloadUrl}
+    //                             </a>
+    //                         </div>
+    //                     )} */}
+    //                 </div>
+    //             </div>
+    //         )}
+
+    //         {/* التواريخ */}
+    //         <div className="border-t pt-4">
+    //             <h3 className="font-semibold text-lg mb-3">التواريخ</h3>
+    //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    //                 <div>
+    //                     <Label className="font-medium">تاريخ الإنشاء:</Label>
+    //                     <p className="text-gray-600 mt-1">
+    //                         {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
+    //                     </p>
+    //                 </div>
+    //                 <div>
+    //                     <Label className="font-medium">آخر تحديث:</Label>
+    //                     <p className="text-gray-600 mt-1">
+    //                         {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
+    //                     </p>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
+
+
+    // مكون عرض التفاصيل الكاملة للمستوى
+const LevelDetails = ({ item }) => {
+    if (!item) return null;
+
+    return (
+        <div className="space-y-6 text-right">
+            {/* الهيدر مع الصورة والمعلومات الأساسية */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-gradient-to-l from-gray-50 to-white rounded-lg border">
+                <div className="flex-shrink-0">
+                    <img
+                        src={getImageUrl(item.imageUrl)}
+                        alt={item.name}
+                        className="w-32 h-32 object-cover rounded-lg shadow-md"
+                        {...imageConfig}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/tallaam_logo2.png";
+                        }}
+                    />
+                </div>
+                <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.name || "بدون اسم"}</h3>
+                    <div className="flex flex-wrap gap-2">
+                        <Badge variant={item.isActive ? "default" : "secondary"} className="text-sm">
+                            {item.isActive ? "نشط" : "معطل"}
+                        </Badge>
+                        <Badge variant={item.isFree ? "default" : "outline"} className="text-sm">
+                            {item.isFree ? "مجاني" : "مدفوع"}
+                        </Badge>
+                        <Badge variant="secondary" className="text-sm">
+                            ترتيب: {item.order || 0}
                         </Badge>
                     </div>
-
-                    <div>
-                        <Label className="font-semibold text-base">الوصف:</Label>
-                        <p className="text-gray-700 mt-1 leading-relaxed">
-                            {item.description || "لا يوجد وصف"}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label className="font-semibold text-base">الحالة:</Label>
-                            <Badge variant={item.isActive ? "default" : "secondary"} className="mt-1">
-                                {item.isActive ? "نشط" : "معطل"}
-                            </Badge>
-                        </div>
-                        <div>
-                            <Label className="font-semibold text-base">النوع:</Label>
-                            <Badge variant={item.isFree ? "default" : "outline"} className="mt-1">
-                                {item.isFree ? "مجاني" : "مدفوع"}
-                            </Badge>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label className="font-semibold text-base">السعر (USD):</Label>
-                            <p className="text-lg font-medium text-green-600 mt-1">
-                                ${item.priceUSD || 0}
-                            </p>
-                        </div>
-                        <div>
-                            <Label className="font-semibold text-base">السعر (SAR):</Label>
-                            <p className="text-lg font-medium text-green-600 mt-1">
-                                {item.priceSAR || 0} ل.س
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <Label className="font-semibold text-base">المدرب:</Label>
-                        <p className="text-gray-700 mt-1">{getInstructorName(item.instructorId)}</p>
-                    </div>
                 </div>
             </div>
+
+            {/* الشبكة الرئيسية للمعلومات */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* المعلومات الأساسية */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <BookOpen className="w-5 h-5" />
+                            المعلومات الأساسية
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">اسم المستوى</span>
+                                <span className="font-medium">{item.name}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">ترتيب المستوى</span>
+                                <span className="font-medium">{item.order || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">حالة المستوى</span>
+                                <Badge variant={item.isActive ? "default" : "secondary"}>
+                                    {item.isActive ? "نشط" : "معطل"}
+                                </Badge>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">نوع المستوى</span>
+                                <Badge variant={item.isFree ? "default" : "outline"}>
+                                    {item.isFree ? "مجاني" : "مدفوع"}
+                                </Badge>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* المعلومات المالية والمدرب */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Shield className="w-5 h-5" />
+                            المعلومات المالية
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">السعر (USD)</span>
+                                <span className="font-medium text-green-600">${item.priceUSD || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">السعر (SAR)</span>
+                                <span className="font-medium text-green-600">{item.priceSAR || 0} ل.س</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">المدرب</span>
+                                <span className="font-medium">{getInstructorName(item.instructorId)}</span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* الوصف */}
+            {item.description && (
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <FileText className="w-5 h-5" />
+                            الوصف
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-gray-700 leading-relaxed p-3 bg-gray-50 rounded-lg">
+                            {item.description}
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* معلومات المسار */}
-            <div className="border-t pt-4">
-                <h3 className="font-semibold text-lg mb-3">معلومات المسار</h3>
-                <div className="flex items-center gap-2 text-sm bg-gray-50 p-3 rounded-lg">
-                    <span className="font-medium">التخصص:</span>
-                    <span>{getSpecializationName(selectedSpecialization)}</span>
-                    <ChevronRightIcon className="h-4 w-4" />
-                    <span className="font-medium">الكورس:</span>
-                    <span>{getCourseName(selectedCourse)}</span>
-                </div>
-            </div>
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Map className="w-5 h-5" />
+                        معلومات المسار
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">التخصص:</span>
+                        <span>{getSpecializationName(selectedSpecialization)}</span>
+                        <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">الكورس:</span>
+                        <span>{getCourseName(selectedCourse)}</span>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* الروابط */}
-            {(item.previewUrl) && (
-                <div className="border-t pt-4">
-                    <h3 className="font-semibold text-lg mb-3">الروابط</h3>
-                    <div className="space-y-2">
-                        {item.previewUrl && (
-                            <div>
-                                <Label className="font-medium">رابط المعاينة:</Label>
+            {item.previewUrl && (
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Link className="w-5 h-5" />
+                            الروابط
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-600">رابط المعاينة</span>
                                 <a
                                     href={item.previewUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline block mt-1 text-sm break-all"
+                                    className="text-blue-600 hover:underline text-sm break-all"
                                 >
-                                    {item.previewUrl}
+                                    {item.previewUrl.length > 40 ? 
+                                        `${item.previewUrl.substring(0, 40)}...` : 
+                                        item.previewUrl
+                                    }
                                 </a>
                             </div>
-                        )}
-                        {/* {item.downloadUrl && (
-                            <div>
-                                <Label className="font-medium">رابط التحميل:</Label>
-                                <a
-                                    href={item.downloadUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline block mt-1 text-sm break-all"
-                                >
-                                    {item.downloadUrl}
-                                </a>
-                            </div>
-                        )} */}
-                    </div>
-                </div>
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
-            {/* التواريخ */}
-            <div className="border-t pt-4">
-                <h3 className="font-semibold text-lg mb-3">التواريخ</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="font-medium">تاريخ الإنشاء:</Label>
-                        <p className="text-gray-600 mt-1">
-                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
-                        </p>
+            {/* معلومات التوقيت */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        معلومات التوقيت
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء</span>
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span className="font-medium">
+                                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">آخر تحديث</span>
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span className="font-medium">
+                                    {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <Label className="font-medium">آخر تحديث:</Label>
-                        <p className="text-gray-600 mt-1">
-                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
-                        </p>
-                    </div>
-                </div>
+                </CardContent>
+            </Card>
+
+            {/* الإجراءات */}
+            <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        handleToggleActive(item.id, item.isActive);
+                        setDetailsDialog({ isOpen: false, item: null });
+                    }}
+                    className="flex items-center gap-2"
+                >
+                    {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {item.isActive ? "تعطيل المستوى" : "تفعيل المستوى"}
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setEditItem(item);
+                        setForm({
+                            name: item.name,
+                            description: item.description || "",
+                            order: (item.order || "").toString(),
+                            priceUSD: (item.priceUSD || "0").toString(),
+                            priceSAR: (item.priceSAR || "0").toString(),
+                            isFree: item.isFree || false,
+                            previewUrl: item.previewUrl || "",
+                            downloadUrl: item.downloadUrl || "",
+                            instructorId: item.instructorId
+                        });
+                        setImageFile(null);
+                        setImagePreview(item.imageUrl ? getImageUrl(item.imageUrl) : null);
+                        setIsDialogOpen(true);
+                        setDetailsDialog({ isOpen: false, item: null });
+                    }}
+                    className="flex items-center gap-2"
+                >
+                    <Edit className="w-4 h-4" />
+                    تعديل المستوى
+                </Button>
+                <Button
+                    variant="destructive"
+                    onClick={() => {
+                        setDeleteDialog({
+                            isOpen: true,
+                            itemId: item.id,
+                            itemName: item.name || "بدون اسم"
+                        });
+                        setDetailsDialog({ isOpen: false, item: null });
+                    }}
+                    className="flex items-center gap-2"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    حذف المستوى
+                </Button>
             </div>
         </div>
     );
+};
+
 
     return (
         <Card dir="rtl">
@@ -1432,7 +1689,7 @@ const handlePreviewUrlChange = (value) => {
             </AlertDialog>
 
             {/* Details Dialog */}
-            <Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
+            {/* <Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>تفاصيل المستوى</DialogTitle>
@@ -1442,7 +1699,17 @@ const handlePreviewUrlChange = (value) => {
                     </DialogHeader>
                     {detailsDialog.item && <LevelDetails item={detailsDialog.item} />}
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
+
+            {/* Level Details Dialog */}
+<Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
+    <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+        <DialogHeader>
+            <DialogTitle className="text-xl text-right">تفاصيل المستوى</DialogTitle>
+        </DialogHeader>
+        {detailsDialog.item && <LevelDetails item={detailsDialog.item} />}
+    </DialogContent>
+</Dialog>
         </Card>
     );
 };

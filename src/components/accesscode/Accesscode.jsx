@@ -111,7 +111,9 @@ const AccessCode = () => {
             const res = await getAllUsers();
             const data = Array.isArray(res.data?.data?.items) ? res.data.data.items :
                 Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
-            setUsers(data);
+                // if(data.role === "STUDENT"){
+                    setUsers(data);
+                // }
         } catch (err) {
             console.error("❌ فشل تحميل المستخدمين:", err);
             showErrorToast("فشل تحميل المستخدمين");
@@ -1882,15 +1884,7 @@ useEffect(() => {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>ملاحظات</Label>
-                                    <Textarea
-                                        value={form.notes}
-                                        onChange={(e) => handleFormChange("notes", e.target.value)}
-                                        rows={2}
-                                        placeholder="أدخل أي ملاحظات إضافية..."
-                                    />
-                                </div>
+                                
 
                                 <div className="space-y-2">
                                     <Label htmlFor="receipt-image">صورة الإيصال *</Label>
@@ -1914,6 +1908,16 @@ useEffect(() => {
                                             />
                                         </div>
                                     )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>ملاحظات</Label>
+                                    <Textarea
+                                        value={form.notes}
+                                        onChange={(e) => handleFormChange("notes", e.target.value)}
+                                        rows={2}
+                                        placeholder="أدخل أي ملاحظات إضافية..."
+                                    />
                                 </div>
 
                                 <Button
@@ -2683,7 +2687,7 @@ useEffect(() => {
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-xs text-blue-600">
                                 <div>المستخدم الحالي: {editDialog.item.user?.name || "غير محدد"}</div>
-                                <div>الهاتف: {editDialog.item.user?.phone || "غير محدد"}</div>
+                                <div >الهاتف: <span dir="ltr">{editDialog.item.user?.phone || "غير محدد"}</span></div>
                                 <div>المبلغ الحالي: {getAmountPaid(editDialog.item)} ل.س</div>
                                 <div>الكوبون الحالي: {getCouponInfo(editDialog.item)?.code || "لا يوجد"}</div>
                             </div>
@@ -2882,7 +2886,7 @@ useEffect(() => {
                                                 <SelectItem key={user.id} value={user.id.toString()}>
                                                     <div className="flex flex-col">
                                                         <span className="font-medium">{user.name}</span>
-                                                        <span className="text-xs text-muted-foreground">{user.phone}</span>
+                                                        <span dir="ltr" className="text-xs text-muted-foreground">{user.phone}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))
@@ -2983,9 +2987,9 @@ useEffect(() => {
                         </div>
 
                         {/* الحالة والملاحظات */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                             {/* الحالة */}
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>حالة الكود</Label>
                                 <Select
                                     value={form.isActive}
@@ -2999,7 +3003,7 @@ useEffect(() => {
                                         <SelectItem value="false">غير نشط</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
+                            </div> */}
 
                             {/* الملاحظات */}
                             <div className="space-y-2">

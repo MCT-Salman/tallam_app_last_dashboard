@@ -430,11 +430,11 @@ export function Sidebar({ collapsed, onToggle }) {
         {/* Desktop Sidebar */}
         <div
           className={cn(
-            "bg-card border-l border-border transition-all duration-300 flex flex-col fixed top-0 right-0 h-screen z-50 overflow-hidden",
+            "bg-card border-l border-border transition-all duration-300 flex flex-col fixed top-0 right-0 h-screen z-20 overflow-hidden",
             "hidden md:flex",
             collapsed ? "w-24" : "w-64"
           )}
-          style={{ zIndex: 60 }}
+          // style={{ zIndex: 60 }}
         >
           {/* Header - Fixed */}
           <div className={cn(
