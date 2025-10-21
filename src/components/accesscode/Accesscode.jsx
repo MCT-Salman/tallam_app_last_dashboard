@@ -10,14 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus,Clock, Shield, Hash, BarChart3,Users ,Upload , Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X } from "lucide-react";
+import { Plus, Clock, Shield, Hash, BarChart3, Users, Upload, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
     deleteAccessCode,
     updateAccessCodeStatus,
     getActiveCouponsByLevel,
-    calculateFinalPrice
+    calculateFinalPrice,
+    updateAccessCode
 } from "@/api/api";
 import { getAllUsers } from "@/api/api";
 import { getCourses } from "@/api/api";
@@ -63,6 +64,7 @@ const AccessCode = () => {
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, itemId: null, itemName: "" });
     const [statusDialog, setStatusDialog] = useState({ isOpen: false, itemId: null, itemName: "", isActive: false });
     const [detailDialog, setDetailDialog] = useState({ isOpen: false, item: null });
+    const [editDialog, setEditDialog] = useState({ isOpen: false, item: null, currentCouponId: "" }); // ✅ حالة جديدة للتعديل
 
     // حالات الفلترة والترتيب
     const [currentPage, setCurrentPage] = useState(1);
@@ -90,6 +92,8 @@ const AccessCode = () => {
     // 📊 قوائم الفلترة
     const [filterCourses, setFilterCourses] = useState([]);
     const [filterLevels, setFilterLevels] = useState([]);
+
+    const [userSearch, setUserSearch] = useState("");
 
     // 🔧 الإصلاح: استخدام useRef لحقل البحث
     const searchInputRef = useRef(null);
@@ -176,6 +180,15 @@ const AccessCode = () => {
 
             console.log("✅ المدرسين المستلمون:", data);
             setInstructors(data || []);
+
+            // إذا كنا في وضع التعديل وكان هناك مدرس محدد مسبقاً، تأكد من وجوده في القائمة
+            if (editDialog.isOpen && selectedInstructor) {
+                const instructorExists = data.some(inst => inst.id.toString() === selectedInstructor);
+                if (!instructorExists) {
+                    console.log("⚠️ المدرس المحدد غير موجود في القائمة، إعادة التعيين");
+                    setSelectedInstructor("");
+                }
+            }
         } catch (err) {
             console.error("❌ فشل تحميل المدرسين:", err);
             showErrorToast("فشل تحميل المدرسين");
@@ -224,6 +237,15 @@ const AccessCode = () => {
 
             console.log("المستويات المفلترة حسب المدرس:", filteredLevels);
             setLevels(filteredLevels || []);
+
+            // إذا كنا في وضع التعديل وكان هناك مستوى محدد مسبقاً، تأكد من وجوده في القائمة
+            if (editDialog.isOpen && selectedLevel) {
+                const levelExists = filteredLevels.some(level => level.id.toString() === selectedLevel);
+                if (!levelExists) {
+                    console.log("⚠️ المستوى المحدد غير موجود في القائمة، إعادة التعيين");
+                    setSelectedLevel("");
+                }
+            }
         } catch (err) {
             console.error("❌ فشل تحميل مستويات المدرس:", err);
             showErrorToast("فشل تحميل مستويات المدرس");
@@ -232,32 +254,55 @@ const AccessCode = () => {
     };
 
     // 🎯 جلب الكوبونات النشطة للمستوى
-    const fetchActiveCoupons = async (levelId) => {
-        if (!levelId) {
-            setCoupons([]);
-            return;
+  const fetchActiveCoupons = async (levelId) => {
+    if (!levelId) {
+        setCoupons([]);
+        return;
+    }
+
+    try {
+        console.log("🔄 جلب الكوبونات للمستوى:", levelId);
+        const res = await getActiveCouponsByLevel(levelId);
+        console.log("📊 استجابة الكوبونات:", res);
+
+        let data = [];
+        if (Array.isArray(res.data?.data)) {
+            data = res.data.data;
+        } else if (Array.isArray(res.data)) {
+            data = res.data;
         }
 
-        try {
-            console.log("🔄 جلب الكوبونات للمستوى:", levelId);
-            const res = await getActiveCouponsByLevel(levelId);
-            console.log("📊 استجابة الكوبونات:", res);
+        console.log("✅ الكوبونات المستلمة:", data);
+        setCoupons(data);
+        
+        // ✅ إرجاع البيانات للاستخدام في الـ then
+        return data;
+    } catch (err) {
+        console.error("❌ فشل تحميل الكوبونات:", err);
+        showErrorToast("فشل تحميل الكوبونات");
+        setCoupons([]);
+        return [];
+    }
+};
+    // 🔄 جلب الكوبونات عند فتح التعديل
+    useEffect(() => {
+        if (editDialog.isOpen && editDialog.item) {
+            const item = editDialog.item;
+            const transaction = item.transaction?.[0];
+            const coupon = transaction?.coupon;
 
-            let data = [];
-            if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            } else if (Array.isArray(res.data)) {
-                data = res.data;
+            console.log("🔄 جلب الكوبونات للتعديل:", {
+                itemId: item.id,
+                courseLevelId: item.courseLevelId,
+                hasCoupon: !!coupon,
+                couponId: coupon?.id
+            });
+
+            if (item.courseLevelId) {
+                fetchActiveCoupons(item.courseLevelId.toString());
             }
-
-            console.log("✅ الكوبونات المستلمة:", data);
-            setCoupons(data);
-        } catch (err) {
-            console.error("❌ فشل تحميل الكوبونات:", err);
-            showErrorToast("فشل تحميل الكوبونات");
-            setCoupons([]);
         }
-    };
+    }, [editDialog.isOpen, editDialog.item]);
 
     // 💰 حساب السعر النهائي مع الكوبون
     const calculatePriceWithCoupon = async (couponId, courseLevelId) => {
@@ -347,6 +392,35 @@ const AccessCode = () => {
         } catch (err) {
             console.error("❌ فشل تحديث حالة الكود:", err);
             showErrorToast(err?.response?.data?.message || "فشل تحديث حالة الكود");
+        }
+    };
+
+    //  دالة التعديل الكاملة
+    const handleEditCode = async () => {
+        if (!editDialog.item) return;
+
+        try {
+            const requestData = {
+                courseLevelId: parseInt(form.courseLevelId),    // ✅ تحويل إلى number
+                userId: parseInt(form.userId),                  // ✅ تحويل إلى number
+                validityInMonths: parseFloat(form.validityInMonths),
+                isActive: form.isActive === "true",
+                amountPaid: parseFloat(form.amountPaid),
+                notes: form.notes || null,
+                couponId: form.couponId ? parseInt(form.couponId) : null
+            };
+
+            console.log("📤 بيانات التعديل المرسلة (numbers):", requestData);
+
+            await updateAccessCode(editDialog.item.id, requestData);
+            showSuccessToast("تم تعديل الكود بنجاح");
+
+            setEditDialog({ isOpen: false, item: null });
+            resetAllSelections();
+            fetchAccessCodes();
+        } catch (err) {
+            console.error("❌ فشل تعديل الكود:", err);
+            showErrorToast(err?.response?.data?.message || "فشل تعديل الكود");
         }
     };
 
@@ -477,7 +551,7 @@ const AccessCode = () => {
         if (selectedLevel) {
             handleFormChange("courseLevelId", selectedLevel);
             fetchActiveCoupons(selectedLevel);
-            
+
             // جلب سعر المستوى من البيانات الفعلية
             const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
             if (selectedLevelData) {
@@ -523,21 +597,18 @@ const AccessCode = () => {
         }
     }, [form.couponId, form.courseLevelId, levels]);
 
-    // 🛠️ دوال مساعدة
-    const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return "/tallaam_logo2.png";
-        const cleanBaseUrl = BASE_URL.replace(/\/$/, "");
-        const cleanImageUrl = imageUrl.replace(/^\//, "");
-        return `${cleanBaseUrl}/${cleanImageUrl}`;
-    };
-
+    // 🛠️ دوال مساعدة مصححة - مع التعامل مع القيم null
     const getAmountPaid = (item) => {
-        if (!item.transaction || item.transaction.length === 0) {
+        if (!item || !item.transaction || item.transaction.length === 0) {
             return "0";
         }
 
         const transaction = item.transaction[0];
         const amountPaid = transaction.amountPaid;
+
+        if (!amountPaid) {
+            return "0";
+        }
 
         console.log('🔍 amountPaid object:', JSON.stringify(amountPaid));
 
@@ -551,14 +622,8 @@ const AccessCode = () => {
         }
 
         if (typeof amountPaid === 'object' && amountPaid.d && Array.isArray(amountPaid.d)) {
-            // جرب قراءة الرقم من أماكن مختلفة في الكائن
             const baseNumber = amountPaid.d[0];
-
-            // إذا كان baseNumber هو 50 وexponent هو 3، فالنتيجة يجب أن تكون 50000
-            // ولكن إذا أعطاك 500000000، فربما baseNumber هو 50000 وexponent هو 4
             console.log(`🔢 baseNumber: ${baseNumber}, e: ${amountPaid.e}`);
-
-            // جرب بدون exponent أولاً
             return baseNumber.toString();
         }
 
@@ -566,8 +631,15 @@ const AccessCode = () => {
     };
 
     const getCouponInfo = (item) => {
-        if (!item.transaction || item.transaction.length === 0) return null;
+        if (!item || !item.transaction || item.transaction.length === 0) return null;
         return item.transaction[0].coupon;
+    };
+
+    const getImageUrl = (imageUrl) => {
+        if (!imageUrl) return "/tallaam_logo2.png";
+        const cleanBaseUrl = BASE_URL.replace(/\/$/, "");
+        const cleanImageUrl = imageUrl.replace(/^\//, "");
+        return `${cleanBaseUrl}/${cleanImageUrl}`;
     };
 
     const getIssuedByName = (issuedById) => {
@@ -575,6 +647,26 @@ const AccessCode = () => {
         const user = users.find(user => user.id === issuedById);
         return user ? user.name : `المستخدم ${issuedById}`;
     };
+
+    // 🔄 جلب الكوبونات عند تغيير المستوى في التعديل
+    // 🔄 جلب الكوبونات والحفاظ على التحديد
+useEffect(() => {
+    if (editDialog.isOpen && selectedLevel) {
+        console.log("🔄 جلب الكوبونات للمستوى في التعديل:", selectedLevel);
+        fetchActiveCoupons(selectedLevel).then(() => {
+            // ✅ بعد جلب الكوبونات، إعادة تعيين الكوبون الأصلي
+            if (editDialog.currentCouponId) {
+                console.log("🎯 استعادة الكوبون بعد التحميل:", editDialog.currentCouponId);
+                setTimeout(() => {
+                    setForm(prev => ({ 
+                        ...prev, 
+                        couponId: editDialog.currentCouponId 
+                    }));
+                }, 100);
+            }
+        });
+    }
+}, [selectedLevel, editDialog.isOpen]);
 
     // 🔍 الفلترة والترتيب
     const filteredAndSortedCodes = useMemo(() => {
@@ -738,6 +830,175 @@ const AccessCode = () => {
             showErrorToast(err?.response?.data?.message || "فشل توليد الكود");
         }
     };
+
+    //  دالة فتح نموذج التعديل الكامل
+ const openEditDialog = async (item) => {
+    if (!item) {
+        console.error("❌ عنصر غير محدد لفتح التعديل");
+        return;
+    }
+    
+    console.log("🔧 فتح نموذج التعديل للعنصر:", item);
+    
+    // ✅ حفظ الكوبون الحالي قبل فتح الديالوج
+    const transaction = item.transaction?.[0];
+    const currentCouponId = transaction?.coupon?.id?.toString() || "";
+    
+    setEditDialog({ 
+        isOpen: true, 
+        item,
+        currentCouponId // ✅ حفظ الكوبون الحالي
+    });
+    
+    // استخراج البيانات الأساسية
+    const courseLevel = item.courseLevel;
+    const course = courseLevel?.course;
+    const user = item.user;
+    
+    // تعبئة النموذج بجميع البيانات
+    const formData = {
+        // بيانات الهيكلية
+        specializationId: course?.specializationId?.toString() || "",
+        courseId: course?.id?.toString() || "",
+        instructorId: courseLevel?.instructorId?.toString() || "",
+        courseLevelId: courseLevel?.id?.toString() || "",
+        
+        // البيانات الأخرى
+        validityInMonths: item.validityInMonths?.toString() || "6",
+        isActive: item.isActive?.toString() || "true",
+        userId: item.userId?.toString() || user?.id?.toString() || "",
+        couponId: currentCouponId, // ✅ استخدام الكوبون المحفوظ
+        amountPaid: getAmountPaid(item) || "",
+        notes: transaction?.notes || "",
+        
+        // بيانات للعرض
+        userName: user?.name || "",
+        userPhone: user?.phone || ""
+    };
+    
+    console.log("📝 بيانات النموذج المعبأة:", formData);
+    console.log("🎯 الكوبون الحالي:", currentCouponId);
+    
+    setForm(formData);
+
+    // تعيين جميع الاختيارات مع التسلسل الهرمي
+    const specializationId = course?.specializationId?.toString() || "";
+    const courseId = course?.id?.toString() || "";
+    const instructorId = courseLevel?.instructorId?.toString() || "";
+    const levelId = courseLevel?.id?.toString() || "";
+    
+    console.log("🎯 الاختيارات:", { specializationId, courseId, instructorId, levelId });
+    
+    try {
+        // 🔄 التسلسل الهرمي باستخدام async/await
+        setSelectedSpecialization(specializationId);
+        
+        if (specializationId) {
+            console.log("🔄 جلب الكورسات للاختصاص:", specializationId);
+            await fetchCourses(specializationId);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            setSelectedCourse(courseId);
+            console.log("✅ تم تعيين الكورس:", courseId);
+            
+            if (courseId) {
+                console.log("🔄 جلب المدرسين للكورس:", courseId);
+                await fetchInstructorsByCourse(courseId);
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                setSelectedInstructor(instructorId);
+                console.log("✅ تم تعيين المدرس:", instructorId);
+                
+                if (instructorId) {
+                    console.log("🔄 جلب المستويات للمدرس:", instructorId);
+                    await fetchLevelsByInstructor(instructorId);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    setSelectedLevel(levelId);
+                    console.log("✅ تم تعيين المستوى:", levelId);
+                    
+                    if (levelId) {
+                        console.log("🔄 جلب الكوبونات للمستوى:", levelId);
+                        await fetchActiveCoupons(levelId);
+                        console.log("✅ تم جلب الكوبونات");
+                        
+                        // ✅ بعد جلب الكوبونات، تأكد من تعيين الكوبون الأصلي
+                        setTimeout(() => {
+                            if (currentCouponId) {
+                                console.log("🎯 إعادة تعيين الكوبون الأصلي:", currentCouponId);
+                                setForm(prev => ({ ...prev, couponId: currentCouponId }));
+                            }
+                        }, 200);
+                    }
+                }
+            }
+        }
+        
+        console.log("✅ تم تحميل جميع البيانات بنجاح");
+        
+    } catch (error) {
+        console.error("❌ خطأ في تحميل البيانات:", error);
+        showErrorToast("حدث خطأ في تحميل البيانات");
+    }
+};
+    // 🔄 useEffect خاص لمعالجة بيانات التعديل
+    useEffect(() => {
+        if (editDialog.isOpen && editDialog.item) {
+            const item = editDialog.item;
+            const course = item.courseLevel?.course;
+
+            // إذا كان هناك اختصاص محدد، جلب الكورسات
+            if (selectedSpecialization && course?.specializationId?.toString() === selectedSpecialization) {
+                fetchCourses(selectedSpecialization);
+            }
+
+            // إذا كان هناك كورس محدد، جلب المدرسين
+            if (selectedCourse && course?.id?.toString() === selectedCourse) {
+                fetchInstructorsByCourse(selectedCourse);
+            }
+
+            // إذا كان هناك مدرس محدد، جلب المستويات
+            if (selectedInstructor && item.courseLevel?.instructorId?.toString() === selectedInstructor) {
+                fetchLevelsByInstructor(selectedInstructor);
+            }
+        }
+    }, [editDialog.isOpen, selectedSpecialization, selectedCourse, selectedInstructor]);
+
+    // 🔄 جلب المستويات للفلترة في التعديل
+    useEffect(() => {
+        if (editDialog.isOpen) {
+            // جلب جميع المستويات المتاحة للعرض في التعديل
+            const fetchLevelsForEdit = async () => {
+                try {
+                    const res = await getCourseLevels();
+                    console.log("استجابة المستويات للتحرير:", res);
+
+                    let allLevels = [];
+                    if (Array.isArray(res.data?.data)) {
+                        if (res.data.data.length > 0 && Array.isArray(res.data.data[0])) {
+                            allLevels = res.data.data[0];
+                        } else {
+                            allLevels = res.data.data;
+                        }
+                    } else if (Array.isArray(res.data?.data?.items)) {
+                        allLevels = res.data.data.items;
+                    } else if (Array.isArray(res.data?.data?.data)) {
+                        allLevels = res.data.data.data;
+                    }
+
+                    setFilterLevels(allLevels || []);
+                } catch (err) {
+                    console.error("❌ فشل تحميل المستويات للتحرير:", err);
+                    setFilterLevels([]);
+                }
+            };
+
+            fetchLevelsForEdit();
+        }
+    }, [editDialog.isOpen]);
 
     // 📅 دوال التنسيق
     const formatDate = (dateString) => {
@@ -1062,6 +1323,15 @@ const AccessCode = () => {
                         <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => openEditDialog(item)} // ✅ استخدام دالة التعديل الجديدة
+                            className="flex-1"
+                        >
+                            <Edit className="w-4 h-4 ml-1" />
+                            تعديل
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => setStatusDialog({
                                 isOpen: true,
                                 itemId: item.id,
@@ -1170,8 +1440,8 @@ const AccessCode = () => {
 
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">فلترة بالمستوى</Label>
-                        <Select 
-                            value={levelFilter} 
+                        <Select
+                            value={levelFilter}
                             onValueChange={setLevelFilter}
                             disabled={courseFilter === "all"}
                         >
@@ -1183,8 +1453,8 @@ const AccessCode = () => {
                             <SelectContent>
                                 <SelectItem value="all">جميع المستويات</SelectItem>
                                 {filterLevels
-                                    .filter(level => 
-                                        courseFilter === "all" || 
+                                    .filter(level =>
+                                        courseFilter === "all" ||
                                         level.courseId?.toString() === courseFilter
                                     )
                                     .map((level) => (
@@ -1199,9 +1469,9 @@ const AccessCode = () => {
 
                     <div className="flex items-end">
                         {hasActiveFilters && (
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={resetFilters}
                                 className="w-full"
                             >
@@ -1437,7 +1707,7 @@ const AccessCode = () => {
                                                 </div>
                                                 {filteredLevelsForSelect.map((level) => (
                                                     <SelectItem key={level.id} value={level.id.toString()}>
-                                                        {level.name} 
+                                                        {level.name}
                                                         {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`}
                                                         {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`}
                                                     </SelectItem>
@@ -1646,8 +1916,8 @@ const AccessCode = () => {
                                     )}
                                 </div>
 
-                                <Button 
-                                    onClick={handleGenerateCode} 
+                                <Button
+                                    onClick={handleGenerateCode}
                                     disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid}
                                 >
                                     {priceLoading ? "جاري حساب السعر..." : "توليد الكود"}
@@ -1806,6 +2076,14 @@ const AccessCode = () => {
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
+                                                        onClick={() => openEditDialog(item)} // ✅ زر التعديل الجديد
+                                                        title="تعديل الكود"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
                                                         onClick={() => setStatusDialog({
                                                             isOpen: true,
                                                             itemId: item.id,
@@ -1918,7 +2196,7 @@ const AccessCode = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-right">تأكيد الحذف</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
-                             سيتم حذف الفاتورة الخاصة به أيضا
+                            سيتم حذف الفاتورة الخاصة به أيضا
                             هل أنت متأكد من أنك تريد حذف الكود "{deleteDialog.itemName}"؟ هذا الإجراء لا يمكن التراجع عنه.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -1964,409 +2242,788 @@ const AccessCode = () => {
             </AlertDialog>
 
             {/*  ديالوج التفاصيل */}
-<Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ ...detailDialog, isOpen: open })}>
-  <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
-        <div className="flex items-center gap-2">
-          <FileText className="w-6 h-6 text-blue-600" />
-          تفاصيل كود الوصول
-        </div>
-      </DialogTitle>
-    </DialogHeader>
-    
-    {detailDialog.item && (
-      <div className="space-y-6 text-right">
-        {/* الهيدر مع المعلومات الأساسية */}
-        <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            {/* أيقونة الكود */}
-            <div className="relative flex-shrink-0">
-              <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
-                <FileText className="w-10 h-10 text-blue-600" />
-              </div>
-              {/* شارة الحالة */}
-              <div className={`absolute -top-2 -right-2 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg ${
-                detailDialog.item.isActive && !detailDialog.item.used 
-                  ? "bg-green-500 text-white" 
-                  : "bg-gray-500 text-white"
-              }`}>
-                {detailDialog.item.isActive && !detailDialog.item.used ? "✓" : "✗"}
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 font-mono">
-                    {detailDialog.item.code}
-                  </h2>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"} 
-                          className={detailDialog.item.isActive && !detailDialog.item.used ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
-                      {detailDialog.item.isActive && !detailDialog.item.used ? "🟢 نشط" : "🔴 مستخدم"}
-                    </Badge>
-                    
-                    {detailDialog.item.validityInMonths && (
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                        <Calendar className="w-3 h-3 ml-1" />
-                        {detailDialog.item.validityInMonths} شهر
-                      </Badge>
+            <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ ...detailDialog, isOpen: open })}>
+                <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                                تفاصيل كود الوصول
+                            </div>
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {detailDialog.item && (
+                        <div className="space-y-6 text-right">
+                            {/* الهيدر مع المعلومات الأساسية */}
+                            <div className="bg-gradient-to-l from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                                    {/* أيقونة الكود */}
+                                    <div className="relative flex-shrink-0">
+                                        <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
+                                            <FileText className="w-10 h-10 text-blue-600" />
+                                        </div>
+                                        {/* شارة الحالة */}
+                                        <div className={`absolute -top-2 -right-2 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg ${detailDialog.item.isActive && !detailDialog.item.used
+                                            ? "bg-green-500 text-white"
+                                            : "bg-gray-500 text-white"
+                                            }`}>
+                                            {detailDialog.item.isActive && !detailDialog.item.used ? "✓" : "✗"}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                            <div>
+                                                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 font-mono">
+                                                    {detailDialog.item.code}
+                                                </h2>
+
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"}
+                                                        className={detailDialog.item.isActive && !detailDialog.item.used ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
+                                                        {detailDialog.item.isActive && !detailDialog.item.used ? "🟢 نشط" : "🔴 مستخدم"}
+                                                    </Badge>
+
+                                                    {detailDialog.item.validityInMonths && (
+                                                        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                                            <Calendar className="w-3 h-3 ml-1" />
+                                                            {detailDialog.item.validityInMonths} شهر
+                                                        </Badge>
+                                                    )}
+
+                                                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                                                        <Book className="w-3 h-3 ml-1" />
+                                                        {detailDialog.item.courseLevel?.course?.title || "غير محدد"}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => copyToClipboard(detailDialog.item.code)}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                                نسخ الكود
+                                            </Button>
+                                        </div>
+
+                                        {/* معلومات سريعة */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                            <div className="flex items-center gap-2 text-gray-700">
+                                                <Calendar className="w-4 h-4 text-blue-600" />
+                                                <span>أصدر في: {formatDate(detailDialog.item.issuedAt)}</span>
+                                            </div>
+                                            {detailDialog.item.user && (
+                                                <div className="flex items-center gap-2 text-gray-700">
+                                                    <User className="w-4 h-4 text-blue-600" />
+                                                    <span>{detailDialog.item.user.name}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* الشبكة الرئيسية للمعلومات */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* معلومات المستخدم والكورس */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <User className="w-5 h-5 text-green-600" />
+                                            معلومات المستخدم والكورس
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 pt-4">
+                                        <div className="space-y-3">
+                                            {/* معلومات المستخدم */}
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <User className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">المستخدم</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">{detailDialog.item.user?.name || "غير محدد"}</span>
+                                                    <span className="text-xs text-gray-500" dir="ltr">{detailDialog.item.user?.phone}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* الاختصاص */}
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <BookA className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">الاختصاص</span>
+                                                </div>
+                                                <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.course?.specialization?.name || "غير محدد"}</span>
+                                            </div>
+                                            {/* الكورس */}
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Book className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">الكورس</span>
+                                                </div>
+                                                <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.course?.title || "غير محدد"}</span>
+                                            </div>
+
+
+                                            {/* المدرب */}
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Users className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">المدرب</span>
+                                                </div>
+                                                <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.instructor?.name || "غير محدد"}</span>
+                                            </div>
+
+                                            {/* المستوى */}
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <BarChart3 className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">المستوى</span>
+                                                </div>
+                                                <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.name || "غير محدد"}</span>
+                                            </div>
+
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* معلومات الإصدار والصحة */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <Calendar className="w-5 h-5 text-purple-600" />
+                                            معلومات الإصدار والصحة
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">تاريخ الإصدار</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">{formatDate(detailDialog.item.issuedAt)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">مدة الصلاحية</span>
+                                                </div>
+                                                <span className="font-medium text-gray-900">{detailDialog.item.validityInMonths || "غير محدد"} شهر</span>
+                                            </div>
+
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Shield className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">الحالة الحالية</span>
+                                                </div>
+                                                <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"}>
+                                                    {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Hash className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-sm font-medium text-gray-700">معرف الكود</span>
+                                                </div>
+                                                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
+                                                    {detailDialog.item.id}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* المعلومات المالية */}
+                            <Card className="border border-gray-200 shadow-sm">
+                                <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+                                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                        <DollarSign className="w-5 h-5 text-orange-600" />
+                                        المعلومات المالية
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {/* المبلغ المدفوع */}
+                                        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                            <div className="text-2xl font-bold text-blue-600">💰</div>
+                                            <div className="text-sm font-medium text-gray-700 mt-2">المبلغ المدفوع</div>
+                                            <div className="text-2xl font-bold text-gray-900 mt-1">{getAmountPaid(detailDialog.item)} ل.س</div>
+                                            <div className="text-xs text-blue-600 mt-1">المبلغ الفعلي</div>
+                                        </div>
+
+                                        {/* سعر الكورس */}
+                                        {detailDialog.item.courseLevel && (
+                                            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                                                <div className="text-2xl font-bold text-green-600">🏷️</div>
+                                                <div className="text-sm font-medium text-gray-700 mt-2">سعر الكورس</div>
+                                                {detailDialog.item.courseLevel.priceSAR > 0 && (
+                                                    <div className="text-xl font-bold text-gray-900">{detailDialog.item.courseLevel.priceSAR} ل.س</div>
+                                                )}
+                                                {detailDialog.item.courseLevel.priceUSD > 0 && (
+                                                    <div className="text-sm text-gray-600 mt-1">{detailDialog.item.courseLevel.priceUSD} $</div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* معلومات الكوبون */}
+                                        {getCouponInfo(detailDialog.item) ? (
+                                            <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                                <div className="text-2xl font-bold text-purple-600">🎫</div>
+                                                <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
+                                                <div className="text-lg font-bold text-gray-900 mt-1">{getCouponInfo(detailDialog.item).code}</div>
+                                                <div className="text-xs text-purple-600 mt-1">
+                                                    {getCouponInfo(detailDialog.item).isPercent ?
+                                                        `${getCouponInfo(detailDialog.item).discount}% خصم` :
+                                                        `${getCouponInfo(detailDialog.item).discount} ل.س خصم`}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                                <div className="text-2xl font-bold text-gray-600">➖</div>
+                                                <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
+                                                <div className="text-lg font-bold text-gray-900 mt-1">بدون كوبون</div>
+                                                <div className="text-xs text-gray-600 mt-1">لم يتم تطبيق خصم</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* تفاصيل إضافية */}
+                                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].notes && (
+                                            <div className="md:col-span-2">
+                                                <span className="text-sm font-medium text-gray-700 block mb-2">الملاحظات</span>
+                                                <p className="p-3 bg-gray-50 rounded border text-gray-800">{detailDialog.item.transaction[0].notes}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* صورة الإيصال */}
+                            {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].receiptImageUrl && (
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-red-50 to-rose-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <Upload className="w-5 h-5 text-red-600" />
+                                            صورة الإيصال
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="flex flex-col items-center">
+                                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group cursor-pointer transition-all duration-300 hover:shadow-lg">
+                                                <img
+                                                    src={getImageUrl(detailDialog.item.transaction[0].receiptImageUrl)}
+                                                    alt="صورة الإيصال"
+                                                    className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto transition-all duration-300 group-hover:scale-105"
+                                                    {...imageConfig}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "/tallaam_logo2.png";
+                                                    }}
+                                                    onClick={() => {
+                                                        window.open(getImageUrl(detailDialog.item.transaction[0].receiptImageUrl), '_blank');
+                                                    }}
+                                                />
+                                                <div className="absolute top-3 right-3 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <ZoomIn className="w-4 h-4" />
+                                                    انقر للتكبير
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-3 flex items-center gap-2">
+                                                <Info className="w-4 h-4" />
+                                                انقر على الصورة لعرضها بحجم كامل في نافذة جديدة
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* ملخص سريع */}
+                            <Card className="border border-gray-200 shadow-sm">
+                                <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+                                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                        <BarChart3 className="w-5 h-5 text-gray-600" />
+                                        ملخص الكود
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                            <div className="text-2xl font-bold text-blue-600">
+                                                {detailDialog.item.isActive && !detailDialog.item.used ? "✅" : "❌"}
+                                            </div>
+                                            <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
+                                            <div className="text-lg font-bold text-gray-900">
+                                                {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
+                                            <div className="text-2xl font-bold text-green-600">📅</div>
+                                            <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
+                                            <div className="text-lg font-bold text-gray-900">
+                                                {detailDialog.item.validityInMonths || "0"} شهر
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                            <div className="text-2xl font-bold text-purple-600">💳</div>
+                                            <div className="text-sm font-medium text-gray-700 mt-1">المدفوع</div>
+                                            <div className="text-lg font-bold text-gray-900">
+                                                {getAmountPaid(detailDialog.item)} ل.س
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                                            <div className="text-2xl font-bold text-orange-600">🎯</div>
+                                            <div className="text-sm font-medium text-gray-700 mt-1">الكورس</div>
+                                            <div className="text-lg font-bold text-gray-900 truncate" title={detailDialog.item.courseLevel?.course?.title}>
+                                                {detailDialog.item.courseLevel?.course?.title ?
+                                                    (detailDialog.item.courseLevel.course.title.length > 12 ?
+                                                        detailDialog.item.courseLevel.course.title.substring(0, 12) + "..." :
+                                                        detailDialog.item.courseLevel.course.title)
+                                                    : "---"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* أزرار الإجراءات */}
+                            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => copyToClipboard(detailDialog.item.code)}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    <Copy className="w-4 h-4" />
+                                    نسخ الكود
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        openEditDialog(detailDialog.item); // ✅ فتح نموذج التعديل
+                                        setDetailDialog({ isOpen: false, item: null });
+                                    }}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    تعديل الكود
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setStatusDialog({
+                                            isOpen: true,
+                                            itemId: detailDialog.item.id,
+                                            itemName: detailDialog.item.code,
+                                            isActive: !detailDialog.item.isActive
+                                        });
+                                        setDetailDialog({ isOpen: false, item: null });
+                                    }}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    {detailDialog.item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                    {detailDialog.item.isActive ? "تعطيل الكود" : "تفعيل الكود"}
+                                </Button>
+
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => {
+                                        setDeleteDialog({
+                                            isOpen: true,
+                                            itemId: detailDialog.item.id,
+                                            itemName: detailDialog.item.code
+                                        });
+                                        setDetailDialog({ isOpen: false, item: null });
+                                    }}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    حذف الكود
+                                </Button>
+                            </div>
+                        </div>
                     )}
-                    
-                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-                      <Book className="w-3 h-3 ml-1" />
-                      {detailDialog.item.courseLevel?.course?.title || "غير محدد"}
-                    </Badge>
-                  </div>
+                </DialogContent>
+            </Dialog>
+
+            {/*  ديالوج التعديل الكامل */}
+            <Dialog open={editDialog.isOpen} onOpenChange={(open) => {
+                setEditDialog({ ...editDialog, isOpen: open });
+                if (!open) {
+                    resetAllSelections();
+                }
+            }}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-right">تعديل كود الوصول - {editDialog.item?.code}</DialogTitle>
+                        <DialogDescription className="text-right">
+                            تعديل جميع معلومات كود الوصول
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {/* عرض معلومات الكود الحالي */}
+                    {editDialog.item && (
+                        <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+                            <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                                <Info className="w-4 h-4" />
+                                الكود: <span className="font-mono">{editDialog.item.code || "غير محدد"}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-blue-600">
+                                <div>المستخدم الحالي: {editDialog.item.user?.name || "غير محدد"}</div>
+                                <div>الهاتف: {editDialog.item.user?.phone || "غير محدد"}</div>
+                                <div>المبلغ الحالي: {getAmountPaid(editDialog.item)} ل.س</div>
+                                <div>الكوبون الحالي: {getCouponInfo(editDialog.item)?.code || "لا يوجد"}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-4 mt-2">
+                        {/* ✅ مسار الاختيار */}
+                        {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
+                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
+                                    <span className="text-blue-700">المسار المختار:</span>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className="bg-white">
+                                            {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
+                                        </Badge>
+                                        <ChevronRight className="h-4 w-4 text-blue-500" />
+                                        <Badge variant="outline" className="bg-white">
+                                            {selectedCourse ? getCourseName(selectedCourse) : "---"}
+                                        </Badge>
+                                        <ChevronRight className="h-4 w-4 text-blue-500" />
+                                        <Badge variant="outline" className="bg-white">
+                                            {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
+                                        </Badge>
+                                        <ChevronRight className="h-4 w-4 text-blue-500" />
+                                        <Badge variant="outline" className="bg-white">
+                                            {selectedLevel ? getLevelName(selectedLevel) : "---"}
+                                        </Badge>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={resetAllSelections}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                            إعادة تعيين الكل
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ✅ الهيكلية الجديدة: اختصاص ← كورس ← مدرس ← مستوى */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* اختيار الاختصاص */}
+                            <div className="space-y-2">
+                                <Label>الاختصاص</Label>
+                                <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="اختر الاختصاص" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="ابحث عن اختصاص..."
+                                                value={specializationSearch}
+                                                onChange={(e) => setSpecializationSearch(e.target.value)}
+                                                className="mb-2"
+                                            />
+                                        </div>
+                                        {filteredSpecializations.map((spec) => (
+                                            <SelectItem key={spec.id} value={spec.id.toString()}>
+                                                {spec.name || spec.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* اختيار الكورس */}
+                            <div className="space-y-2">
+                                <Label>الكورس</Label>
+                                <Select
+                                    value={selectedCourse}
+                                    onValueChange={setSelectedCourse}
+                                    disabled={!selectedSpecialization}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="ابحث عن كورس..."
+                                                value={courseSearch}
+                                                onChange={(e) => setCourseSearch(e.target.value)}
+                                                className="mb-2"
+                                            />
+                                        </div>
+                                        {filteredCoursesForSelect.map((course) => (
+                                            <SelectItem key={course.id} value={course.id.toString()}>
+                                                {course.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* اختيار المدرس */}
+                            <div className="space-y-2">
+                                <Label>المدرس</Label>
+                                <Select
+                                    value={selectedInstructor}
+                                    onValueChange={setSelectedInstructor}
+                                    disabled={!selectedCourse}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="ابحث عن مدرس..."
+                                                value={instructorSearch}
+                                                onChange={(e) => setInstructorSearch(e.target.value)}
+                                                className="mb-2"
+                                            />
+                                        </div>
+                                        {filteredInstructorsForSelect.map((instructor) => (
+                                            <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                                {instructor.name}
+                                            </SelectItem>
+                                        ))}
+                                        {filteredInstructorsForSelect.length === 0 && selectedCourse && (
+                                            <div className="p-2 text-sm text-muted-foreground text-center">
+                                                لا توجد مدرسين لهذا الكورس
+                                            </div>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* اختيار المستوى */}
+                            <div className="space-y-2">
+                                <Label>المستوى *</Label>
+                                <Select
+                                    value={selectedLevel}
+                                    onValueChange={setSelectedLevel}
+                                    disabled={!selectedInstructor}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="ابحث عن مستوى..."
+                                                value={levelSearch}
+                                                onChange={(e) => setLevelSearch(e.target.value)}
+                                                className="mb-2"
+                                            />
+                                        </div>
+                                        {filteredLevelsForSelect.map((level) => (
+                                            <SelectItem key={level.id} value={level.id.toString()}>
+                                                {level.name}
+                                                {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`}
+                                                {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* البيانات الأساسية */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* المستخدم */}
+                            <div className="space-y-2">
+                                <Label>المستخدم *</Label>
+                                <Select
+                                    value={form.userId}
+                                    onValueChange={(value) => handleFormChange("userId", value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={
+                                            form.userId ? `محدد: ${users.find(u => u.id.toString() === form.userId)?.name || form.userId}` : "اختر المستخدم"
+                                        } />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="ابحث عن مستخدم..."
+                                                value={userSearch}
+                                                onChange={(e) => setUserSearch(e.target.value)}
+                                                className="mb-2"
+                                            />
+                                        </div>
+                                        {users
+                                            .filter(user =>
+                                                !userSearch ||
+                                                user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+                                                user.phone?.includes(userSearch)
+                                            )
+                                            .map((user) => (
+                                                <SelectItem key={user.id} value={user.id.toString()}>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">{user.name}</span>
+                                                        <span className="text-xs text-muted-foreground">{user.phone}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        }
+                                    </SelectContent>
+                                </Select>
+                                {form.userId && (
+                                    <p className="text-xs text-green-600">
+                                        ✓ المستخدم الحالي: {users.find(u => u.id.toString() === form.userId)?.name || "جاري التحميل..."}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* مدة الصلاحية */}
+                            <div className="space-y-2">
+                                <Label>مدة الصلاحية (أشهر) *</Label>
+                                <Select
+                                    value={form.validityInMonths}
+                                    onValueChange={(value) => handleFormChange("validityInMonths", value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="اختر المدة" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">شهر واحد</SelectItem>
+                                        <SelectItem value="1.5">شهر ونصف</SelectItem>
+                                        <SelectItem value="2">شهرين</SelectItem>
+                                        <SelectItem value="3">ثلاثة أشهر</SelectItem>
+                                        <SelectItem value="6">ستة أشهر</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* الكوبونات والمبلغ */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* الكوبونات */}
+<div className="space-y-2">
+    <Label>كوبون الخصم</Label>
+    <Select
+        value={form.couponId || "no-coupon"}
+        onValueChange={(value) => handleFormChange("couponId", value === "no-coupon" ? "" : value)}
+    >
+        <SelectTrigger>
+            <SelectValue placeholder={
+                form.couponId ? `محدد: ${coupons.find(c => c.id.toString() === form.couponId)?.code || form.couponId}` : "اختر كوبون خصم"
+            } />
+        </SelectTrigger>
+        <SelectContent>
+            <SelectItem value="no-coupon">بدون كوبون</SelectItem>
+            {coupons.map((coupon) => (
+                <SelectItem key={coupon.id} value={coupon.id.toString()}>
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex flex-col items-start">
+                            <span className="font-medium">{coupon.code}</span>
+                            <span className="text-xs text-muted-foreground">
+                                {coupon.isPercent ? `${coupon.discount}% خصم` : `${coupon.discount} ل.س خصم`}
+                            </span>
+                        </div>
+                        <Badge variant={coupon.isPercent ? "default" : "secondary"}>
+                            {coupon.isPercent ? `${coupon.discount}%` : `${coupon.discount} ل.س`}
+                        </Badge>
+                    </div>
+                </SelectItem>
+            ))}
+            {coupons.length === 0 && selectedLevel && (
+                <div className="p-2 text-sm text-muted-foreground text-center">
+                    لا توجد كوبونات متاحة لهذا المستوى
                 </div>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => copyToClipboard(detailDialog.item.code)}
-                  className="flex items-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  نسخ الكود
-                </Button>
-              </div>
-              
-              {/* معلومات سريعة */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar className="w-4 h-4 text-blue-600" />
-                  <span>أصدر في: {formatDate(detailDialog.item.issuedAt)}</span>
-                </div>
-                {detailDialog.item.user && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <User className="w-4 h-4 text-blue-600" />
-                    <span>{detailDialog.item.user.name}</span>
-                  </div>
-                )}
-              </div>
+            )}
+        </SelectContent>
+    </Select>
+    
+    {/* ✅ عرض معلومات الكوبون الحالي */}
+    {form.couponId && (
+        <div className="p-2 bg-green-50 border border-green-200 rounded text-sm">
+            <div className="flex items-center gap-2 text-green-700">
+                <Tag className="w-3 h-3" />
+                <span>الكوبون الحالي: <strong>{coupons.find(c => c.id.toString() === form.couponId)?.code || "جاري التحميل..."}</strong></span>
             </div>
-          </div>
         </div>
-
-        {/* الشبكة الرئيسية للمعلومات */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* معلومات المستخدم والكورس */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <User className="w-5 h-5 text-green-600" />
-                معلومات المستخدم والكورس
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <div className="space-y-3">
-                {/* معلومات المستخدم */}
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">المستخدم</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">{detailDialog.item.user?.name || "غير محدد"}</span>
-                    <span className="text-xs text-gray-500" dir="ltr">{detailDialog.item.user?.phone}</span>
-                  </div>
-                </div>
-                
-                {/* الكورس */}
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Book className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">الكورس</span>
-                  </div>
-                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.course?.title || "غير محدد"}</span>
-                </div>
-                
-                {/* المستوى */}
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">المستوى</span>
-                  </div>
-                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.name || "غير محدد"}</span>
-                </div>
-                
-                {/* المدرب */}
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">المدرب</span>
-                  </div>
-                  <span className="font-medium text-gray-900">{detailDialog.item.courseLevel?.instructor?.name || "غير محدد"}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* معلومات الإصدار والصحة */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-purple-50 to-pink-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Calendar className="w-5 h-5 text-purple-600" />
-                معلومات الإصدار والصحة
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">تاريخ الإصدار</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">{formatDate(detailDialog.item.issuedAt)}</span>
-                    {/* <span className="text-xs text-gray-500">
-                      {new Date(detailDialog.item.issuedAt).toLocaleTimeString('ar-SA')}
-                    </span> */}
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">مدة الصلاحية</span>
-                  </div>
-                  <span className="font-medium text-gray-900">{detailDialog.item.validityInMonths || "غير محدد"} شهر</span>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">الحالة الحالية</span>
-                  </div>
-                  <Badge variant={detailDialog.item.isActive && !detailDialog.item.used ? "default" : "secondary"}>
-                    {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
-                  </Badge>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">معرف الكود</span>
-                  </div>
-                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
-                    {detailDialog.item.id}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* المعلومات المالية */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <DollarSign className="w-5 h-5 text-orange-600" />
-              المعلومات المالية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* المبلغ المدفوع */}
-              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-2xl font-bold text-blue-600">💰</div>
-                <div className="text-sm font-medium text-gray-700 mt-2">المبلغ المدفوع</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{getAmountPaid(detailDialog.item)} ل.س</div>
-                <div className="text-xs text-blue-600 mt-1">المبلغ الفعلي</div>
-              </div>
-              
-              {/* سعر الكورس */}
-              {detailDialog.item.courseLevel && (
-                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-2xl font-bold text-green-600">🏷️</div>
-                  <div className="text-sm font-medium text-gray-700 mt-2">سعر الكورس</div>
-                  {detailDialog.item.courseLevel.priceSAR > 0 && (
-                    <div className="text-xl font-bold text-gray-900">{detailDialog.item.courseLevel.priceSAR} ل.س</div>
-                  )}
-                  {detailDialog.item.courseLevel.priceUSD > 0 && (
-                    <div className="text-sm text-gray-600 mt-1">{detailDialog.item.courseLevel.priceUSD} $</div>
-                  )}
-                </div>
-              )}
-              
-              {/* معلومات الكوبون */}
-              {getCouponInfo(detailDialog.item) ? (
-                <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="text-2xl font-bold text-purple-600">🎫</div>
-                  <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
-                  <div className="text-lg font-bold text-gray-900 mt-1">{getCouponInfo(detailDialog.item).code}</div>
-                  <div className="text-xs text-purple-600 mt-1">
-                    {getCouponInfo(detailDialog.item).isPercent ? 
-                      `${getCouponInfo(detailDialog.item).discount}% خصم` : 
-                      `${getCouponInfo(detailDialog.item).discount} ل.س خصم`}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-600">➖</div>
-                  <div className="text-sm font-medium text-gray-700 mt-2">كوبون الخصم</div>
-                  <div className="text-lg font-bold text-gray-900 mt-1">بدون كوبون</div>
-                  <div className="text-xs text-gray-600 mt-1">لم يتم تطبيق خصم</div>
-                </div>
-              )}
-            </div>
-            
-            {/* تفاصيل إضافية */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">المستخدم المصدر</span>
-                <span className="font-medium text-gray-900">{getIssuedByName(detailDialog.item.issuedBy)}</span>
-              </div> */}
-              
-              {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].notes && (
-                <div className="md:col-span-2">
-                  <span className="text-sm font-medium text-gray-700 block mb-2">الملاحظات</span>
-                  <p className="p-3 bg-gray-50 rounded border text-gray-800">{detailDialog.item.transaction[0].notes}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* صورة الإيصال */}
-        {detailDialog.item.transaction && detailDialog.item.transaction.length > 0 && detailDialog.item.transaction[0].receiptImageUrl && (
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-red-50 to-rose-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Upload  className="w-5 h-5 text-red-600" />
-                صورة الإيصال
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center">
-                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group cursor-pointer transition-all duration-300 hover:shadow-lg">
-                  <img
-                    src={getImageUrl(detailDialog.item.transaction[0].receiptImageUrl)}
-                    alt="صورة الإيصال"
-                    className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto transition-all duration-300 group-hover:scale-105"
-                    {...imageConfig}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/tallaam_logo2.png";
-                    }}
-                    onClick={() => {
-                      window.open(getImageUrl(detailDialog.item.transaction[0].receiptImageUrl), '_blank');
-                    }}
-                  />
-                  <div className="absolute top-3 right-3 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ZoomIn className="w-4 h-4" />
-                    انقر للتكبير
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-3 flex items-center gap-2">
-                  <Info className="w-4 h-4" />
-                  انقر على الصورة لعرضها بحجم كامل في نافذة جديدة
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ملخص سريع */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <BarChart3 className="w-5 h-5 text-gray-600" />
-              ملخص الكود
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="text-2xl font-bold text-blue-600">
-                  {detailDialog.item.isActive && !detailDialog.item.used ? "✅" : "❌"}
-                </div>
-                <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {detailDialog.item.isActive && !detailDialog.item.used ? "نشط" : "مستخدم"}
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
-                <div className="text-2xl font-bold text-green-600">📅</div>
-                <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {detailDialog.item.validityInMonths || "0"} شهر
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                <div className="text-2xl font-bold text-purple-600">💳</div>
-                <div className="text-sm font-medium text-gray-700 mt-1">المدفوع</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {getAmountPaid(detailDialog.item)} ل.س
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
-                <div className="text-2xl font-bold text-orange-600">🎯</div>
-                <div className="text-sm font-medium text-gray-700 mt-1">الكورس</div>
-                <div className="text-lg font-bold text-gray-900 truncate" title={detailDialog.item.courseLevel?.course?.title}>
-                  {detailDialog.item.courseLevel?.course?.title ? 
-                    (detailDialog.item.courseLevel.course.title.length > 12 ? 
-                      detailDialog.item.courseLevel.course.title.substring(0, 12) + "..." : 
-                      detailDialog.item.courseLevel.course.title) 
-                    : "---"}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* أزرار الإجراءات */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-          <Button
-            variant="outline"
-            onClick={() => copyToClipboard(detailDialog.item.code)}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Copy className="w-4 h-4" />
-            نسخ الكود
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStatusDialog({
-                isOpen: true,
-                itemId: detailDialog.item.id,
-                itemName: detailDialog.item.code,
-                isActive: !detailDialog.item.isActive
-              });
-              setDetailDialog({ isOpen: false, item: null });
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            {detailDialog.item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {detailDialog.item.isActive ? "تعطيل الكود" : "تفعيل الكود"}
-          </Button>
-          
-          <Button
-            variant="destructive"
-            onClick={() => {
-              setDeleteDialog({
-                isOpen: true,
-                itemId: detailDialog.item.id,
-                itemName: detailDialog.item.code
-              });
-              setDetailDialog({ isOpen: false, item: null });
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Trash2 className="w-4 h-4" />
-            حذف الكود
-          </Button>
-        </div>
-      </div>
     )}
-  </DialogContent>
-</Dialog>
+</div>
+
+                            {/* المبلغ المدفوع */}
+                            <div className="space-y-2">
+                                <Label>المبلغ المدفوع *</Label>
+                                <Input
+                                    type="number"
+                                    value={form.amountPaid}
+                                    onChange={(e) => handleFormChange("amountPaid", e.target.value)}
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* الحالة والملاحظات */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* الحالة */}
+                            <div className="space-y-2">
+                                <Label>حالة الكود</Label>
+                                <Select
+                                    value={form.isActive}
+                                    onValueChange={(value) => handleFormChange("isActive", value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="اختر الحالة" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="true">نشط</SelectItem>
+                                        <SelectItem value="false">غير نشط</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* الملاحظات */}
+                            <div className="space-y-2">
+                                <Label>ملاحظات</Label>
+                                <Textarea
+                                    value={form.notes}
+                                    onChange={(e) => handleFormChange("notes", e.target.value)}
+                                    rows={2}
+                                    placeholder="أدخل أي ملاحظات إضافية..."
+                                />
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={handleEditCode}
+                            disabled={!selectedLevel || !form.userId || !form.amountPaid || !form.validityInMonths}
+                            className="w-full"
+                        >
+                            تحديث الكود
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
         </Card>
     );
 };
