@@ -625,14 +625,14 @@ const calculateProgressPercentage = (story) => {
                                         />
                                     </div>
 
-                                    <div className="space-y-2 flex items-center gap-2">
+                                    {/* <div className="space-y-2 flex items-center gap-2">
                                         <Label>الحالة</Label>
                                         <Switch
                                             checked={form.isActive}
                                             onCheckedChange={(checked) => handleFormChange("isActive", checked)}
                                         />
                                         <span>{form.isActive ? "نشط" : "معطل"}</span>
-                                    </div>
+                                    </div> */}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">

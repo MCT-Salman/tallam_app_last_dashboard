@@ -567,7 +567,7 @@ const Admins_Accounts = () => {
 
                 {/* الحالة */}
                 {/* <div className="space-y-2 flex items-center gap-2"> */}
-                  <div className="space-y-2 mt-6.5">
+                  {/* <div className="space-y-2 mt-6.5">
                     <Button
                       variant={form.isActive ? "default" : "outline"}
                       size="sm"
@@ -577,7 +577,7 @@ const Admins_Accounts = () => {
                       {form.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       {form.isActive ? "نشط" : "معطل"}
                     </Button>
-                  </div>
+                  </div> */}
                 {/* </div> */}
               </div>
 
@@ -1179,7 +1179,7 @@ const Admins_Accounts = () => {
                 </div>
 
                 {/* الحالة */}
-                <div className="space-y-2 flex items-center gap-2">
+                {/* <div className="space-y-2 flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <Button
                       variant={form.isActive ? "default" : "outline"}
@@ -1191,7 +1191,7 @@ const Admins_Accounts = () => {
                       {form.isActive ? "نشط" : "معطل"}
                     </Button>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <Separator />

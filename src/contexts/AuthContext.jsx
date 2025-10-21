@@ -234,7 +234,7 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { login as apiLogin } from '@/api/api';
 import { startTokenMonitoring as startTokenMonitoringUtil, ensureValidToken, refreshAuthToken as refreshTokenUtil } from '@/utils/tokenManager';
-
+import { setLogoutFunction } from '@/api/axiosInstance';
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
@@ -374,6 +374,15 @@ export const AuthProvider = ({ children }) => {
     redirectToLogin(message);
   }, [redirectToLogin]);
 
+  useEffect(() => {
+  console.log('🔗 ربط دالة logout مع axios instance...');
+  setLogoutFunction(logout);
+  
+  return () => {
+    setLogoutFunction(null);
+  };
+}, [logout]);
+
   // دالة محدثة لتحديث التوكن
   const refreshAuthToken = useCallback(async () => {
     try {
@@ -398,6 +407,7 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   }, [logout]);
+
 
   const validateToken = useCallback(() => {
     const token = localStorage.getItem('accessToken');

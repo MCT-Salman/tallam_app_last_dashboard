@@ -1,16 +1,19 @@
 // src\api\api.jsxو// src\api\api.jsx
 import axios from 'axios';
+import axiosInstance, { setLogoutFunction } from './axiosInstance';
 
 // const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.3.11:5000/api';
 const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com";
 const API_URL = import.meta.env.REACT_APP_API_URL || 'https://dev.tallaam.com/api';
 
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+// const api = axios.create({
+//     baseURL: API_URL,
+//     headers: {
+//         'Content-Type': 'application/json',
+//     },
+// });
+
+const api = axiosInstance;
 
 // Interceptor لإضافة توكن JWT إلى كل طلب مصادق عليه
 api.interceptors.request.use(
@@ -792,6 +795,12 @@ export const updateAccessCodeStatus = async (accessCodeId, isActive) => {
   const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}/active`, {
     isActive
   });
+  return response;
+};
+
+// تعديل الكود
+export const updateAccessCode = async (accessCodeId, data) => {
+  const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}`, data);
   return response;
 };
 

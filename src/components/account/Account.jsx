@@ -573,11 +573,11 @@ const Account = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>رقم الهاتف *[مع رمز البلد]</Label>
+                                    <Label>رقم الهاتف [مع رمز البلد]*</Label>
                                     <Input
                                         value={form.phone}
                                         onChange={(e) => handleFormChange("phone", e.target.value)}
-                                        placeholder="أدخل رقم الهاتف..."
+                                        placeholder="+963123456789"
                                         className="dir-ltr text-left"
                                         dir="ltr"
                                     />
@@ -590,6 +590,7 @@ const Account = () => {
                                             type="date"
                                             value={form.birthDate}
                                             onChange={(e) => handleFormChange("birthDate", e.target.value)}
+                                        // className="flex justify-end"
                                         />
                                     </div>
 
@@ -598,6 +599,7 @@ const Account = () => {
                                         <Select
                                             value={form.sex}
                                             onValueChange={(value) => handleFormChange("sex", value)}
+                                            
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="اختر الجنس" />

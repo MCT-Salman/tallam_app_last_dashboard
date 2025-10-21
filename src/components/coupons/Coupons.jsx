@@ -1131,13 +1131,13 @@ const Coupons = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <Switch
                     checked={form.isActive}
                     onCheckedChange={(checked) => handleFormChange("isActive", checked)}
                   />
                   <Label>الحالة: {form.isActive ? "نشط" : "معطل"}</Label>
-                </div>
+                </div> */}
 
                 <Button onClick={handleSave} className="w-full">
                   {editItem ? "حفظ التعديل" : "حفظ الكوبون"}
