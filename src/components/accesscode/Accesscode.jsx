@@ -2061,6 +2061,15 @@ useEffect(() => {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="table-cell text-right space-x-2">
+                                                     <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => copyToClipboard(item.code)}
+                                                        title="نسخ الكود"
+                                                    >
+                                                        <Copy className="w-4 h-4" />
+                                                    </Button>
+                                                    
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
@@ -2069,14 +2078,7 @@ useEffect(() => {
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => copyToClipboard(item.code)}
-                                                        title="نسخ الكود"
-                                                    >
-                                                        <Copy className="w-4 h-4" />
-                                                    </Button>
+                                                   
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
