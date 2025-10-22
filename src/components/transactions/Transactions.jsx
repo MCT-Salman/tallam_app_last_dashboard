@@ -133,7 +133,7 @@ const Transactions = () => {
         }
     };
 
-     // Handle sort
+    // Handle sort
     const handleSort = (field) => {
         if (sortBy === field) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc")
@@ -350,8 +350,8 @@ const Transactions = () => {
                 'المبلغ المدفوع': getAmountValue(transaction.amountPaid),
                 'المبلغ المدفوع (ل.س)': `${getAmountValue(transaction.amountPaid).toLocaleString()} ل.س`,
                 'كود الكوبون': transaction.coupon?.code || '-',
-'قيمة الخصم': transaction.coupon ? `${transaction.coupon.discount}${transaction.coupon.isPercent ? '%' : ' ل.س'}` : '-',
-'نوع الخصم': transaction.coupon?.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة',
+                'قيمة الخصم': transaction.coupon ? `${transaction.coupon.discount}${transaction.coupon.isPercent ? '%' : ' ل.س'}` : '-',
+                'نوع الخصم': transaction.coupon?.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة',
                 'كود الدخول': transaction.accessCode?.code || 'غير محدد',
                 'تاريخ الإنشاء': formatDate(transaction.createdAt),
                 'آخر تحديث': formatDate(transaction.updatedAt),
@@ -474,7 +474,7 @@ const Transactions = () => {
         }
     }
 
-   
+
 
     // Pagination calculations
     const totalPages = Math.ceil(totalCount / itemsPerPage)
@@ -863,14 +863,14 @@ const Transactions = () => {
                         </div>
 
                         {/* معلومات الكوبون */}
-{transaction.coupon && (
-    <div className="flex justify-between items-center text-sm">
-        <span className="text-muted-foreground">الكوبون:</span>
-        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
-            {transaction.coupon.code} ({transaction.coupon.discount}{transaction.coupon.isPercent ? '%' : 'ل.س'})
-        </Badge>
-    </div>
-)}
+                        {transaction.coupon && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">الكوبون:</span>
+                                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                                    {transaction.coupon.code} ({transaction.coupon.discount}{transaction.coupon.isPercent ? '%' : 'ل.س'})
+                                </Badge>
+                            </div>
+                        )}
 
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">التاريخ:</span>
@@ -1136,16 +1136,16 @@ const Transactions = () => {
                                                     ) : (
                                                         <span className="text-gray-500">لا يوجد</span>
                                                     )}
-                                                        </TableCell>
-                                                    <TableCell className="whitespace-nowrap">
-    {item.coupon ? (
-        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-            {item.coupon.code} ({item.coupon.discount}{item.coupon.isPercent ? '%' : 'ل.س'})
-        </Badge>
-    ) : (
-        <span className="text-gray-500">-</span>
-    )}
-</TableCell>
+                                                </TableCell>
+                                                <TableCell className="whitespace-nowrap">
+                                                    {item.coupon ? (
+                                                        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                                                            {item.coupon.code} ({item.coupon.discount}{item.coupon.isPercent ? '%' : 'ل.س'})
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-gray-500">-</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="whitespace-nowrap">
                                                     {formatDate(item.createdAt)}
                                                 </TableCell>
@@ -1513,53 +1513,53 @@ const Transactions = () => {
                                 </Card>
 
                                 {/* معلومات الكوبون */}
-                               <Card className="border border-gray-200 shadow-sm">
-    <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
-        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-            <DollarSign className="w-5 h-5 text-orange-600" />
-            معلومات الكوبون
-        </CardTitle>
-    </CardHeader>
-    <CardContent className="pt-4">
-        {selectedTransaction.coupon ? (
-            <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-purple-700">معلومات الكوبون</span>
-                    <Badge variant="default" className="bg-purple-600">
-                        خصم مطبق
-                    </Badge>
-                </div>
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                        <span className="text-sm text-purple-600">كود الكوبون:</span>
-                        <span className="font-mono font-bold text-purple-800">
-                            {selectedTransaction.coupon.code}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-sm text-purple-600">قيمة الخصم:</span>
-                        <span className="font-bold text-purple-800">
-                            {selectedTransaction.coupon.discount}
-                            {selectedTransaction.coupon.isPercent ? '%' : ' ل.س'}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-sm text-purple-600">نوع الخصم:</span>
-                        <span className="text-purple-800">
-                            {selectedTransaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        ) : (
-            <div className="text-center py-8">
-                <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500 text-lg">لا يوجد كوبون</p>
-                <p className="text-gray-400 text-sm mt-1">لم يتم استخدام أي كوبون في هذه المعاملة</p>
-            </div>
-        )}
-    </CardContent>
-</Card>
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <DollarSign className="w-5 h-5 text-orange-600" />
+                                            معلومات الكوبون
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        {selectedTransaction.coupon ? (
+                                            <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-sm font-medium text-purple-700">معلومات الكوبون</span>
+                                                    <Badge variant="default" className="bg-purple-600">
+                                                        خصم مطبق
+                                                    </Badge>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-purple-600">كود الكوبون:</span>
+                                                        <span className="font-mono font-bold text-purple-800">
+                                                            {selectedTransaction.coupon.code}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-purple-600">قيمة الخصم:</span>
+                                                        <span className="font-bold text-purple-800">
+                                                            {selectedTransaction.coupon.discount}
+                                                            {selectedTransaction.coupon.isPercent ? '%' : ' ل.س'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-purple-600">نوع الخصم:</span>
+                                                        <span className="text-purple-800">
+                                                            {selectedTransaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-8">
+                                                <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                                <p className="text-gray-500 text-lg">لا يوجد كوبون</p>
+                                                <p className="text-gray-400 text-sm mt-1">لم يتم استخدام أي كوبون في هذه المعاملة</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
                                 {/* معلومات إضافية */}
                                 <Card className="border border-gray-200 shadow-sm">
                                     <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
@@ -1621,7 +1621,7 @@ const Transactions = () => {
                                 </Card>
 
                                 {/* أزرار الإجراءات */}
-                                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                                {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                                     <Button
                                         variant="default"
                                         onClick={() => handleExportInvoice(selectedTransaction)}
@@ -1642,7 +1642,7 @@ const Transactions = () => {
                                         </Button>
                                     )}
 
-                                    {/* <Button
+                                    <Button
                                         variant="outline"
                                         onClick={() => {
                                             // إمكانية إضافة وظيفة الطباعة المباشرة
@@ -1652,8 +1652,8 @@ const Transactions = () => {
                                     >
                                         <FileText className="w-4 h-4" />
                                         طباعة التفاصيل
-                                    </Button> */}
-                                </div>
+                                    </Button>
+                                </div> */}
                             </div>
                         )}
                     </DialogContent>

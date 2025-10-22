@@ -379,7 +379,7 @@ const Specialization = () => {
                 </div>
 
                 {/* الإجراءات */}
-                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                     <Button
                         variant="outline"
                         onClick={() => handleToggleActive(specialization.id, specialization.isActive)}
@@ -420,7 +420,7 @@ const Specialization = () => {
                         <Trash2 className="w-4 h-4" />
                         حذف التخصص
                     </Button>
-                </div>
+                </div> */}
             </div>
         )
     }

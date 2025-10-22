@@ -992,7 +992,7 @@ const LevelDetails = ({ item }) => {
             </Card>
 
             {/* الإجراءات */}
-            <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+            {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                 <Button
                     variant="outline"
                     onClick={() => {
@@ -1044,7 +1044,7 @@ const LevelDetails = ({ item }) => {
                     <Trash2 className="w-4 h-4" />
                     حذف المستوى
                 </Button>
-            </div>
+            </div> */}
         </div>
     );
 };

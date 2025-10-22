@@ -2603,7 +2603,7 @@ useEffect(() => {
                             </Card>
 
                             {/* أزرار الإجراءات */}
-                            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                            {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                                 <Button
                                     variant="outline"
                                     onClick={() => copyToClipboard(detailDialog.item.code)}
@@ -2657,7 +2657,7 @@ useEffect(() => {
                                     <Trash2 className="w-4 h-4" />
                                     حذف الكود
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
                     )}
                 </DialogContent>

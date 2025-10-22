@@ -451,7 +451,7 @@ const Course = () => {
                 )}
 
                 {/* الإجراءات */}
-                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                     <Button
                         variant="outline"
                         onClick={() => handleToggleActive(course.id, course.isActive)}
@@ -494,7 +494,7 @@ const Course = () => {
                         <Trash2 className="w-4 h-4" />
                         حذف المادة
                     </Button>
-                </div>
+                </div> */}
             </div>
         )
     }

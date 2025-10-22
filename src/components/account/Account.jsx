@@ -396,9 +396,9 @@ const Account = () => {
                             <Badge variant={user.isActive ? "default" : "secondary"} className="text-sm">
                                 {user.isActive ? "نشط" : "معطل"}
                             </Badge>
-                            <Badge variant={user.isVerified ? "default" : "secondary"} className="text-sm">
+                            {/* <Badge variant={user.isVerified ? "default" : "secondary"} className="text-sm">
                                 {user.isVerified ? "مفعل" : "غير مفعل"}
-                            </Badge>
+                            </Badge> */}
                         </div>
                     </div>
                 </div>
@@ -480,7 +480,7 @@ const Account = () => {
                 </div>
 
                 {/* الإجراءات */}
-                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                     <Button
                         variant="outline"
                         onClick={() => handleToggleActive(user.id, user.isActive)}
@@ -526,7 +526,7 @@ const Account = () => {
                         <Trash2 className="w-4 h-4" />
                         حذف المستخدم
                     </Button>
-                </div>
+                </div> */}
             </div>
         )
     }

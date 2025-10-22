@@ -1459,18 +1459,7 @@ const Notifications = () => {
               </Card>
 
               {/* أزرار الإجراءات */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                {/* {detailDialog.notification.link && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(detailDialog.notification.link, '_blank')}
-              className="flex items-center gap-2 flex-1"
-            >
-              <Send className="w-4 h-4" />
-              زيارة الرابط
-            </Button>
-          )} */}
-
+              {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -1499,7 +1488,7 @@ const Notifications = () => {
                   <Trash2 className="w-4 h-4" />
                   حذف الإشعار
                 </Button>
-              </div>
+              </div> */}
             </div>
           )}
         </DialogContent>

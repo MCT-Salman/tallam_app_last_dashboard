@@ -440,7 +440,7 @@ const Instructor = () => {
                 )}
 
                 {/* الإجراءات */}
-                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                     <Button
                         variant="outline"
                         onClick={() => handleToggleActive(instructor.id, instructor.isActive)}
@@ -483,7 +483,7 @@ const Instructor = () => {
                         <Trash2 className="w-4 h-4" />
                         حذف المدرب
                     </Button>
-                </div>
+                </div> */}
             </div>
         )
     }

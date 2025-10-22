@@ -720,7 +720,7 @@ const Lesson = () => {
             </Card>
 
             {/* الإجراءات */}
-            <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+            {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                 <Button
                     variant="outline"
                     onClick={() => {
@@ -758,7 +758,7 @@ const Lesson = () => {
                     <Trash2 className="w-4 h-4" />
                     حذف الملف
                 </Button>
-            </div>
+            </div> */}
         </div>
     )
 }
@@ -1738,7 +1738,7 @@ const Lesson = () => {
                 )}
 
                 {/* الإجراءات */}
-                <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                     <Button
                         variant="outline"
                         onClick={() => {
@@ -1778,7 +1778,7 @@ const Lesson = () => {
                         <Trash2 className="w-4 h-4" />
                         حذف الدرس
                     </Button>
-                </div>
+                </div> */}
             </div>
         )
     }
@@ -1939,7 +1939,7 @@ const Lesson = () => {
             </Card>
 
             {/* الإجراءات */}
-            <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+            {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                 <Button
                     variant="outline"
                     onClick={() => {
@@ -1977,7 +1977,7 @@ const Lesson = () => {
                     <Trash2 className="w-4 h-4" />
                     حذف السؤال
                 </Button>
-            </div>
+            </div> */}
         </div>
     )
 }
@@ -2133,6 +2133,120 @@ const Lesson = () => {
             </CardContent>
         </Card>
     )
+
+    // مكون بطاقة الدرس للعرض على الجوال
+// مكون بطاقة الدرس للعرض على الجوال
+const LessonCard = ({ lesson }) => (
+    <Card className="mb-4">
+        <CardContent className="p-4">
+            <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                        <h3 className="font-bold text-lg mb-2">{lesson.title || "بدون عنوان"}</h3>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            <Badge variant="secondary">ترتيب: {lesson.orderIndex || 0}</Badge>
+                            <Badge variant={lesson.isActive ? "default" : "secondary"}>
+                                {lesson.isActive ? "نشط" : "معطل"}
+                            </Badge>
+                            <Badge variant={lesson.isFreePreview ? "default" : "outline"}>
+                                {lesson.isFreePreview ? "مجاني" : "مدفوع"}
+                            </Badge>
+                        </div>
+                        {lesson.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                {lesson.description}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span>{formatDuration(lesson.durationSec)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Youtube className="w-4 h-4 text-red-500" />
+                        <span className={lesson.youtubeUrl ? "text-green-600" : "text-red-600"}>
+                            {lesson.youtubeUrl ? "متوفر" : "غير متوفر"}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-between flex-wrap gap-2 mt-4 pt-4 border-t">
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDetailDialog({ isOpen: true, lesson })}
+                    className="flex-1"
+                >
+                    <Eye className="w-4 h-4 ml-1" />
+                    التفاصيل
+                </Button>
+                {lesson.youtubeUrl && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(lesson.youtubeUrl, '_blank')}
+                        className="flex-1"
+                    >
+                        <Youtube className="w-4 h-4 ml-1" />
+                        مشاهدة
+                    </Button>
+                )}
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                        setEditItem(lesson)
+                        setForm({
+                            title: lesson.title || "",
+                            description: lesson.description || "",
+                            youtubeUrl: lesson.youtubeUrl || "",
+                            youtubeId: lesson.youtubeId || "",
+                            googleDriveUrl: lesson.googleDriveUrl || "",
+                            durationSec: lesson.durationSec || "",
+                            orderIndex: lesson.orderIndex || "",
+                            isFreePreview: Boolean(lesson.isFreePreview)
+                        })
+                        if (lesson.youtubeUrl) {
+                            handleYoutubeUrlChange(lesson.youtubeUrl);
+                        }
+                        setIsDialogOpen(true)
+                    }}
+                    className="flex-1"
+                >
+                    <Edit className="w-4 h-4 ml-1" />
+                    تعديل
+                </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleActive(lesson.id, lesson.isActive)}
+                    className="flex-1"
+                >
+                    {lesson.isActive ? <Pause className="w-4 h-4 ml-1" /> : <Play className="w-4 h-4 ml-1" />}
+                    {lesson.isActive ? "تعطيل" : "تفعيل"}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteDialog({
+                        isOpen: true,
+                        itemId: lesson.id,
+                        itemName: lesson.title || "بدون عنوان",
+                        type: "lesson"
+                    })}
+                    className="flex-1"
+                >
+                    <Trash2 className="w-4 h-4 ml-1" />
+                    حذف
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+)
 
     return (
         <Card>
@@ -2325,270 +2439,303 @@ const Lesson = () => {
                             </TabsTrigger>
                         </TabsList>
 
-                        {/* محتوى تاب الدروس */}
-                        <TabsContent value="lessons" className="space-y-4 mt-4">
-                            <div className="flex justify-between items-center">
-                                <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                                    setIsDialogOpen(open)
-                                    if (!open) resetFormData()
-                                }}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => {
-                                                resetFormData()
-                                                setIsDialogOpen(true)
-                                            }}
-                                        >
-                                            إضافة درس
-                                            <Plus className="w-4 h-4 mr-1" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                                        <DialogHeader>
-                                            <DialogTitle className="text-right">{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4 mt-2">
-                                            <div className="space-y-2">
-                                                <Label>عنوان الدرس *</Label>
-                                                <Input
-                                                    value={form.title}
-                                                    onChange={(e) => handleFormChange("title", e.target.value)}
-                                                    placeholder="أدخل عنوان الدرس..."
-                                                />
-                                            </div>
+                       {/* محتوى تاب الدروس */}
+<TabsContent value="lessons" className="space-y-4 mt-4">
+    <div className="flex justify-between items-center">
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetFormData()
+        }}>
+            <DialogTrigger asChild>
+                <Button
+                    size="sm"
+                    onClick={() => {
+                        resetFormData()
+                        setIsDialogOpen(true)
+                    }}
+                >
+                    إضافة درس
+                    <Plus className="w-4 h-4 mr-1" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-right">{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                        <Label>عنوان الدرس *</Label>
+                        <Input
+                            value={form.title}
+                            onChange={(e) => handleFormChange("title", e.target.value)}
+                            placeholder="أدخل عنوان الدرس..."
+                        />
+                    </div>
 
-                                            {/* <div className="space-y-2">
-                                                <Label>وصف الدرس</Label>
-                                                <Textarea
-                                                    value={form.description}
-                                                    onChange={(e) => handleFormChange("description", e.target.value)}
-                                                    placeholder="أدخل وصف الدرس..."
-                                                    rows={3}
-                                                />
-                                            </div> */}
+                    <div className="space-y-2">
+                        <Label>وصف الدرس</Label>
+                        <Textarea
+                            value={form.description}
+                            onChange={(e) => handleFormChange("description", e.target.value)}
+                            placeholder="أدخل وصف الدرس..."
+                            rows={3}
+                        />
+                    </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>ترتيب الدرس *</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={form.orderIndex}
-                                                        onChange={(e) => handleFormChange("orderIndex", e.target.value)}
-                                                        min="1"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>مدة الدرس (ثانية)</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={form.durationSec}
-                                                        onChange={(e) => handleFormChange("durationSec", e.target.value)}
-                                                        min="0"
-                                                    />
-                                                </div>
-                                            </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>ترتيب الدرس *</Label>
+                            <Input
+                                type="number"
+                                value={form.orderIndex}
+                                onChange={(e) => handleFormChange("orderIndex", e.target.value)}
+                                min="1"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>مدة الدرس (ثانية)</Label>
+                            <Input
+                                type="number"
+                                value={form.durationSec}
+                                onChange={(e) => handleFormChange("durationSec", e.target.value)}
+                                min="0"
+                            />
+                        </div>
+                    </div>
 
-                                            <div className="space-y-2">
-                                                <Label>رابط YouTube *</Label>
-                                                <Input
-                                                    value={form.youtubeUrl}
-                                                    onChange={(e) => handleYoutubeUrlChange(e.target.value)}
-                                                    placeholder="https://youtube.com/..."
-                                                    className={linkValidation.youtubeUrl.isValid && linkValidation.youtubeUrl.exists ? "border-green-500" :
-                                                        linkValidation.youtubeUrl.isValid && !linkValidation.youtubeUrl.exists ? "border-yellow-500" :
-                                                            !linkValidation.youtubeUrl.isValid && form.youtubeUrl ? "border-red-500" : ""}
-                                                />
-                                                <LinkStatus validation={linkValidation.youtubeUrl} />
-                                            </div>
+                    <div className="space-y-2">
+                        <Label>رابط YouTube *</Label>
+                        <Input
+                            value={form.youtubeUrl}
+                            onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+                            placeholder="https://youtube.com/..."
+                            className={linkValidation.youtubeUrl.isValid && linkValidation.youtubeUrl.exists ? "border-green-500" :
+                                linkValidation.youtubeUrl.isValid && !linkValidation.youtubeUrl.exists ? "border-yellow-500" :
+                                    !linkValidation.youtubeUrl.isValid && form.youtubeUrl ? "border-red-500" : ""}
+                        />
+                        <LinkStatus validation={linkValidation.youtubeUrl} />
+                    </div>
 
-                                            <div className="space-y-2">
-                                                <Label>رابط Google Drive</Label>
-                                                <Input
-                                                    value={form.googleDriveUrl}
-                                                    onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
-                                                    placeholder="https://drive.google.com/..."
-                                                />
-                                            </div>
+                    <div className="space-y-2">
+                        <Label>رابط Google Drive</Label>
+                        <Input
+                            value={form.googleDriveUrl}
+                            onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
+                            placeholder="https://drive.google.com/..."
+                        />
+                    </div>
 
-                                            <div className="flex items-center space-x-2 space-x-reverse">
-                                                <Switch
-                                                    checked={form.isFreePreview}
-                                                    onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
-                                                />
-                                                <Label>معاينة مجانية</Label>
-                                            </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                        <Switch
+                            checked={form.isFreePreview}
+                            onCheckedChange={(checked) => handleFormChange("isFreePreview", checked)}
+                        />
+                        <Label>معاينة مجانية</Label>
+                    </div>
 
-                                            <Button
-                                                onClick={handleSave}
-                                                disabled={isSubmitting || !linkValidation.youtubeUrl.isValid || !linkValidation.youtubeUrl.exists}
-                                                className="w-full"
-                                            >
-                                                {isSubmitting ? "جاري الحفظ..." : (editItem ? "حفظ التعديل" : "حفظ")}
-                                            </Button>
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
+                    <Button
+                        onClick={handleSave}
+                        disabled={isSubmitting || !linkValidation.youtubeUrl.isValid || !linkValidation.youtubeUrl.exists}
+                        className="w-full"
+                    >
+                        {isSubmitting ? "جاري الحفظ..." : (editItem ? "حفظ التعديل" : "حفظ")}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
 
-                                <div className="flex gap-2">
-                                    <div className="relative">
-                                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input placeholder="بحث بالعنوان..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-10 w-48" />
-                                    </div>
+        <div className="flex flex-wrap gap-2">
+            <div className="relative">
+                <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="بحث بالعنوان..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-10 w-48" />
+            </div>
 
-                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                        <SelectTrigger className="w-32">
-                                            <SelectValue placeholder="الحالة" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">جميع الحالات</SelectItem>
-                                            <SelectItem value="active">نشط</SelectItem>
-                                            <SelectItem value="inactive">معطل</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-32">
+                    <SelectValue placeholder="الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">جميع الحالات</SelectItem>
+                    <SelectItem value="active">نشط</SelectItem>
+                    <SelectItem value="inactive">معطل</SelectItem>
+                </SelectContent>
+            </Select>
 
-                                    <Select value={freePreviewFilter} onValueChange={setFreePreviewFilter}>
-                                        <SelectTrigger className="w-36">
-                                            <SelectValue placeholder="المعاينة" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">جميع الدروس</SelectItem>
-                                            <SelectItem value="free">معاينة مجانية</SelectItem>
-                                            <SelectItem value="paid">بدون معاينة</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+            <Select value={freePreviewFilter} onValueChange={setFreePreviewFilter}>
+                <SelectTrigger className="w-32">
+                    <SelectValue placeholder="المعاينة" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">جميع الدروس</SelectItem>
+                    <SelectItem value="free">معاينة مجانية</SelectItem>
+                    <SelectItem value="paid">بدون معاينة</SelectItem>
+                </SelectContent>
+            </Select>
 
-                                    {(searchTerm || statusFilter !== "all" || freePreviewFilter !== "all") && (
-                                        <Button variant="outline" size="sm" onClick={resetFilters}>
-                                            <Filter className="w-4 h-4 ml-1" />
-                                            إعادة تعيين
-                                        </Button>
-                                    )}
-                                </div>
+            <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => setItemsPerPage(Number(value))}
+                className="w-32"
+            >
+                <SelectTrigger>
+                    <SelectValue placeholder="عدد العناصر" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="5">5 عناصر</SelectItem>
+                    <SelectItem value="10">10 عناصر</SelectItem>
+                    <SelectItem value="20">20 عنصر</SelectItem>
+                    <SelectItem value="50">50 عنصر</SelectItem>
+                </SelectContent>
+            </Select>
+
+            {(searchTerm || statusFilter !== "all" || freePreviewFilter !== "all") && (
+                <Button variant="outline" size="sm" onClick={resetFilters}>
+                    <Filter className="w-4 h-4 ml-1" />
+                    إعادة تعيين
+                </Button>
+            )}
+        </div>
+    </div>
+
+    {/* Table View for lessons - for medium screens and up */}
+    <div className="hidden md:block">
+        <Table className="direction-rtl">
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="table-header cursor-pointer hover:bg-gray-100" onClick={() => handleSort("title")}>
+                        <div className="flex items-center gap-1">
+                            العنوان
+                            {sortBy === "title" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
+                        </div>
+                    </TableHead>
+                    <TableHead className="table-header cursor-pointer hover:bg-gray-100" onClick={() => handleSort("orderIndex")}>
+                        <div className="flex items-center gap-1">
+                            الترتيب
+                            {sortBy === "orderIndex" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
+                        </div>
+                    </TableHead>
+                    <TableHead className="table-header">المدة</TableHead>
+                    <TableHead className="table-header">المعاينة</TableHead>
+                    <TableHead className="table-header">الحالة</TableHead>
+                    <TableHead className="table-header text-right">الإجراءات</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {paginatedLessons.length > 0 ? paginatedLessons.map(item => (
+                    <TableRow key={item.id}>
+                        <TableCell className="table-cell font-medium">
+                            <div>
+                                <div>{item.title || "بدون عنوان"}</div>
+                                {item.description && <div className="text-sm text-muted-foreground truncate max-w-[200px]">{item.description}</div>}
                             </div>
-
-                            <Table className="direction-rtl">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="table-header cursor-pointer hover:bg-gray-100" onClick={() => handleSort("title")}>
-                                            <div className="flex items-center gap-1">
-                                                العنوان
-                                                {sortBy === "title" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
-                                            </div>
-                                        </TableHead>
-                                        <TableHead className="table-header cursor-pointer hover:bg-gray-100" onClick={() => handleSort("orderIndex")}>
-                                            <div className="flex items-center gap-1">
-                                                المستوى
-                                                {sortBy === "orderIndex" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
-                                            </div>
-                                        </TableHead>
-                                        <TableHead className="table-header">المدة</TableHead>
-                                        <TableHead className="table-header">المعاينة</TableHead>
-                                        <TableHead className="table-header">الحالة</TableHead>
-                                        <TableHead className="table-header text-right">الإجراءات</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedLessons.length > 0 ? paginatedLessons.map(item => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="table-cell font-medium">
-                                                <div>
-                                                    <div>{item.title || "بدون عنوان"}</div>
-                                                    {item.description && <div className="text-sm text-muted-foreground truncate max-w-[200px]">{item.description}</div>}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                <Badge variant="secondary">{item.orderIndex || "0"}</Badge>
-                                            </TableCell>
-                                            <TableCell className="table-cell">{formatDuration(item.durationSec)}</TableCell>
-                                            <TableCell className="table-cell">
-                                                <Badge variant={item.isFreePreview ? "default" : "secondary"}>
-                                                    {item.isFreePreview ? "مجاني" : "مدفوع"}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="table-cell">
-                                                <Badge variant={item.isActive ? "default" : "secondary"}>
-                                                    {item.isActive ? "نشط" : "معطل"}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="table-cell text-right space-x-2">
-                                                <Button size="icon" variant="ghost" onClick={() => setDetailDialog({ isOpen: true, lesson: item })} title="عرض التفاصيل">
-                                                    <Info className="w-4 h-4" />
-                                                </Button>
-                                                {item.youtubeUrl && (
-                                                    <Button size="icon" variant="ghost" onClick={() => window.open(item.youtubeUrl, '_blank')} title="مشاهدة على YouTube">
-                                                        <Eye className="w-4 h-4" />
-                                                    </Button>
-                                                )}
-                                                <Button size="icon" variant="ghost" onClick={() => handleToggleActive(item.id, item.isActive)} title={item.isActive ? "تعطيل" : "تفعيل"}>
-                                                    {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                                                </Button>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => {
-                                                        setEditItem(item)
-                                                        setForm({
-                                                            title: item.title || "",
-                                                            description: item.description || "",
-                                                            youtubeUrl: item.youtubeUrl || "",
-                                                            youtubeId: item.youtubeId || "",
-                                                            googleDriveUrl: item.googleDriveUrl || "",
-                                                            durationSec: item.durationSec || "",
-                                                            orderIndex: item.orderIndex || "",
-                                                            isFreePreview: Boolean(item.isFreePreview)
-                                                        })
-
-                                                        // ✅ تفعيل فحص الرابط تلقائياً عند التعديل
-                                                        if (item.youtubeUrl) {
-                                                            handleYoutubeUrlChange(item.youtubeUrl);
-                                                        }
-
-                                                        setIsDialogOpen(true)
-                                                    }}
-                                                    title="تعديل"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </Button>
-                                                <Button size="icon" variant="destructive" onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title, type: "lesson" })} title="حذف">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    )) : (
-                                        <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                                                {allLessons.length === 0 ? "لا توجد دروس" : "لم يتم العثور على نتائج"}
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-
-                            {paginatedLessons.length > 0 && (
-                                <div className="flex items-center justify-between gap-4 mt-6">
-                                    <div className="text-sm text-muted-foreground">
-                                        عرض {startItem} - {endItem} من أصل {totalItems}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-                                            <ChevronRight className="w-4 h-4" />
-                                        </Button>
-                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            let pageNumber = currentPage <= 3 ? i + 1 : currentPage >= totalPages - 2 ? totalPages - 4 + i : currentPage - 2 + i
-                                            return (
-                                                <Button key={pageNumber} variant={currentPage === pageNumber ? "default" : "outline"} size="sm" onClick={() => handlePageChange(pageNumber)}>
-                                                    {pageNumber}
-                                                </Button>
-                                            )
-                                        })}
-                                        <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-                                            <ChevronLeft className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </div>
+                        </TableCell>
+                        <TableCell className="table-cell">
+                            <Badge variant="secondary">{item.orderIndex || "0"}</Badge>
+                        </TableCell>
+                        <TableCell className="table-cell">{formatDuration(item.durationSec)}</TableCell>
+                        <TableCell className="table-cell">
+                            <Badge variant={item.isFreePreview ? "default" : "secondary"}>
+                                {item.isFreePreview ? "مجاني" : "مدفوع"}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="table-cell">
+                            <Badge variant={item.isActive ? "default" : "secondary"}>
+                                {item.isActive ? "نشط" : "معطل"}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="table-cell text-right space-x-2">
+                            {item.youtubeUrl && (
+                                <Button size="icon" variant="ghost" onClick={() => window.open(item.youtubeUrl, '_blank')} title="مشاهدة على YouTube">
+                                    <Youtube className="w-4 h-4" />
+                                </Button>
                             )}
-                        </TabsContent>
+                            <Button size="icon" variant="ghost" onClick={() => setDetailDialog({ isOpen: true, lesson: item })} title="عرض التفاصيل">
+                                <Eye className="w-4 h-4" />
+                            </Button>
+                            
+                            <Button size="icon" variant="ghost" onClick={() => handleToggleActive(item.id, item.isActive)} title={item.isActive ? "تعطيل" : "تفعيل"}>
+                                {item.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                    setEditItem(item)
+                                    setForm({
+                                        title: item.title || "",
+                                        description: item.description || "",
+                                        youtubeUrl: item.youtubeUrl || "",
+                                        youtubeId: item.youtubeId || "",
+                                        googleDriveUrl: item.googleDriveUrl || "",
+                                        durationSec: item.durationSec || "",
+                                        orderIndex: item.orderIndex || "",
+                                        isFreePreview: Boolean(item.isFreePreview)
+                                    })
+
+                                    // ✅ تفعيل فحص الرابط تلقائياً عند التعديل
+                                    if (item.youtubeUrl) {
+                                        handleYoutubeUrlChange(item.youtubeUrl);
+                                    }
+
+                                    setIsDialogOpen(true)
+                                }}
+                                title="تعديل"
+                            >
+                                <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="icon" variant="destructive" onClick={() => setDeleteDialog({ isOpen: true, itemId: item.id, itemName: item.title, type: "lesson" })} title="حذف">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                )) : (
+                    <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            {allLessons.length === 0 ? "لا توجد دروس" : "لم يتم العثور على نتائج"}
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
+    </div>
+
+    {/* Cards View for lessons - for small screens */}
+    <div className="block md:hidden">
+        {paginatedLessons.length > 0 ? (
+            paginatedLessons.map(lesson => (
+                <LessonCard key={lesson.id} lesson={lesson} />
+            ))
+        ) : (
+            <div className="text-center py-8 text-muted-foreground">
+                {allLessons.length === 0 ? "لا توجد دروس" : "لم يتم العثور على نتائج"}
+            </div>
+        )}
+    </div>
+
+    {paginatedLessons.length > 0 && (
+        <div className="flex items-center justify-between gap-4 mt-6">
+            <div className="text-sm text-muted-foreground">
+                عرض {startItem} - {endItem} من أصل {totalItems}
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                    <ChevronRight className="w-4 h-4" />
+                </Button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber = currentPage <= 3 ? i + 1 : currentPage >= totalPages - 2 ? totalPages - 4 + i : currentPage - 2 + i
+                    return (
+                        <Button key={pageNumber} variant={currentPage === pageNumber ? "default" : "outline"} size="sm" onClick={() => handlePageChange(pageNumber)}>
+                            {pageNumber}
+                        </Button>
+                    )
+                })}
+                <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                    <ChevronLeft className="w-4 h-4" />
+                </Button>
+            </div>
+        </div>
+    )}
+</TabsContent>
 
                         {/* محتوى تاب الملفات */}
                         <TabsContent value="files" className="space-y-4 mt-4">
@@ -2637,7 +2784,7 @@ const Lesson = () => {
                                 </Dialog>
 
                                 {/* أدوات البحث والفلترة للملفات */}
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <div className="relative">
                                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input
