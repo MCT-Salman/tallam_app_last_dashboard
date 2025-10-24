@@ -149,7 +149,7 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  /* font-family: 'Tajawal', sans-serif; */
+  font-family: 'Alqabas', sans-serif;
   direction: rtl;
 }
 
