@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, UserCheck, GraduationCap, BookOpen, Image as ImageIcon, TrendingUp, DollarSign } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { getAllUsers, getInstructors, getCourseLevels, getStories, getAllAccessCodes, getTransactions } from "@/api/api"
+import { getAllUsers, getInstructors,getCourses, getCourseLevels, getStories, getAllAccessCodes, getTransactions } from "@/api/api"
 import { showErrorToast } from "@/hooks/useToastMessages"
 
 // دالة لتحويل الأرقام إلى نص عربي
@@ -124,17 +124,9 @@ const Home = () => {
       const totalInstructors = instructorsData.length
 
       // 4. جلب عدد المستويات (نحتاج لجلب جميع الكورسات أولاً)
-      const coursesRes = await fetch(`${import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com"}/api/catalog/admin/courses`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
-      const coursesData = await coursesRes.json()
-      const allCourses = Array.isArray(coursesData.data?.items) 
-        ? coursesData.data.items 
-        : Array.isArray(coursesData.data?.data)
-        ? coursesData.data.data
-        : []
+      const coursesRes = await getCourses()
+      // const coursesData = await coursesRes.json()
+      const allCourses = Array.isArray(coursesRes.data?.data?.items) ? coursesRes.data.data.items : []
       
       let totalLevels = 0
       for (const course of allCourses) {
