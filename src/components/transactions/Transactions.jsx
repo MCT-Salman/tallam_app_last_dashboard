@@ -654,60 +654,104 @@ const Transactions = () => {
         return ""
     }
 
-    // مكون عرض الإحصائيات
+    // حساب الإحصائيات بالدولار
+    const calculateUSDStats = () => {
+        if (!transactions || transactions.length === 0) return { total: 0, average: 0, max: 0 }
+        
+        const usdAmounts = transactions.map(t => t.accessCode?.courseLevel?.priceUSD || 0)
+        const total = usdAmounts.reduce((sum, amount) => sum + amount, 0)
+        const average = total / transactions.length
+        const max = Math.max(...usdAmounts, 0)
+        
+        return { total, average, max }
+    }
+
+    const usdStats = calculateUSDStats()
+
+    // مكون عرض الإحصائيات المحسّن
     const StatsCards = () => (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            <Card className="overflow-hidden">
-                <CardContent className="p-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* إجمالي المعاملات */}
+            <Card className="relative overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground">إجمالي المعاملات</p>
-                            <p className="text-lg font-bold">{stats.totalTransactions || 0}</p>
+                        <div className="flex-1">
+                            <p className="text-xs font-medium text-blue-900 mb-1">إجمالي المعاملات</p>
+                            <p className="text-2xl font-bold text-blue-700">{stats.totalTransactions || 0}</p>
+                            <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                              <Receipt className="w-3 h-3" />
+                              معاملة مكتملة
+                            </p>
                         </div>
-                        <div className="p-2 bg-blue-100 rounded-full">
-                            <Receipt className="w-4 h-4 text-blue-600" />
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                            <Receipt className="w-6 h-6 text-blue-600" />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
-                <CardContent className="p-3">
+            {/* إجمالي المبالغ */}
+            <Card className="relative overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-green-50 to-emerald-50">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-400/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground">إجمالي المبالغ</p>
-                            <p className="text-lg font-bold text-green-600">{formatAmount(stats.totalAmount)}</p>
+                        <div className="flex-1">
+                            <p className="text-xs font-medium text-green-900 mb-1">إجمالي المبالغ</p>
+                            <p className="text-xl font-bold text-green-700">{formatAmount(stats.totalAmount)}</p>
+                            {usdStats.total > 0 && (
+                                <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                                    <DollarSign className="w-3 h-3" />
+                                    ${usdStats.total.toLocaleString()}
+                                </p>
+                            )}
                         </div>
-                        <div className="p-2 bg-green-100 rounded-full">
-                            <DollarSign className="w-4 h-4 text-green-600" />
+                        <div className="p-3 bg-green-100 rounded-lg">
+                            <DollarSign className="w-6 h-6 text-green-600" />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
-                <CardContent className="p-3">
+            {/* متوسط المبلغ */}
+            <Card className="relative overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-purple-50 to-violet-50">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-violet-400/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground">متوسط المبلغ</p>
-                            <p className="text-lg font-bold">{formatAmount(stats.averageAmount)}</p>
+                        <div className="flex-1">
+                            <p className="text-xs font-medium text-purple-900 mb-1">متوسط المبلغ</p>
+                            <p className="text-xl font-bold text-purple-700">{formatAmount(stats.averageAmount)}</p>
+                            {usdStats.average > 0 && (
+                                <p className="text-sm text-purple-600 mt-1 flex items-center gap-1">
+                                    <DollarSign className="w-3 h-3" />
+                                    ${usdStats.average.toFixed(2)}
+                                </p>
+                            )}
                         </div>
-                        <div className="p-2 bg-purple-100 rounded-full">
-                            <DollarSign className="w-4 h-4 text-purple-600" />
+                        <div className="p-3 bg-purple-100 rounded-lg">
+                            <DollarSign className="w-6 h-6 text-purple-600" />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
-                <CardContent className="p-3">
+            {/* أعلى مبلغ */}
+            <Card className="relative overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-rose-50 to-pink-50">
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-400/10 to-pink-400/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground">أعلى مبلغ</p>
-                            <p className="text-lg font-bold text-red-600">{formatAmount(stats.maxAmount)}</p>
+                        <div className="flex-1">
+                            <p className="text-xs font-medium text-rose-900 mb-1">أعلى مبلغ</p>
+                            <p className="text-xl font-bold text-rose-700">{formatAmount(stats.maxAmount)}</p>
+                            {usdStats.max > 0 && (
+                                <p className="text-sm text-rose-600 mt-1 flex items-center gap-1">
+                                    <DollarSign className="w-3 h-3" />
+                                    ${usdStats.max.toLocaleString()}
+                                </p>
+                            )}
                         </div>
-                        <div className="p-2 bg-red-100 rounded-full">
-                            <DollarSign className="w-4 h-4 text-red-600" />
+                        <div className="p-3 bg-rose-100 rounded-lg">
+                            <DollarSign className="w-6 h-6 text-rose-600" />
                         </div>
                     </div>
                 </CardContent>
