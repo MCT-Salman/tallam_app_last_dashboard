@@ -1398,7 +1398,7 @@ useEffect(() => {
                         <SelectTrigger>
                             <SelectValue placeholder="فلترة بالمستخدم" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent searchable>
                             <SelectItem value="all">جميع المستخدمين</SelectItem>
                             {users.map((user) => (
                                 <SelectItem key={user.id} value={user.id.toString()}>
@@ -1429,7 +1429,7 @@ useEffect(() => {
                             <SelectTrigger>
                                 <SelectValue placeholder="جميع الكورسات" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent searchable>
                                 <SelectItem value="all">جميع الكورسات</SelectItem>
                                 {filterCourses.map((course) => (
                                     <SelectItem key={course.id} value={course.id.toString()}>
@@ -1452,7 +1452,7 @@ useEffect(() => {
                                     courseFilter === "all" ? "اختر كورس أولاً" : "جميع المستويات"
                                 } />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent searchable>
                                 <SelectItem value="all">جميع المستويات</SelectItem>
                                 {filterLevels
                                     .filter(level =>
@@ -1585,7 +1585,7 @@ useEffect(() => {
                                         <SelectTrigger>
                                             <SelectValue placeholder="اختر المستخدم" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent searchable>
                                             {users.map((user) => (
                                                 <SelectItem key={user.id} value={user.id.toString()}>
                                                     {user.name} - {user.phone}
@@ -2869,7 +2869,7 @@ useEffect(() => {
                                             form.userId ? `محدد: ${users.find(u => u.id.toString() === form.userId)?.name || form.userId}` : "اختر المستخدم"
                                         } />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent >
                                         <div className="p-2">
                                             <Input
                                                 placeholder="ابحث عن مستخدم..."

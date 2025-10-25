@@ -1223,7 +1223,7 @@ const Coupons = () => {
             <SelectTrigger>
               <SelectValue placeholder="فلترة بالاختصاص" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent searchable>
               <SelectItem value="all">جميع الاختصاصات</SelectItem>
               {specializations.map(spec => (
                 <SelectItem key={spec.id} value={spec.id.toString()}>
@@ -1242,7 +1242,7 @@ const Coupons = () => {
             <SelectTrigger>
               <SelectValue placeholder={specializationFilter !== "all" ? "فلترة بالكورس" : "اختر الاختصاص أولاً"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent searchable>
               <SelectItem value="all">جميع الكورسات</SelectItem>
               {courses
                 .filter(course => course.specializationId === parseInt(specializationFilter))
@@ -1264,7 +1264,7 @@ const Coupons = () => {
             <SelectTrigger>
               <SelectValue placeholder={courseFilter !== "all" ? "فلترة بالمدرس" : "اختر الكورس أولاً"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent searchable>
               <SelectItem value="all">جميع المدرسين</SelectItem>
               {instructors.map(instructor => (
                 <SelectItem key={instructor.id} value={instructor.id.toString()}>
@@ -1283,7 +1283,7 @@ const Coupons = () => {
             <SelectTrigger>
               <SelectValue placeholder={instructorFilter !== "all" ? "فلترة بالمستوى" : "اختر المدرس أولاً"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent searchable>
               <SelectItem value="all">جميع المستويات</SelectItem>
               {courseLevels.map(level => (
                 <SelectItem key={level.id} value={level.id.toString()}>

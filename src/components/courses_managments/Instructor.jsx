@@ -621,7 +621,7 @@ const Instructor = () => {
                                         <SelectTrigger>
                                             <SelectValue placeholder="اختر التخصص" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent searchable>
                                             {specializations.map((spec) => (
                                                 <SelectItem key={spec.id} value={spec.id}>
                                                     {spec.name}

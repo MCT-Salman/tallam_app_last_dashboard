@@ -684,7 +684,7 @@ const Notifications = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="اختر المستخدم" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent searchable>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id.toString()}>
                             {user.name} - {user.phone}
@@ -705,7 +705,7 @@ const Notifications = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="اختر المستخدمين" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent searchable>
                         {users
                           .filter(user => !notificationForm.userIds.includes(user.id.toString()))
                           .map((user) => (
@@ -901,7 +901,7 @@ const Notifications = () => {
   <SelectTrigger>
     <SelectValue placeholder="فلترة بالمستخدم" />
   </SelectTrigger>
-  <SelectContent>
+  <SelectContent searchable>
     <SelectItem value="all">جميع المستخدمين</SelectItem>
     <SelectItem value="null">إشعارات عامة</SelectItem>
     {users

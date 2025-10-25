@@ -2553,7 +2553,7 @@ const Lesson = () => {
                                         <SelectTrigger className="w-32">
                                             <SelectValue placeholder="الحالة" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent >
                                             <SelectItem value="all">جميع الحالات</SelectItem>
                                             <SelectItem value="active">نشط</SelectItem>
                                             <SelectItem value="inactive">معطل</SelectItem>

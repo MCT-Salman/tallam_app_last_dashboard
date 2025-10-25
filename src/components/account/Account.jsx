@@ -702,7 +702,7 @@ const Account = () => {
                         <SelectTrigger>
                             <SelectValue placeholder="فلترة بالبلد" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent searchable>
                             <SelectItem value="all">جميع البلدان</SelectItem>
                             {allCountries.map(country => (
                                 <SelectItem key={country} value={country}>

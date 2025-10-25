@@ -504,7 +504,7 @@ const Review = () => {
                 <SelectTrigger className="text-right">
                   <SelectValue placeholder="اختر الكورس" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent searchable>
                   {courses.map((course) => (
                     <SelectItem key={course.id} value={course.id.toString()}>
                       {course.title}
@@ -525,7 +525,7 @@ const Review = () => {
                 <SelectTrigger className="text-right">
                   <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent searchable>
                   {levels.map((level) => (
                     <SelectItem key={level.id} value={level.id.toString()}>
                       {level.name}
