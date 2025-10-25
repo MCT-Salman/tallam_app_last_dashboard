@@ -786,81 +786,103 @@ const Transactions = () => {
                 </Select>
             </div>
 
-            {/* فلتر التاريخ من - إلى - محسّن */}
-            <div className="space-y-2">
-                <Label className="text-sm">فلتر مخصص</Label>
-                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="w-full justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <CalendarIcon className="h-4 w-4" />
-                                <span>
-                                    {dateRange.from && dateRange.to ? (
-                                        `${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
-                                    ) : (
-                                        "اختر الفترة الزمنية"
-                                    )}
-                                </span>
-                            </div>
-                            {dateRange.from && dateRange.to && (
-                                <X
-                                    className="h-4 w-4 text-muted-foreground hover:text-foreground"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        resetDateFilter()
-                                    }}
-                                />
-                            )}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <div className="p-4 border-b">
-                            <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-medium">اختر الفترة الزمنية</h4>
-                                {dateRange.from && dateRange.to && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={resetDateFilter}
-                                        className="h-8 text-xs"
-                                    >
-                                        مسح
-                                    </Button>
-                                )}
-                            </div>
-                            <Calendar
-                                mode="range"
-                                selected={dateRange}
-                                onSelect={setDateRange}
-                                numberOfMonths={2}
-                                defaultMonth={dateRange.from || new Date()}
-                                locale={ar}
-                            />
-                        </div>
-                        <div className="p-3 border-t bg-muted/50">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="text-sm text-muted-foreground">
-                                    {dateRange.from && dateRange.to ? (
-                                        `المحدد: ${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
-                                    ) : (
-                                        "اختر تاريخ البداية والنهاية"
-                                    )}
-                                </div>
-                                <Button
-                                    onClick={applyCustomDateFilter}
-                                    disabled={!dateRange.from || !dateRange.to}
-                                    size="sm"
-                                >
-                                    تطبيق
-                                </Button>
-                            </div>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            </div>
+            {/* فلتر التاريخ من - إلى -  */}
+            <div className="space-y-2" dir="rtl">
+  <Label className="text-sm">فلتر مخصص</Label>
+  <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+    <PopoverTrigger asChild>
+      <Button
+        variant="outline"
+        className="w-full justify-between text-right"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm">
+            {dateRange.from && dateRange.to ? (
+              `${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+            ) : (
+              "اختر الفترة الزمنية"
+            )}
+          </span>
+          <CalendarIcon className="h-4 w-4" />
+        </div>
+        {dateRange.from && dateRange.to && (
+          <X
+            className="h-4 w-4 text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation()
+              resetDateFilter()
+            }}
+          />
+        )}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0 max-w-[95vw]" align="center" sideOffset={5}>
+      <div className="p-4 border-b" dir="rtl">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium">اختر الفترة الزمنية</h4>
+          {dateRange.from && dateRange.to && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetDateFilter}
+              className="h-8 text-xs"
+            >
+              مسح
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* التقويم مع الاتجاه LTR للحفاظ على الترتيب الصحيح */}
+      <div dir="ltr">
+        <Calendar
+          mode="range"
+          selected={dateRange}
+          onSelect={setDateRange}
+          numberOfMonths={window.innerWidth < 640 ? 1 : 2}
+          defaultMonth={dateRange.from || new Date()}
+          locale={ar}
+          dir="rtl" // إبقاء التقويم LTR
+          className="text-xs"
+          classNames={{
+           months: "flex flex-col sm:flex-row gap-4 sm:gap-6",
+            month: "space-y-2",
+            caption: "flex justify-center pt-1 relative items-center",
+            caption_label: "text-xs font-medium",
+            nav: "flex items-center",
+            nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+            table: "w-full border-collapse space-y-0",
+            head_row: "flex",
+            head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.7rem]",
+            row: "flex w-full mt-1",
+            cell: "h-8 w-8 text-center text-xs p-0",
+            day: "h-8 w-8 text-sm",
+          }}
+        />
+      </div>
+      
+      <div className="p-3 border-t bg-muted/50" dir="rtl">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm text-muted-foreground">
+            {dateRange.from && dateRange.to ? (
+              `المحدد: ${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+            ) : (
+              "اختر تاريخ البداية والنهاية"
+            )}
+          </div>
+          <Button
+            onClick={applyCustomDateFilter}
+            disabled={!dateRange.from || !dateRange.to}
+            size="sm"
+            className="text-xs h-8 px-3"
+          >
+            تطبيق
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  </Popover>
+</div>
         </div>
     )
 

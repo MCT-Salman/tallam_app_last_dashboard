@@ -44,3 +44,19 @@
 .read-the-docs {
   color: #888;
 } 
+
+/* في ملف CSS الخاص بك */
+.rtl-calendar-container {
+  direction: rtl;
+}
+
+.rtl-calendar-container .calendar-ltr {
+  direction: ltr;
+}
+
+/* تحسين المظهر للشاشات الصغيرة */
+@media (max-width: 640px) {
+  .calendar-month {
+    min-width: unset;
+  }
+}

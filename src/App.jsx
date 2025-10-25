@@ -33,6 +33,7 @@ import SettingsComp from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
 import Review from "@/components/review/Review"
 import Admins_Accounts from "@/components/account/Admins_Accounts"
+import TeacherReports from "./components/financial/TeacherReports"
 
 const App = () => {
   return (
@@ -147,6 +148,13 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Review />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/reports/teacher" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <TeacherReports />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

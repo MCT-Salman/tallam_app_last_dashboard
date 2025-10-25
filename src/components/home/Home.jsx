@@ -394,10 +394,10 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-700">{stats.activeStudents.toLocaleString()}</div>
-            <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+            {/* <p className="text-xs text-green-600 mt-2 flex items-center gap-1"> */}
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              لديهم أكواد شراء نشطة
-            </p>
+             <span> لديهم أكواد شراء نشطة</span>
+            {/* </p> */}
           </CardContent>
         </Card>
 
