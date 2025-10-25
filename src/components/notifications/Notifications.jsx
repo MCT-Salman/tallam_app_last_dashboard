@@ -882,7 +882,7 @@ const Notifications = () => {
           </Select>
 
           {/* User Filter */}
-          <Select value={userFilter} onValueChange={setUserFilter}>
+          {/* <Select value={userFilter} onValueChange={setUserFilter}>
             <SelectTrigger>
               <SelectValue placeholder="فلترة بالمستخدم" />
             </SelectTrigger>
@@ -895,7 +895,26 @@ const Notifications = () => {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
+
+<Select value={userFilter} onValueChange={setUserFilter}>
+  <SelectTrigger>
+    <SelectValue placeholder="فلترة بالمستخدم" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="all">جميع المستخدمين</SelectItem>
+    <SelectItem value="null">إشعارات عامة</SelectItem>
+    {users
+      .filter(user => user && user.id && user.name) // تصفية المستخدمين الصالحين
+      .sort((a, b) => a.name?.localeCompare(b.name)) // ترتيب حسب الاسم
+      .map(user => (
+        <SelectItem key={user.id} value={user.id.toString()}>
+          {user.name}
+        </SelectItem>
+      ))
+    }
+  </SelectContent>
+</Select>
 
           {/* Sort By */}
           <Select value={sortBy} onValueChange={setSortBy}>
