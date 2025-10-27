@@ -1,5 +1,5 @@
 /* src\index.css */
-@import url('https://fonts.googleapis.com/css2?family=Alqabas:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@100..900&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
@@ -149,7 +149,7 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: 'Alqabas', sans-serif;
+  font-family: 'Noto Kufi Arabic', sans-serif;
   direction: rtl;
 }
 
@@ -288,13 +288,13 @@ body {
 
   /* Arabic numbers */
   .arabic-nums {
-    font-feature-settings: "lnum", "tnum";
+    font-feature-settings: "Noto Kufi Arabic", "tnum";
     font-variant-numeric: lining-nums tabular-nums;
   }
   
   /* Emoji flags support */
   .font-emoji {
-    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', 'EmojiOne Mozilla', 'Android Emoji', sans-serif;
+    font-family: 'Noto Kufi Arabic', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', 'EmojiOne Mozilla', 'Android Emoji', sans-serif;
     font-weight: normal;
     line-height: 1;
     display: inline-block;

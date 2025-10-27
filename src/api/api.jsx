@@ -1107,4 +1107,16 @@ export const deleteAdmin = (adminId) =>
 export const getReviews = (courseLevelId) =>
     api.get(`/reviews/all?courseLevelId=${courseLevelId}`);
 
+// --- تقارير المدرسين ---
+
+export const getInstructorReport = (instructorId, startDate, endDate) => {
+    return api.get(`/catalog/admin/report/instructors`, {
+        params: {
+            instructorId,
+            startDate,
+            endDate
+        }
+    });
+};
+
 export { api, BASE_URL };
