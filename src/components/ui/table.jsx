@@ -170,11 +170,11 @@ const TableHead = React.forwardRef(({ className, ...props }, ref) => (
 ))
 TableHead.displayName = "TableHead"
 
-const TableCell = React.forwardRef(({ className, ...props }, ref) => (
+const TableCell = React.forwardRef(({ className, dir="rtl", ...props }, ref) => (
   <td
     ref={ref}
     className={cn("p-4 align-middle text-right [&:has([role=checkbox])]:pr-0", className)}
-    dir="rtl"
+    dir={dir}
     {...props}
   />
 ))

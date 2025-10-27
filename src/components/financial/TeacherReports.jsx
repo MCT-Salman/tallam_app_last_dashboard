@@ -270,7 +270,7 @@ const TeacherReports = () => {
                                                                 {levelData.students.map((student) => (
                                                                     <TableRow key={student.id}>
                                                                         <TableCell className="text-right">{student.name}</TableCell>
-                                                                        <TableCell className="text-right">{student.phone}</TableCell>
+                                                                        <TableCell className="text-right" dir="ltr">{student.phone}</TableCell>
                                                                         <TableCell className="text-right font-medium">
                                                                             {student.amountPaid?.toLocaleString()} ل.س
                                                                         </TableCell>
@@ -304,7 +304,7 @@ const TeacherReports = () => {
                                             {reportData.allStudents.map((student) => (
                                                 <TableRow key={student.id}>
                                                     <TableCell className="text-right">{student.name}</TableCell>
-                                                    <TableCell className="text-right">{student.phone}</TableCell>
+                                                    <TableCell className="text-right" dir="ltr">{student.phone}</TableCell>
                                                     <TableCell className="text-right font-medium">
                                                         {student.totalPaid?.toLocaleString()} ل.س
                                                     </TableCell>
