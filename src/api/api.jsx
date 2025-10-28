@@ -1136,13 +1136,15 @@ export const getInstructorReport = (instructorId, startDate, endDate) => {
 
 // تقرير الأكواد النشطة
 export const getAccessCodesReport = () => {
-    // baseURL already includes /api
     return api.get('/access-codes/admin/report');
+};
+
+export const getcountStudentOfInstructors = () => {
+    return api.get('/catalog/admin/count/students');
 };
 
 // تقرير المستخدمين حسب البلد
 export const getUsersReport = () => {
-    // baseURL already includes /api
     return api.get('/users/report');
 };
 
