@@ -1065,27 +1065,44 @@ export const getTransactionStats = (params) =>
 export const getTransactionsByDate = (params) => 
     api.get('/transactions/admin/analytics/date', { params });
 
-//   للإعدادات
-// 1. جلب إعدادات التواصل
-export const getContactSettings = () =>
-    api.get('/settings/contact');
+// //   للإعدادات
+// // 1. جلب إعدادات التواصل
+// export const getContactSettings = () =>
+//     api.get('/settings/contact');
 
-// 2. جلب جميع الإعدادات
+// // 2. جلب جميع الإعدادات
+// export const getAllSettings = () =>
+//     api.get('/settings/');
+
+// // 3. تعديل إعداد محدد
+// export const updateSetting = (key, value) =>
+//     api.put('/settings/allowRating', { key, value });
+
+// // 4. إضافة إعداد جديد
+// export const addSetting = (data) =>
+//     api.post('/settings', data);
+
+// // 5. تعديل جميع الإعدادات
+// export const updateAllSettings = (data) =>
+//     api.put('/settings/', data);
+
+
+//   للإعدادات
+// 1. جلب جميع الإعدادات
 export const getAllSettings = () =>
     api.get('/settings/');
 
-// 3. تعديل إعداد محدد
+// 2. تعديل إعداد محدد
 export const updateSetting = (key, value) =>
-    api.put('/settings/allowRating', { key, value });
+    api.put('/settings/key', { key, value });
 
-// 4. إضافة إعداد جديد
+// 3. إضافة إعداد جديد
 export const addSetting = (data) =>
     api.post('/settings', data);
 
-// 5. تعديل جميع الإعدادات
+// 4. تعديل جميع الإعدادات
 export const updateAllSettings = (data) =>
     api.put('/settings/', data);
-
 
 //   لإدارة المدراء
 export const createAdmin = (data) =>
