@@ -107,6 +107,11 @@ export const sidebarGroups = [
         icon: CreditCard
       },
       {
+        title: "مشتركو المستويات",
+        href: "/reports/level-subscribers",
+        icon: Users
+      },
+      {
         title: "تقرير المدرسين",
         href: "/reports/teacher",
         icon: FileText

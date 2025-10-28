@@ -4,7 +4,9 @@ import axiosInstance, { setLogoutFunction } from './axiosInstance';
 
 // const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.3.11:5000/api';
 const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com";
-const API_URL = import.meta.env.REACT_APP_API_URL || 'https://dev.tallaam.com/api';
+// Prefer Vite envs; fall back to BASE_URL + /api
+const API_URL = (import.meta.env.VITE_API_URL
+  || `${(BASE_URL || '').replace(/\/$/, '')}/api`);
 
 const api = axios.create({
     baseURL: API_URL,
@@ -1107,7 +1109,7 @@ export const deleteAdmin = (adminId) =>
 export const getReviews = (courseLevelId) =>
     api.get(`/reviews/all?courseLevelId=${courseLevelId}`);
 
-// --- تقارير المدرسين ---
+// // --- تقارير المدرسين ---
 
 export const getInstructorReport = (instructorId, startDate, endDate) => {
     return api.get(`/catalog/admin/report/instructors`, {
@@ -1117,6 +1119,50 @@ export const getInstructorReport = (instructorId, startDate, endDate) => {
             endDate
         }
     });
+};
+
+// // --- تقارير الأكواد النشطة ---
+// export const getAccessCodesReport = () => {
+//     return api.get('/access-codes/admin/report');
+// };
+
+// // --- تقارير المستخدمين حسب البلد ---
+// export const getUsersReport = () => {
+//     return api.get('/users/report');
+// };
+
+
+// --- تقارير لوحة التحكم ---
+
+// تقرير الأكواد النشطة
+export const getAccessCodesReport = () => {
+    // baseURL already includes /api
+    return api.get('/access-codes/admin/report');
+};
+
+// تقرير المستخدمين حسب البلد
+export const getUsersReport = () => {
+    // baseURL already includes /api
+    return api.get('/users/report');
+};
+
+// تقرير الإيرادات الشهرية
+export const getMonthlyRevenueReport = (year = new Date().getFullYear()) => {
+    return api.get('/transactions/admin/analytics/date', {
+        params: { year }
+    });
+};
+
+// تقرير المستخدمين الشهري
+export const getMonthlyUsersReport = (year = new Date().getFullYear()) => {
+    return api.get('/users/admin/analytics/date', {
+        params: { year }
+    });
+};
+
+// إحصائيات لوحة التحكم الرئيسية
+export const getDashboardStats = () => {
+    return api.get('/admin/dashboard/stats');
 };
 
 export { api, BASE_URL };
