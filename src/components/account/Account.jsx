@@ -467,7 +467,7 @@ const Account = () => {
                                     <span className="text-sm font-medium text-gray-600">عدد النقاط</span>
                                     <div className="flex items-center gap-2">
                                         <Coins className="w-4 h-4 text-gray-500" />
-                                        <span className="font-medium">{user.points}</span>
+                                        <span className="font-medium">{user.points} نقطة</span>
                                     </div>
                                 </div>
                                 {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
