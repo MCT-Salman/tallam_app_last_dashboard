@@ -3,14 +3,13 @@ import axios from 'axios';
 import axiosInstance, { setLogoutFunction } from './axiosInstance';
 
 // const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.3.11:5000/api';
-// const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com/api";
-const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com/api";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com";
 // Prefer Vite envs; fall back to BASE_URL + /api
-// const API_URL = (import.meta.env.VITE_API_URL
-//   || `${(BASE_URL || '').replace(/\/$/, '')}/api`);
+const API_URL = (import.meta.env.VITE_API_URL
+  || `${(BASE_URL || '').replace(/\/$/, '')}/api`);
 
 const api = axios.create({
-    baseURL: BASE_URL,
+    baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -1185,4 +1184,4 @@ export const getDashboardStats = () => {
     return api.get('/admin/dashboard/stats');
 };
 
-export { api, BASE_URL };
+export { api, API_URL };
