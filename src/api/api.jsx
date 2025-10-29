@@ -1,12 +1,9 @@
-// src\api\api.jsxو// src\api\api.jsx
+// src\api\api.jsx
 import axios from 'axios';
-import axiosInstance, { setLogoutFunction } from './axiosInstance';
 
 // const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.3.11:5000/api';
-const API_URL  = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com/api";
-// Prefer Vite envs; fall back to BASE_URL + /api
-// const API_URL = (import.meta.env.VITE_API_URL
-//   || `${(BASE_URL || '').replace(/\/$/, '')}/api`);
+const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dev.tallaam.com";
+const API_URL = import.meta.env.REACT_APP_API_URL || 'https://dev.tallaam.com/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -1184,4 +1181,4 @@ export const getDashboardStats = () => {
     return api.get('/admin/dashboard/stats');
 };
 
-export { api, API_URL };
+export { api, BASE_URL };
