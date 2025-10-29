@@ -1495,7 +1495,7 @@ const Home = () => {
             <TrendingUp className="h-6 w-6 text-primary animate-pulse" />
           </div>
         </div>
-        <p className="text-muted-foreground animate-pulse">جاري تحميل البيانات...</p>
+        {/* <p className="text-muted-foreground animate-pulse">جاري تحميل البيانات...</p> */}
       </div>
     )
   }
