@@ -17,12 +17,12 @@
 // // دالة لتحويل الأرقام إلى نص عربي
 // const numberToArabicWords = (num) => {
 //   if (num === 0) return 'صفر'
-  
+
 //   const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة']
 //   const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون']
 //   const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر']
 //   const hundreds = ['', 'مئة', 'مئتان', 'ثلاثمئة', 'أربعمئة', 'خمسمئة', 'ستمئة', 'سبعمئة', 'ثمانمئة', 'تسعمئة']
-  
+
 //   if (num < 10) return ones[num]
 //   if (num >= 10 && num < 20) return teens[num - 10]
 //   if (num >= 20 && num < 100) {
@@ -47,7 +47,7 @@
 //     const millionWord = million === 1 ? 'مليون' : million === 2 ? 'مليونان' : `${numberToArabicWords(million)} مليون`
 //     return remainder === 0 ? millionWord : `${millionWord} و${numberToArabicWords(remainder)}`
 //   }
-  
+
 //   return num.toString()
 // }
 
@@ -55,11 +55,11 @@
 // const CustomRevenueTooltip = ({ active, payload }) => {
 //   if (active && payload && payload.length) {
 //     const valueSYP = payload[0]?.value || 0
-    
+
 //     return (
 //       <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg min-w-[250px]">
 //         <p className="font-bold text-gray-800 mb-3 text-center border-b pb-2">{payload[0].payload.month}</p>
-        
+
 //         {/* السعر بالليرة السورية */}
 //         <div className="mb-3">
 //           <p className="text-xs text-gray-500 mb-1">بالليرة السورية:</p>
@@ -119,16 +119,16 @@
 //         : Array.isArray(accessCodesRes.data)
 //         ? accessCodesRes.data
 //         : []
-      
+
 //       // حساب الإحصائيات محلياً
 //       const now = new Date()
 //       // نشط: غير مستخدم ومفعّل
 //       const activeCodes = allAccessCodes.filter(code =>  (code.expiresAt < now.toString()) && code.used)
 //       // const activeCodes = allAccessCodes.filter(code => code.isActive && !code.used)
-      
+
 //       const activeUserIds = new Set()
 //       const usersByLevelMap = new Map()
-      
+
 //       activeCodes.forEach(code => {
 //         const uid = code.userId || code.user?.id
 //         if (uid) {
@@ -154,7 +154,7 @@
 //           }
 //         }
 //       })
-      
+
 //       return {
 //         activeCodesCount: activeCodes.length,
 //         totalUsersWithAnyActiveCode: activeUserIds.size,
@@ -175,10 +175,10 @@
 //     try {
 //       const usersRes = await getAllUsers({ role: 'STUDENT', take: 1000 })
 //       const allStudents = usersRes.data?.data?.items || []
-      
+
 //       // تجميع حسب البلد
 //       const countryMap = new Map()
-      
+
 //       allStudents.forEach(student => {
 //         const country = student.country || 'غير محدد'
 //         if (!countryMap.has(country)) {
@@ -186,7 +186,7 @@
 //         }
 //         countryMap.get(country).totalUsers++
 //       })
-      
+
 //       return Array.from(countryMap.values())
 //     } catch (error) {
 //       console.error("Error generating users report:", error)
@@ -315,7 +315,7 @@
 //           return { data: { data: [] } }
 //         })
 //       )
-      
+
 //       const levelsResults = await Promise.all(levelPromises)
 //       return levelsResults.reduce((total, result) => {
 //         let levels = []
@@ -339,7 +339,7 @@
 //   const processStoriesData = async (storiesRes) => {
 //     try {
 //       let allStories = []
-      
+
 //       if (storiesRes.data?.data?.data && Array.isArray(storiesRes.data.data.data)) {
 //         allStories = storiesRes.data.data.data
 //       } else if (Array.isArray(storiesRes.data?.data)) {
@@ -347,7 +347,7 @@
 //       } else if (Array.isArray(storiesRes.data)) {
 //         allStories = storiesRes.data
 //       }
-      
+
 //       return allStories
 //     } catch (error) {
 //       console.error("Error processing stories data:", error)
@@ -382,7 +382,7 @@
 //         const createdDate = new Date(transaction.createdAt)
 //         return createdDate.getMonth() === index && createdDate.getFullYear() === currentYear
 //       })
-      
+
 //       const totalRevenue = monthTransactions.reduce((sum, transaction) => {
 //         let amount = 0
 //         if (transaction.amountPaid) {
@@ -394,7 +394,7 @@
 //         }
 //         return sum + amount
 //       }, 0)
-      
+
 //       return {
 //         month,
 //         revenue: totalRevenue
@@ -412,7 +412,7 @@
 //     const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];
 //     // const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 //     const currentYear = new Date().getFullYear()
-    
+
 //     try {
 //       // جلب جميع المستويات مع تواريخها
 //       const allLevels = await getAllLevelsWithDates(courses)
@@ -439,10 +439,10 @@
 //         })
 //         levelsWithDates = extracted
 //       }
-      
+
 //       // تجميع المستويات حسب الشهر
 //       const monthlyCounts = new Array(12).fill(0)
-      
+
 //       levelsWithDates.forEach(level => {
 //         if (level.createdAt) {
 //           const createdDate = new Date(level.createdAt)
@@ -452,7 +452,7 @@
 //           }
 //         }
 //       })
-      
+
 //       return months.map((month, index) => ({
 //         month,
 //         count: monthlyCounts[index]
@@ -472,10 +472,10 @@
 //         return { data: { data: [] } }
 //       })
 //     )
-    
+
 //     const levelsResults = await Promise.all(levelPromises)
 //     const allLevels = []
-    
+
 //     levelsResults.forEach(result => {
 //       let levels = []
 //       const raw = result.data?.data
@@ -492,7 +492,7 @@
 //         }
 //       })
 //     })
-    
+
 //     return allLevels
 //   }
 
@@ -821,7 +821,7 @@
 //                   ))}
 //                 </SelectContent>
 //               </Select>
-              
+
 //               <div className="text-center p-6 bg-gradient-to-br from-cyan-100 to-blue-100 rounded-lg border border-cyan-200">
 //                 <div className="text-4xl font-bold text-cyan-700 mb-2">
 //                   {countryUsersCount.toLocaleString()}
@@ -861,7 +861,7 @@
 //                   </div>
 //                 </div>
 //               ))}
-              
+
 //               {usersByLevel.length === 0 && (
 //                 <div className="text-center py-8 text-orange-500">
 //                   لا توجد بيانات عن المستخدمين حسب المستوى
@@ -935,14 +935,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, UserCheck, GraduationCap, BookOpen, Image as ImageIcon, TrendingUp, DollarSign, MapPin, Code, Globe } from "lucide-react"
+import { Users, UserCheck, GraduationCap, BookOpen, Image as ImageIcon, TrendingUp, DollarSign, MapPin, Code, Globe, BadgeAlert } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { 
-  getAllUsers, 
-  getInstructors, 
-  getCourses, 
-  getCourseLevels, 
-  getStories, 
+import {
+  getAllUsers,
+  getInstructors,
+  getCourses,
+  getCourseLevels,
+  getStories,
   getTransactions,
   getAllAccessCodes,
   getcountStudentOfInstructors
@@ -952,12 +952,12 @@ import { showErrorToast } from "@/hooks/useToastMessages"
 // دالة لتحويل الأرقام إلى نص عربي
 const numberToArabicWords = (num) => {
   if (num === 0) return 'صفر'
-  
+
   const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة']
   const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون']
   const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر']
   const hundreds = ['', 'مئة', 'مئتان', 'ثلاثمئة', 'أربعمئة', 'خمسمئة', 'ستمئة', 'سبعمئة', 'ثمانمئة', 'تسعمئة']
-  
+
   if (num < 10) return ones[num]
   if (num >= 10 && num < 20) return teens[num - 10]
   if (num >= 20 && num < 100) {
@@ -982,7 +982,7 @@ const numberToArabicWords = (num) => {
     const millionWord = million === 1 ? 'مليون' : million === 2 ? 'مليونان' : `${numberToArabicWords(million)} مليون`
     return remainder === 0 ? millionWord : `${millionWord} و${numberToArabicWords(remainder)}`
   }
-  
+
   return num.toString()
 }
 
@@ -990,11 +990,11 @@ const numberToArabicWords = (num) => {
 const CustomRevenueTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const valueSYP = payload[0]?.value || 0
-    
+
     return (
       <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg min-w-[250px]">
         <p className="font-bold text-gray-800 mb-3 text-center border-b pb-2">{payload[0].payload.month}</p>
-        
+
         {/* السعر بالليرة السورية */}
         <div className="mb-3">
           <p className="text-xs text-gray-500 mb-1">بالليرة السورية:</p>
@@ -1055,19 +1055,19 @@ const Home = () => {
       const allAccessCodes = Array.isArray(accessCodesRes.data?.data)
         ? accessCodesRes.data.data
         : Array.isArray(accessCodesRes.data?.data?.items)
-        ? accessCodesRes.data.data.items
-        : Array.isArray(accessCodesRes.data)
-        ? accessCodesRes.data
-        : []
-      
+          ? accessCodesRes.data.data.items
+          : Array.isArray(accessCodesRes.data)
+            ? accessCodesRes.data
+            : []
+
       // حساب الإحصائيات محلياً
       const now = new Date()
       // نشط: غير مستخدم ومفعّل
-      const activeCodes = allAccessCodes.filter(code =>  (code.expiresAt < now.toString()) && code.used)
-      
+      const activeCodes = allAccessCodes.filter(code => (code.expiresAt < now.toString()) && code.used)
+
       const activeUserIds = new Set()
       const usersByLevelMap = new Map()
-      
+
       activeCodes.forEach(code => {
         const uid = code.userId || code.user?.id
         if (uid) {
@@ -1093,7 +1093,7 @@ const Home = () => {
           }
         }
       })
-      
+
       return {
         activeCodesCount: activeCodes.length,
         totalUsersWithAnyActiveCode: activeUserIds.size,
@@ -1114,10 +1114,10 @@ const Home = () => {
     try {
       const usersRes = await getAllUsers({ role: 'STUDENT', take: 1000 })
       const allStudents = usersRes.data?.data?.items || []
-      
+
       // تجميع حسب البلد
       const countryMap = new Map()
-      
+
       allStudents.forEach(student => {
         const country = student.country || 'غير محدد'
         if (!countryMap.has(country)) {
@@ -1125,7 +1125,7 @@ const Home = () => {
         }
         countryMap.get(country).totalUsers++
       })
-      
+
       return Array.from(countryMap.values())
     } catch (error) {
       console.error("Error generating users report:", error)
@@ -1153,10 +1153,10 @@ const Home = () => {
     try {
       // جلب جميع البيانات بالتوازي
       const [
-        usersRes, 
-        instructorsRes, 
-        coursesRes, 
-        storiesRes, 
+        usersRes,
+        instructorsRes,
+        coursesRes,
+        storiesRes,
         transactionsRes,
         instructorsStudentsData
       ] = await Promise.all([
@@ -1184,11 +1184,11 @@ const Home = () => {
       const usersByLevelData = accessCodesReport.usersByLevel || []
 
       // عدد المدرسين
-      const instructorsData = Array.isArray(instructorsRes.data?.data?.data) 
-        ? instructorsRes.data.data.data 
+      const instructorsData = Array.isArray(instructorsRes.data?.data?.data)
+        ? instructorsRes.data.data.data
         : Array.isArray(instructorsRes.data?.data?.items)
-        ? instructorsRes.data.data.items
-        : []
+          ? instructorsRes.data.data.items
+          : []
       const totalInstructors = instructorsData.length
 
       // تخزين بيانات الدكاترة والطلاب
@@ -1198,15 +1198,15 @@ const Home = () => {
       const allCourses = Array.isArray(coursesRes.data?.data?.items)
         ? coursesRes.data.data.items
         : Array.isArray(coursesRes.data?.data?.data)
-        ? coursesRes.data.data.data
-        : Array.isArray(coursesRes.data)
-        ? coursesRes.data
-        : []
+          ? coursesRes.data.data.data
+          : Array.isArray(coursesRes.data)
+            ? coursesRes.data
+            : []
       let totalLevels = await calculateTotalLevels(allCourses)
       // إذا لم نجد أي مستويات، حاول مرة أخرى بطريقة التسطيح من الـ CourseLevel.jsx
       if (totalLevels === 0 && allCourses.length > 0) {
         console.warn('No levels counted, retrying with fallback extraction...')
-        const levelPromises = allCourses.map(course => 
+        const levelPromises = allCourses.map(course =>
           getCourseLevels(course.id).catch(() => ({ data: { data: [] } }))
         )
         const results = await Promise.all(levelPromises)
@@ -1230,7 +1230,8 @@ const Home = () => {
 
       // القصص النشطة
       const storiesData = await processStoriesData(storiesRes)
-      const activeStories = storiesData.filter(story => story.isActive).length
+      const activeStories = storiesData.filter(story => story.isActive && story.isStory).length
+      const activeAds = storiesData.filter(story => story.isActive && !story.isStory).length
 
       // بيانات الدول
       const countryData = usersReport || []
@@ -1243,6 +1244,7 @@ const Home = () => {
         totalInstructors,
         totalLevels,
         activeStories,
+        activeAds,
         activeCodesCount,
         totalUsersWithAnyActiveCode
       })
@@ -1267,13 +1269,13 @@ const Home = () => {
   // حساب إجمالي المستويات
   const calculateTotalLevels = async (courses) => {
     try {
-      const levelPromises = courses.map(course => 
+      const levelPromises = courses.map(course =>
         getCourseLevels(course.id).catch(err => {
           console.error(`Error fetching levels for course ${course.id}:`, err)
           return { data: { data: [] } }
         })
       )
-      
+
       const levelsResults = await Promise.all(levelPromises)
       return levelsResults.reduce((total, result) => {
         let levels = []
@@ -1297,7 +1299,7 @@ const Home = () => {
   const processStoriesData = async (storiesRes) => {
     try {
       let allStories = []
-      
+
       if (storiesRes.data?.data?.data && Array.isArray(storiesRes.data.data.data)) {
         allStories = storiesRes.data.data.data
       } else if (Array.isArray(storiesRes.data?.data)) {
@@ -1305,7 +1307,7 @@ const Home = () => {
       } else if (Array.isArray(storiesRes.data)) {
         allStories = storiesRes.data
       }
-      
+
       return allStories
     } catch (error) {
       console.error("Error processing stories data:", error)
@@ -1315,7 +1317,7 @@ const Home = () => {
 
   // إنشاء بيانات المخططات من البيانات الحقيقية
   const generateChartData = async (students, transactions, courses) => {
-const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];  
+    const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];
     const currentYear = new Date().getFullYear()
 
     // 1. مخطط المشتركين حسب الشهر - معالجة محلية
@@ -1339,7 +1341,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
         const createdDate = new Date(transaction.createdAt)
         return createdDate.getMonth() === index && createdDate.getFullYear() === currentYear
       })
-      
+
       const totalRevenue = monthTransactions.reduce((sum, transaction) => {
         let amount = 0
         if (transaction.amountPaid) {
@@ -1351,7 +1353,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
         }
         return sum + amount
       }, 0)
-      
+
       return {
         month,
         revenue: totalRevenue
@@ -1368,14 +1370,14 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
   const generateLevelsChartData = async (courses) => {
     const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];
     const currentYear = new Date().getFullYear()
-    
+
     try {
       // جلب جميع المستويات مع تواريخها
       const allLevels = await getAllLevelsWithDates(courses)
       // Fallback: إذا كانت خالية، أعد المحاولة باستخدام منطق CourseLevel.jsx
       let levelsWithDates = allLevels
       if (!levelsWithDates.length && courses.length) {
-        const levelPromises = courses.map(course => 
+        const levelPromises = courses.map(course =>
           getCourseLevels(course.id).catch(() => ({ data: { data: [] } }))
         )
         const results = await Promise.all(levelPromises)
@@ -1395,10 +1397,10 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
         })
         levelsWithDates = extracted
       }
-      
+
       // تجميع المستويات حسب الشهر
       const monthlyCounts = new Array(12).fill(0)
-      
+
       levelsWithDates.forEach(level => {
         if (level.createdAt) {
           const createdDate = new Date(level.createdAt)
@@ -1408,7 +1410,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
           }
         }
       })
-      
+
       return months.map((month, index) => ({
         month,
         count: monthlyCounts[index]
@@ -1422,16 +1424,16 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
 
   // دالة مساعدة لجمع جميع المستويات مع التواريخ
   const getAllLevelsWithDates = async (courses) => {
-    const levelPromises = courses.map(course => 
+    const levelPromises = courses.map(course =>
       getCourseLevels(course.id).catch(err => {
         console.error(`Error fetching levels for course ${course.id}:`, err)
         return { data: { data: [] } }
       })
     )
-    
+
     const levelsResults = await Promise.all(levelPromises)
     const allLevels = []
-    
+
     levelsResults.forEach(result => {
       let levels = []
       const raw = result.data?.data
@@ -1448,13 +1450,13 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
         }
       })
     })
-    
+
     return allLevels
   }
 
   // بيانات افتراضية للمخططات في حالة الخطأ
   const generateFallbackChartData = () => {
-   const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];
+    const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '[4] نيسان', '[5] أيار', '[6] حزيران', '[7] تموز', '[8] آب', '[9] أيلول', '[10] تشرين الأول', '[11] تشرين الثاني', '[12] كانون الأول'];
     return months.map(month => ({ month, count: 0, revenue: 0 }))
   }
 
@@ -1473,7 +1475,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
     if (selectedInstructor === 'all') {
       setInstructorStudentsCount(stats.totalStudents)
     } else {
-      const instructorData = instructorsStudents.find(instructor => 
+      const instructorData = instructorsStudents.find(instructor =>
         instructor.instructorId.toString() === selectedInstructor
       )
       setInstructorStudentsCount(instructorData ? instructorData.studentCount : 0)
@@ -1517,7 +1519,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
       </div>
 
       {/* البطاقات الإحصائية - جميعها بيانات حقيقية */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
         {/* إجمالي المشتركين */}
         <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-none bg-gradient-to-br from-blue-50 to-indigo-50">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -1625,6 +1627,24 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
             </div>
           </CardContent>
         </Card>
+
+        {/* الإعلانات النشطة */}
+        <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-none bg-gradient-to-br from-gray-50 to-zinc-50">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-200/15 to-zinc-300/15 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700">الإعلانات النشطة</CardTitle>
+            <div className="p-2 bg-gray-100 rounded-lg group-hover:scale-110 transition-transform">
+              <BadgeAlert className="h-5 w-5 text-gray-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-800">{stats.activeAds.toLocaleString()}</div>
+            <div className="text-xs text-gray-600 mt-2 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              إعلان نشط حالياً
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* المخططات البيانية - جميعها بيانات حقيقية */}
@@ -1645,33 +1665,33 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
               <LineChart data={subscribersChart}>
                 <defs>
                   <linearGradient id="colorSubscribers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#3b82f6" 
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#3b82f6"
                   strokeWidth={3}
                   fill="url(#colorSubscribers)"
                   name="عدد المشتركين"
@@ -1699,24 +1719,24 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
               <BarChart data={revenueChart}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
                 <Tooltip content={<CustomRevenueTooltip />} />
                 <Legend />
-                <Bar 
-                  dataKey="revenue" 
+                <Bar
+                  dataKey="revenue"
                   fill="url(#colorRevenue)"
                   name="الإيرادات (ل.س)"
                   radius={[8, 8, 0, 0]}
@@ -1788,7 +1808,7 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <div className="text-center p-6 bg-gradient-to-br from-cyan-100 to-blue-100 rounded-lg border border-cyan-200">
                 <div className="text-4xl font-bold text-cyan-700 mb-2">
                   {countryUsersCount.toLocaleString()}
@@ -1824,8 +1844,8 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
                 <SelectContent>
                   <SelectItem value="all">جميع المدرسين</SelectItem>
                   {instructorsStudents.map((instructor) => (
-                    <SelectItem 
-                      key={instructor.instructorId} 
+                    <SelectItem
+                      key={instructor.instructorId}
                       value={instructor.instructorId.toString()}
                     >
                       {instructor.instructorName} ({instructor.studentCount} طالب)
@@ -1833,14 +1853,14 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <div className="text-center p-6 bg-gradient-to-br from-teal-100 to-green-100 rounded-lg border border-teal-200">
                 <div className="text-4xl font-bold text-teal-700 mb-2">
                   {instructorStudentsCount.toLocaleString()}
                 </div>
                 <p className="text-teal-600 font-medium">
-                  {selectedInstructor === 'all' 
-                    ? 'إجمالي الطلاب' 
+                  {selectedInstructor === 'all'
+                    ? 'إجمالي الطلاب'
                     : `طلاب لدى ${instructorsStudents.find(i => i.instructorId.toString() === selectedInstructor)?.instructorName || 'الدكتور المحدد'}`
                   }
                 </p>
@@ -1868,33 +1888,33 @@ const months = ['[1] كانون الثاني', '[2] شباط', '[3] آذار', '
               <LineChart data={levelsChart}>
                 <defs>
                   <linearGradient id="colorLevels" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#ec4899" 
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#ec4899"
                   strokeWidth={3}
                   fill="url(#colorLevels)"
                   name="عدد الدورات"
