@@ -485,6 +485,9 @@ export const deleteLesson = (id) =>
 
 // --- إدارة المستخدمين ---
 export const getAllUsers = (params) => api.get('/users', { params });
+export const getAllUsersHavePoints = () => {
+    return api.get('/coupons/admin/users');
+};
 export const createUser = (data) => api.post('/users', data);
 export const getUserById = (id) => api.get(`/users/${id}`);
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
