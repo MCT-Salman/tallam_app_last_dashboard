@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock, Globe } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock, Globe, Coins } from "lucide-react"
 import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
@@ -463,6 +463,13 @@ const Account = () => {
                                         <span className="font-medium">{formatDate(user.createdAt)}</span>
                                     </div>
                                 </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">عدد النقاط</span>
+                                    <div className="flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">{user.points}</span>
+                                    </div>
+                                </div>
                                 {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span className="text-sm font-medium text-gray-600">تاريخ الانتهاء</span>
                                     <div className="flex items-center gap-2">
@@ -793,6 +800,7 @@ const Account = () => {
                                                 )}
                                             </div>
                                         </TableHead>
+                                         <TableHead className="table-header">عدد النقاط</TableHead>
                                         <TableHead className="table-header text-right">الإجراءات</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -838,6 +846,9 @@ const Account = () => {
                                             </TableCell>
                                             <TableCell className="table-cell">
                                                 {formatDate(user.createdAt)}
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                {user.points}
                                             </TableCell>
                                             <TableCell className="table-cell text-right space-x-2">
                                                 <Button

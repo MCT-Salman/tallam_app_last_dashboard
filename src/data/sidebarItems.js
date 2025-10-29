@@ -85,7 +85,7 @@ export const sidebarGroups = [
         icon: BookOpen
       },
       {
-        title: "القصص",
+        title: "القصص والإعلانات",
         href: "/stories",
         icon: Image
       },

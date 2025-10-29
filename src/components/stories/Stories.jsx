@@ -24,7 +24,8 @@ const Stories = () => {
         startedAt: "",
         endedAt: "",
         orderIndex: "",
-        isActive: true
+        isActive: true,
+        isStory: true
     })
     const [imageFile, setImageFile] = useState(null)
     const [imagePreview, setImagePreview] = useState(null)
@@ -38,6 +39,7 @@ const Stories = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
+    const [typeFilter, setTypeFilter] = useState("all")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState("desc")
     const [totalStories, setTotalStories] = useState(0)
@@ -116,6 +118,13 @@ const Stories = () => {
             )
         }
 
+        // فلترة بالنوع
+        if (typeFilter !== "all") {
+            filtered = filtered.filter(story =>
+                typeFilter === "story" ? story.isStory : !story.isStory
+            )
+        }
+
         // الترتيب
         filtered.sort((a, b) => {
             let aValue, bValue
@@ -137,6 +146,10 @@ const Stories = () => {
                     aValue = a.isActive
                     bValue = b.isActive
                     break
+                case "isStory":
+                    aValue = a.isStory
+                    bValue = b.isStory
+                    break
                 case "createdAt":
                     aValue = new Date(a.createdAt) || new Date(0)
                     bValue = new Date(b.createdAt) || new Date(0)
@@ -152,12 +165,12 @@ const Stories = () => {
         })
 
         return filtered
-    }, [allStories, searchTerm, statusFilter, sortBy, sortOrder])
+    }, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
 
     // إعادة تعيين الصفحة عند تغيير الفلتر
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, statusFilter, itemsPerPage])
+    }, [searchTerm, statusFilter, typeFilter, itemsPerPage])
 
     // التعامل مع تغييرات النموذج
     const handleFormChange = (key, value) => {
@@ -176,10 +189,10 @@ const Stories = () => {
         }
     }
 
-    // حفظ القصة (إضافة أو تعديل) - التصحيح النهائي
+    // حفظ القصة (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!form.title.trim()) return showErrorToast("يرجى إدخال عنوان القصة")
-        if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة للقصة")
+        if (!form.title.trim()) return showErrorToast("يرجى إدخال العنوان")
+        if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة")
 
         try {
             const storyData = new FormData()
@@ -188,41 +201,37 @@ const Stories = () => {
             storyData.append('title', form.title)
             storyData.append('orderIndex', form.orderIndex || "0")
             storyData.append('isActive', form.isActive.toString())
+            storyData.append('isStory', form.isStory.toString())
             
             if (form.startedAt) storyData.append('startedAt', form.startedAt)
             if (form.endedAt) storyData.append('endedAt', form.endedAt)
             
-            // ⬅️ التصحيح المهم: استخدام الحقل الصحيح للصورة
             if (imageFile) {
-                storyData.append('imageUrl', imageFile) // هذا هو الحقل الذي يتوقعه الـ API
+                storyData.append('imageUrl', imageFile)
             }
 
             console.log("📤 Sending story data:", {
                 title: form.title,
                 orderIndex: form.orderIndex,
                 isActive: form.isActive,
+                isStory: form.isStory,
                 startedAt: form.startedAt,
                 endedAt: form.endedAt,
                 hasImage: !!imageFile,
                 isEdit: !!editItem
             })
 
-            // طباعة محتويات FormData للتأكد
-            for (let [key, value] of storyData.entries()) {
-                console.log(`📦 FormData: ${key} =`, value)
-            }
-
             if (editItem) {
                 console.log(`🔄 Updating story ID: ${editItem.id}`)
                 const response = await updateStory(editItem.id, storyData)
                 console.log("✅ Update response:", response)
-                showSuccessToast("تم تعديل القصة بنجاح")
+                showSuccessToast("تم التعديل بنجاح")
                 setEditItem(null)
             } else {
                 console.log("🆕 Creating new story")
                 const response = await createStory(storyData)
                 console.log("✅ Create response:", response)
-                showSuccessToast("تم إنشاء القصة بنجاح")
+                showSuccessToast("تم الإضافة بنجاح")
             }
 
             // إعادة تعيين النموذج
@@ -231,7 +240,8 @@ const Stories = () => {
                 startedAt: "",
                 endedAt: "",
                 orderIndex: "",
-                isActive: true
+                isActive: true,
+                isStory: true
             })
             setImageFile(null)
             setImagePreview(null)
@@ -294,6 +304,43 @@ const Stories = () => {
         return true
     }
 
+    // دالة لحساب الفرق بين تاريخين
+    const calculateDateDifference = (startDate, endDate) => {
+        if (!startDate || !endDate) return "غير محدد"
+        
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        const diffTime = Math.abs(end - start)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays === 1) return "يوم واحد"
+        if (diffDays < 30) return `${diffDays} يوم`
+        
+        const months = Math.floor(diffDays / 30)
+        const remainingDays = diffDays % 30
+        
+        if (months === 1 && remainingDays === 0) return "شهر واحد"
+        if (remainingDays === 0) return `${months} أشهر`
+        
+        return `${months} شهر و ${remainingDays} يوم`
+    }
+
+    // دالة لحساب نسبة التقدم
+    const calculateProgressPercentage = (story) => {
+        if (!story.startedAt || !story.endedAt) return 0
+        
+        const start = new Date(story.startedAt)
+        const end = new Date(story.endedAt)
+        const now = new Date()
+        
+        if (now < start) return 0
+        if (now > end) return 100
+        
+        const totalDuration = end - start
+        const elapsed = now - start
+        return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
+    }
+
     // Pagination calculations
     const totalItems = filteredAndSortedStories.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
@@ -321,67 +368,11 @@ const Stories = () => {
     const resetFilters = () => {
         setSearchTerm("")
         setStatusFilter("all")
+        setTypeFilter("all")
         setSortBy("createdAt")
         setSortOrder("desc")
         setCurrentPage(1)
     }
-
-    // دالة لحساب الفرق بين تاريخين
-const calculateDateDifference = (startDate, endDate) => {
-  if (!startDate || !endDate) return "غير محدد"
-  
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  const diffTime = Math.abs(end - start)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 1) return "يوم واحد"
-  if (diffDays < 30) return `${diffDays} يوم`
-  
-  const months = Math.floor(diffDays / 30)
-  const remainingDays = diffDays % 30
-  
-  if (months === 1 && remainingDays === 0) return "شهر واحد"
-  if (remainingDays === 0) return `${months} أشهر`
-  
-  return `${months} شهر و ${remainingDays} يوم`
-}
-
-// دالة لحساب نسبة التقدم
-const calculateProgressPercentage = (story) => {
-  if (!story.startedAt || !story.endedAt) return 0
-  
-  const start = new Date(story.startedAt)
-  const end = new Date(story.endedAt)
-  const now = new Date()
-  
-  if (now < start) return 0
-  if (now > end) return 100
-  
-  const totalDuration = end - start
-  const elapsed = now - start
-  return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
-}
-
-// دالة لحساب مدة النشر
-// const calculatePublishDuration = (createdAt) => {
-//   if (!createdAt) return "غير محدد"
-  
-//   const created = new Date(createdAt)
-//   const now = new Date()
-//   const diffTime = Math.abs(now - created)
-//   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-//   if (diffDays === 1) return "يوم"
-//   if (diffDays < 30) return `${diffDays} يوم`
-  
-//   const months = Math.floor(diffDays / 30)
-//   if (months === 1) return "شهر"
-//   if (months < 12) return `${months} أشهر`
-  
-//   const years = Math.floor(months / 12)
-//   return years === 1 ? "سنة" : `${years} سنوات`
-// }
 
     // عرض التفاصيل الكاملة للقصة
     const renderStoryDetails = (story) => {
@@ -408,8 +399,16 @@ const calculateProgressPercentage = (story) => {
                 {/* المعلومات الأساسية */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <Label className="font-bold">عنوان القصة:</Label>
+                        <Label className="font-bold">العنوان:</Label>
                         <p className="mt-1 text-lg">{story.title}</p>
+                    </div>
+                    <div>
+                        <Label className="font-bold">النوع:</Label>
+                        <p className="mt-1">
+                            <Badge variant={story.isStory ? "default" : "secondary"}>
+                                {story.isStory ? "قصة" : "إعلان"}
+                            </Badge>
+                        </p>
                     </div>
                     <div>
                         <Label className="font-bold">ترتيب العرض:</Label>
@@ -452,10 +451,6 @@ const calculateProgressPercentage = (story) => {
                             <Label className="font-medium">آخر تحديث:</Label>
                             <p>{formatDate(story.updatedAt)}</p>
                         </div>
-                        {/* <div>
-                            <Label className="font-medium">معرف القصة:</Label>
-                            <p>{story.id || "غير محدد"}</p>
-                        </div> */}
                     </div>
                 </div>
             </div>
@@ -499,6 +494,9 @@ const calculateProgressPercentage = (story) => {
                             <h3 className="font-bold text-xl mb-1">{story.title}</h3>
                             <div className="flex items-center gap-2">
                                 <Badge variant="secondary">ترتيب: {story.orderIndex || 0}</Badge>
+                                <Badge variant={story.isStory ? "default" : "secondary"}>
+                                    {story.isStory ? "قصة" : "إعلان"}
+                                </Badge>
                             </div>
                         </div>
                         
@@ -543,7 +541,8 @@ const calculateProgressPercentage = (story) => {
                                     startedAt: story.startedAt?.split('T')[0] || "",
                                     endedAt: story.endedAt?.split('T')[0] || "",
                                     orderIndex: story.orderIndex?.toString() || "",
-                                    isActive: story.isActive || true
+                                    isActive: story.isActive || true,
+                                    isStory: story.isStory !== undefined ? story.isStory : true
                                 })
                                 setImageFile(null)
                                 setImagePreview(story.imageUrl ? getImageUrl(story.imageUrl) : null)
@@ -577,7 +576,7 @@ const calculateProgressPercentage = (story) => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة القصص</CardTitle>
+                    <CardTitle>إدارة القصص والإعلانات</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -589,27 +588,28 @@ const calculateProgressPercentage = (story) => {
                                         startedAt: "",
                                         endedAt: "",
                                         orderIndex: "",
-                                        isActive: true
+                                        isActive: true,
+                                        isStory: true
                                     })
                                     setImageFile(null)
                                     setImagePreview(null)
                                 }}
                             >
-                                إضافة قصة <Plus className="w-4 h-4 cursor-pointer" />
+                                إضافة <Plus className="w-4 h-4 cursor-pointer" />
                             </Button>
                         </DialogTrigger>
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle className="text-right">{editItem ? "تعديل القصة" : "إضافة قصة جديدة"}</DialogTitle>
+                                <DialogTitle className="text-right">{editItem ? "تعديل المحتوى" : "إضافة محتوى جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 <div className="space-y-2">
-                                    <Label>عنوان القصة *</Label>
+                                    <Label>العنوان *</Label>
                                     <Input
                                         value={form.title}
                                         onChange={(e) => handleFormChange("title", e.target.value)}
-                                        placeholder="أدخل عنوان القصة..."
+                                        placeholder="أدخل العنوان..."
                                     />
                                 </div>
 
@@ -625,14 +625,16 @@ const calculateProgressPercentage = (story) => {
                                         />
                                     </div>
 
-                                    {/* <div className="space-y-2 flex items-center gap-2">
-                                        <Label>الحالة</Label>
+                                    <div className="space-y-2 flex items-center gap-2 justify-end">
+                                        <Label htmlFor="story-type" className="cursor-pointer">
+                                            {form.isStory ? "قصة" : "إعلان"}
+                                        </Label>
                                         <Switch
-                                            checked={form.isActive}
-                                            onCheckedChange={(checked) => handleFormChange("isActive", checked)}
+                                            id="story-type"
+                                            checked={form.isStory}
+                                            onCheckedChange={(checked) => handleFormChange("isStory", checked)}
                                         />
-                                        <span>{form.isActive ? "نشط" : "معطل"}</span>
-                                    </div> */}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -657,7 +659,7 @@ const calculateProgressPercentage = (story) => {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="story-image">
-                                        صورة القصة {!editItem && "*"}
+                                        الصورة {!editItem && "*"}
                                     </Label>
                                     <Input
                                         id="story-image"
@@ -699,13 +701,13 @@ const calculateProgressPercentage = (story) => {
                                     <p className="text-xs text-gray-500">
                                         {editItem 
                                             ? "اترك الحقل فارغاً للحفاظ على الصورة الحالية" 
-                                            : "يجب اختيار صورة للقصة الجديدة"
+                                            : "يجب اختيار صورة للمحتوى الجديد"
                                         }
                                     </p>
                                 </div>
 
                                 <Button onClick={handleSave}>
-                                    {editItem ? "حفظ التعديل" : "حفظ القصة"}
+                                    {editItem ? "حفظ التعديل" : "حفظ المحتوى"}
                                 </Button>
                             </div>
                         </DialogContent>
@@ -713,7 +715,7 @@ const calculateProgressPercentage = (story) => {
                 </div>
 
                 {/* Filters Section */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     {/* Search */}
                     <div className="relative">
                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -734,6 +736,18 @@ const calculateProgressPercentage = (story) => {
                             <SelectItem value="all">جميع الحالات</SelectItem>
                             <SelectItem value="active">نشط</SelectItem>
                             <SelectItem value="inactive">معطل</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {/* Type Filter */}
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="فلترة بالنوع" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">جميع الأنواع</SelectItem>
+                            <SelectItem value="story">قصص</SelectItem>
+                            <SelectItem value="ad">إعلانات</SelectItem>
                         </SelectContent>
                     </Select>
 
@@ -763,6 +777,7 @@ const calculateProgressPercentage = (story) => {
                             <SelectItem value="title">العنوان</SelectItem>
                             <SelectItem value="orderIndex">الترتيب</SelectItem>
                             <SelectItem value="isActive">الحالة</SelectItem>
+                            <SelectItem value="isStory">النوع</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -770,11 +785,11 @@ const calculateProgressPercentage = (story) => {
                 {/* Reset Filters & Results Count */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div className="text-sm text-muted-foreground">
-                        عرض {filteredAndSortedStories.length} من أصل {allStories.length} قصة
-                        {(searchTerm || statusFilter !== "all") && ` (مفلتر)`}
+                        عرض {filteredAndSortedStories.length} من أصل {allStories.length} محتوى
+                        {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && ` (مفلتر)`}
                     </div>
 
-                    {(searchTerm || statusFilter !== "all") && (
+                    {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && (
                         <Button variant="outline" size="sm" onClick={resetFilters}>
                             إعادة تعيين الفلترة
                         </Button>
@@ -806,6 +821,7 @@ const calculateProgressPercentage = (story) => {
                                                 )}
                                             </div>
                                         </TableHead>
+                                        <TableHead className="table-header">النوع</TableHead>
                                         <TableHead 
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("orderIndex")}
@@ -852,6 +868,11 @@ const calculateProgressPercentage = (story) => {
                                                 </TableCell>
                                                 <TableCell className="table-cell font-medium">
                                                     {story.title}
+                                                </TableCell>
+                                                <TableCell className="table-cell">
+                                                    <Badge variant={story.isStory ? "default" : "secondary"}>
+                                                        {story.isStory ? "قصة" : "إعلان"}
+                                                    </Badge>
                                                 </TableCell>
                                                 <TableCell className="table-cell">
                                                     <Badge variant="secondary">{story.orderIndex || 0}</Badge>
@@ -901,7 +922,8 @@ const calculateProgressPercentage = (story) => {
                                                                 startedAt: story.startedAt?.split('T')[0] || "",
                                                                 endedAt: story.endedAt?.split('T')[0] || "",
                                                                 orderIndex: story.orderIndex?.toString() || "",
-                                                                isActive: story.isActive || true
+                                                                isActive: story.isActive || true,
+                                                                isStory: story.isStory !== undefined ? story.isStory : true
                                                             })
                                                             setImageFile(null)
                                                             setImagePreview(story.imageUrl ? getImageUrl(story.imageUrl) : null)
@@ -928,8 +950,8 @@ const calculateProgressPercentage = (story) => {
                                         )
                                     }) : (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                                                {allStories.length === 0 ? "لا توجد قصص متاحة" : "لا توجد نتائج مطابقة للبحث"}
+                                            <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                                                {allStories.length === 0 ? "لا توجد محتويات متاحة" : "لا توجد نتائج مطابقة للبحث"}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -945,7 +967,7 @@ const calculateProgressPercentage = (story) => {
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    {allStories.length === 0 ? "لا توجد قصص متاحة" : "لا توجد نتائج مطابقة للبحث"}
+                                    {allStories.length === 0 ? "لا توجد محتويات متاحة" : "لا توجد نتائج مطابقة للبحث"}
                                 </div>
                             )}
                         </div>
@@ -954,7 +976,7 @@ const calculateProgressPercentage = (story) => {
                         {filteredAndSortedStories.length > 0 && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                                 <div className="text-sm text-muted-foreground">
-                                    عرض {startItem} إلى {endItem} من {totalItems} قصة
+                                    عرض {startItem} إلى {endItem} من {totalItems} محتوى
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -1016,9 +1038,9 @@ const calculateProgressPercentage = (story) => {
             >
                 <AlertDialogContent className="text-right" dir="rtl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذه القصة؟</AlertDialogTitle>
+                        <AlertDialogTitle className="text-right">هل أنت متأكد من الحذف؟</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
-                            سيتم حذف القصة "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+                            سيتم حذف المحتوى "{deleteDialog.itemName}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row-reverse gap-2">
@@ -1039,300 +1061,227 @@ const calculateProgressPercentage = (story) => {
             </AlertDialog>
 
             {/* Story Details Dialog */}
-<Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, story: null })}>
-  <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-bold text-gray-900 text-right">
-        <div className="flex items-center gap-2">
-          <Image className="w-6 h-6 text-purple-600" />
-          تفاصيل القصة
-        </div>
-      </DialogTitle>
-    </DialogHeader>
-    
-    {detailDialog.story && (
-      <div className="space-y-6 text-right">
-        {/* الهيدر مع الصورة والمعلومات الأساسية */}
-        <div className="bg-gradient-to-l from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            {/* الصورة الرئيسية */}
-            <div className="relative flex-shrink-0">
-              <img
-                src={getImageUrl(detailDialog.story.imageUrl)}
-                alt={detailDialog.story.title}
-                className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-2xl shadow-lg border-4 border-white"
-                {...imageConfig}
-                onError={(e) => {
-                  e.target.onerror = null
-                  e.target.src = "/default-story.png"
-                }}
-              />
-              {/* شارة الترتيب */}
-              <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
-                {detailDialog.story.orderIndex || 0}
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
-                {detailDialog.story.title}
-              </h2>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant={detailDialog.story.isActive ? "default" : "secondary"} 
-                      className={detailDialog.story.isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
-                  {detailDialog.story.isActive ? "🟢 نشط" : "🔴 معطل"}
-                </Badge>
-                
-                {isCurrentlyActive(detailDialog.story) && detailDialog.story.isActive && (
-                  <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-                    🎯 نشط حالياً
-                  </Badge>
-                )}
-                
-                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-                  <ListOrdered className="w-3 h-3 ml-1" />
-                  ترتيب: {detailDialog.story.orderIndex || 0}
-                </Badge>
-              </div>
-              
-              {/* معلومات سريعة */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar className="w-4 h-4 text-purple-600" />
-                  <span>أنشئت في: {formatDate(detailDialog.story.createdAt)}</span>
-                </div>
-                {/* <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar className="w-4 h-4 text-purple-600" />
-                  <span>آخر تحديث: {formatDate(detailDialog.story.updatedAt)}</span>
-                </div> */}
-              </div>
-            </div>
-          </div>
-        </div>
+            <Dialog open={detailDialog.isOpen} onOpenChange={(isOpen) => setDetailDialog({ isOpen, story: null })}>
+                <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900 text-right">
+                            <div className="flex items-center gap-2">
+                                <Image className="w-6 h-6 text-purple-600" />
+                                تفاصيل المحتوى
+                            </div>
+                        </DialogTitle>
+                    </DialogHeader>
+                    
+                    {detailDialog.story && (
+                        <div className="space-y-6 text-right">
+                            {/* الهيدر مع الصورة والمعلومات الأساسية */}
+                            <div className="bg-gradient-to-l from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+                                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                                    {/* الصورة الرئيسية */}
+                                    <div className="relative flex-shrink-0">
+                                        <img
+                                            src={getImageUrl(detailDialog.story.imageUrl)}
+                                            alt={detailDialog.story.title}
+                                            className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-2xl shadow-lg border-4 border-white"
+                                            {...imageConfig}
+                                            onError={(e) => {
+                                                e.target.onerror = null
+                                                e.target.src = "/default-story.png"
+                                            }}
+                                        />
+                                        {/* شارة الترتيب */}
+                                        <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
+                                            {detailDialog.story.orderIndex || 0}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                                            {detailDialog.story.title}
+                                        </h2>
+                                        
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            <Badge variant={detailDialog.story.isActive ? "default" : "secondary"} 
+                                                className={detailDialog.story.isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
+                                                {detailDialog.story.isActive ? "🟢 نشط" : "🔴 معطل"}
+                                            </Badge>
+                                            
+                                            <Badge variant={detailDialog.story.isStory ? "default" : "secondary"} 
+                                                className={detailDialog.story.isStory ? "bg-purple-600 hover:bg-purple-700" : "bg-orange-600 hover:bg-orange-700"}>
+                                                {detailDialog.story.isStory ? "📖 قصة" : "📢 إعلان"}
+                                            </Badge>
+                                            
+                                            {isCurrentlyActive(detailDialog.story) && detailDialog.story.isActive && (
+                                                <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                                    🎯 نشط حالياً
+                                                </Badge>
+                                            )}
+                                            
+                                            <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                                                <ListOrdered className="w-3 h-3 ml-1" />
+                                                ترتيب: {detailDialog.story.orderIndex || 0}
+                                            </Badge>
+                                        </div>
+                                        
+                                        {/* معلومات سريعة */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                            <div className="flex items-center gap-2 text-gray-700">
+                                                <Calendar className="w-4 h-4 text-purple-600" />
+                                                <span>أنشئت في: {formatDate(detailDialog.story.createdAt)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-        {/* الشبكة الرئيسية للمعلومات */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* معلومات الفترة الزمنية */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-blue-50 to-cyan-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                الفترة الزمنية
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <div className="space-y-3">
-                <div className={`flex justify-between items-center p-3 rounded-lg transition-colors ${
-                  detailDialog.story.startedAt ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50'
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">تاريخ البدء</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">
-                      {formatDate(detailDialog.story.startedAt) || 'غير محدد'}
-                    </span>
-                    {/* {detailDialog.story.startedAt && (
-                      <span className="text-xs text-gray-500">
-                        {new Date(detailDialog.story.startedAt).toLocaleTimeString('ar-SA')}
-                      </span>
-                    )} */}
-                  </div>
-                </div>
-                
-                <div className={`flex justify-between items-center p-3 rounded-lg transition-colors ${
-                  detailDialog.story.endedAt ? 'bg-green-50 hover:bg-green-100' : 'bg-gray-50'
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">تاريخ الانتهاء</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-gray-900 block">
-                      {formatDate(detailDialog.story.endedAt) || 'غير محدد'}
-                    </span>
-                    {/* {detailDialog.story.endedAt && (
-                      <span className="text-xs text-gray-500">
-                        {new Date(detailDialog.story.endedAt).toLocaleTimeString('ar-SA')}
-                      </span>
-                    )} */}
-                  </div>
-                </div>
-              </div>
-              
-              {/* شريط التقدم الزمني */}
-              {detailDialog.story.startedAt && detailDialog.story.endedAt && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">مدة العرض</span>
-                    <span className="text-sm text-gray-600">
-                      {calculateDateDifference(detailDialog.story.startedAt, detailDialog.story.endedAt)}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${calculateProgressPercentage(detailDialog.story)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                            {/* الشبكة الرئيسية للمعلومات */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* معلومات الفترة الزمنية */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-blue-50 to-cyan-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <Calendar className="w-5 h-5 text-blue-600" />
+                                            الفترة الزمنية
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 pt-4">
+                                        <div className="space-y-3">
+                                            <div className={`flex justify-between items-center p-3 rounded-lg transition-colors ${
+                                                detailDialog.story.startedAt ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50'
+                                            }`}>
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-blue-600" />
+                                                    <span className="text-sm font-medium text-gray-700">تاريخ البدء</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">
+                                                        {formatDate(detailDialog.story.startedAt) || 'غير محدد'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className={`flex justify-between items-center p-3 rounded-lg transition-colors ${
+                                                detailDialog.story.endedAt ? 'bg-green-50 hover:bg-green-100' : 'bg-gray-50'
+                                            }`}>
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-green-600" />
+                                                    <span className="text-sm font-medium text-gray-700">تاريخ الانتهاء</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-medium text-gray-900 block">
+                                                        {formatDate(detailDialog.story.endedAt) || 'غير محدد'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* شريط التقدم الزمني */}
+                                        {detailDialog.story.startedAt && detailDialog.story.endedAt && (
+                                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-sm font-medium text-gray-700">مدة العرض</span>
+                                                    <span className="text-sm text-gray-600">
+                                                        {calculateDateDifference(detailDialog.story.startedAt, detailDialog.story.endedAt)}
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                                    <div 
+                                                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${calculateProgressPercentage(detailDialog.story)}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
 
-          {/* معلومات الحالة والإحصائيات */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-                <Eye className="w-5 h-5 text-green-600" />
-                الحالة والإحصائيات
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {detailDialog.story.isActive ? "✅" : "❌"}
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {detailDialog.story.isActive ? "نشط" : "معطل"}
-                  </div>
-                </div>
-                
-                <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                  <div className="text-2xl font-bold text-purple-600">🎯</div>
-                  <div className="text-sm font-medium text-gray-700 mt-1">الحالة الحالية</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {isCurrentlyActive(detailDialog.story) ? "نشط الآن" : "غير نشط"}
-                  </div>
-                </div>
-                
-                {/* <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
-                  <div className="text-2xl font-bold text-orange-600">📊</div>
-                  <div className="text-sm font-medium text-gray-700 mt-1">مدة النشر</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {calculatePublishDuration(detailDialog.story.createdAt)}
-                  </div>
-                </div> */}
-                
-                {/* <div className="text-center p-3 bg-red-50 rounded-lg border border-red-100">
-                  <div className="text-2xl font-bold text-red-600">🆔</div>
-                  <div className="text-sm font-medium text-gray-700 mt-1">المعرف</div>
-                  <div className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-800 truncate">
-                    {detailDialog.story.id}
-                  </div>
-                </div> */}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                                {/* معلومات الحالة والإحصائيات */}
+                                <Card className="border border-gray-200 shadow-sm">
+                                    <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
+                                        <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                            <Eye className="w-5 h-5 text-green-600" />
+                                            الحالة والإحصائيات
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                <div className="text-2xl font-bold text-blue-600">
+                                                    {detailDialog.story.isActive ? "✅" : "❌"}
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
+                                                <div className="text-lg font-bold text-gray-900">
+                                                    {detailDialog.story.isActive ? "نشط" : "معطل"}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                                <div className="text-2xl font-bold text-purple-600">
+                                                    {detailDialog.story.isStory ? "📖" : "📢"}
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-700 mt-1">النوع</div>
+                                                <div className="text-lg font-bold text-gray-900">
+                                                    {detailDialog.story.isStory ? "قصة" : "إعلان"}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                                                <div className="text-2xl font-bold text-orange-600">🎯</div>
+                                                <div className="text-sm font-medium text-gray-700 mt-1">الحالة الحالية</div>
+                                                <div className="text-lg font-bold text-gray-900">
+                                                    {isCurrentlyActive(detailDialog.story) ? "نشط الآن" : "غير نشط"}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="text-center p-3 bg-red-50 rounded-lg border border-red-100">
+                                                <div className="text-2xl font-bold text-red-600">🔢</div>
+                                                <div className="text-sm font-medium text-gray-700 mt-1">الترتيب</div>
+                                                <div className="text-lg font-bold text-gray-900">
+                                                    {detailDialog.story.orderIndex || 0}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
 
-        {/* معلومات إضافية */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
-            <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
-              <ListOrdered className="w-5 h-5 text-gray-600" />
-              معلومات إضافية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">معرف القصة</span>
-                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
-                  {detailDialog.story.id}
-                </span>
-              </div> */}
-              
-              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
-                <div className="text-right">
-                  <span className="font-medium text-gray-900 block">{formatDate(detailDialog.story.createdAt)}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(detailDialog.story.createdAt).toLocaleTimeString('ar-SA')}
-                  </span>
-                </div>
-              </div> */}
-              
-              {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
-                <div className="text-right">
-                  <span className="font-medium text-gray-900 block">{formatDate(detailDialog.story.updatedAt)}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(detailDialog.story.updatedAt).toLocaleTimeString('ar-SA')}
-                  </span>
-                </div>
-              </div> */}
-              
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">ترتيب العرض</span>
-                <Badge variant="secondary" className="text-lg font-bold">
-                  {detailDialog.story.orderIndex || 0}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* أزرار الإجراءات */}
-        {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setEditItem(detailDialog.story)
-              setForm({
-                title: detailDialog.story.title || "",
-                startedAt: detailDialog.story.startedAt?.split('T')[0] || "",
-                endedAt: detailDialog.story.endedAt?.split('T')[0] || "",
-                orderIndex: detailDialog.story.orderIndex?.toString() || "",
-                isActive: detailDialog.story.isActive || true
-              })
-              setImageFile(null)
-              setImagePreview(detailDialog.story.imageUrl ? getImageUrl(detailDialog.story.imageUrl) : null)
-              setIsDialogOpen(true)
-              setDetailDialog({ isOpen: false, story: null })
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Edit className="w-4 h-4" />
-            تعديل القصة
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              handleToggleActive(detailDialog.story.id, detailDialog.story.isActive)
-              setDetailDialog({ isOpen: false, story: null })
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            {detailDialog.story.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {detailDialog.story.isActive ? "تعطيل القصة" : "تفعيل القصة"}
-          </Button>
-          
-          <Button
-            variant="destructive"
-            onClick={() => {
-              setDeleteDialog({
-                isOpen: true,
-                itemId: detailDialog.story.id,
-                itemName: detailDialog.story.title || "بدون عنوان"
-              })
-              setDetailDialog({ isOpen: false, story: null })
-            }}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Trash2 className="w-4 h-4" />
-            حذف القصة
-          </Button>
-        </div> */}
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
+                            {/* معلومات إضافية */}
+                            <Card className="border border-gray-200 shadow-sm">
+                                <CardHeader className="pb-3 bg-gradient-to-l from-gray-50 to-slate-50 rounded-t-lg">
+                                    <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
+                                        <ListOrdered className="w-5 h-5 text-gray-600" />
+                                        معلومات إضافية
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-700">تاريخ الإنشاء</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-gray-900 block">{formatDate(detailDialog.story.createdAt)}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-gray-900 block">{formatDate(detailDialog.story.updatedAt)}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-700">ترتيب العرض</span>
+                                            <Badge variant="secondary" className="text-lg font-bold">
+                                                {detailDialog.story.orderIndex || 0}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </Card>
     )
 }
