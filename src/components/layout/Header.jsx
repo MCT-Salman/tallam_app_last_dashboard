@@ -1,18 +1,20 @@
 // src\components\layout\Header.jsx
-import { Bell, Search, User } from "lucide-react"
+import { User, Settings, FileText, HelpCircle, CreditCard, BookOpen, Bell, DollarSign, Percent, User as UserIcon, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Link } from "react-router-dom"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
+    DropdownMenuGroup,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import React from "react"
+import React, { useContext } from "react"
 import { LogoutButton } from "@/components/auth/LogoutButton"
+import { AuthContext } from "@/contexts/AuthContext"
 
 // إضافة الـ CSS للمحتوى الرئيسي لتجنب التغطية
 const headerStyles = `
@@ -51,9 +53,9 @@ if (typeof document !== 'undefined') {
     }
 }
 
-
-
 export function Header({ sidebarCollapsed = false }) {
+    const { user } = useContext(AuthContext)
+    
     // إضافة class للـ body لضمان المساحة الصحيحة
     React.useEffect(() => {
         const body = document.body
@@ -102,39 +104,116 @@ export function Header({ sidebarCollapsed = false }) {
                                 className="relative h-10 w-10 rounded-full hover:bg-accent"
                             >
                                 <Avatar className="h-10 w-10">
-                                    <AvatarImage src="/avatar-placeholder.png" alt="المستخدم" />
+                                    <AvatarImage src={user?.avatar || "/avatar-placeholder.png"} alt={user?.name || "المستخدم"} />
                                     <AvatarFallback className="bg-primary text-primary-foreground">
-                                        <User className="w-5 h-5" />
+                                        {user?.name ? 
+                                            user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                                            <User className="w-5 h-5" />
+                                        }
                                     </AvatarFallback>
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end">
-                            <DropdownMenuLabel>
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">أحمد محمد</p>
-                                    <p className="text-xs leading-none text-muted-foreground">
-                                        ahmed@taalam.com
-                                    </p>
+                        <DropdownMenuContent className="w-64 p-2 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800" align="end">
+                            <DropdownMenuLabel className="p-3 border-b border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                                        <AvatarFallback className="bg-primary/10 text-primary dark:bg-primary/20">
+                                            {user?.name ? 
+                                                user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                                                <User className="w-4 h-4" />
+                                            }
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            {user?.name || 'مستخدم'}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            {user?.role === 'ADMIN' ? 'مدير النظام' : 'مستخدم'}
+                                        </p>
+                                    </div>
                                 </div>
                             </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer hover:bg-accent">
-                                الملف الشخصي
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer hover:bg-accent">
-                                الإعدادات
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer hover:bg-accent">
-                                المساعدة
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer hover:bg-destructive/10">
+                            <DropdownMenuGroup className="py-1">
+                                {/* <DropdownMenuItem asChild>
+                                    <Link to="/accounts" className="w-full flex items-center gap-2 cursor-pointer hover:bg-accent">
+                                        <UserIcon className="w-4 h-4" />
+                                        <span>حسابي</span>
+                                    </Link>
+                                </DropdownMenuItem> */}
+
+                                <DropdownMenuItem asChild>
+                                    <Link to="/courses" className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                            <BookOpen className="w-4 h-4" />
+                                        </div>
+                                        <span className="font-medium">الدورات</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                
+                                <DropdownMenuItem asChild>
+                                    <Link to="/accesscode" className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                            <CreditCard className="w-4 h-4" />
+                                        </div>
+                                        <span className="font-medium">أكواد الشراء</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                
+                                
+                                
+                                <DropdownMenuItem asChild>
+                                    <Link to="/notifications" className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <div className="relative">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                                                <Bell className="w-4 h-4" />
+                                            </div>
+                                            {/* <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full">
+                                                3
+                                            </span> */}
+                                        </div>
+                                        <div className="flex items-center justify-between flex-1">
+                                            <span className="font-medium">الإشعارات</span>
+                                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                                
+                                {user?.role === 'admin' && (
+                                    <DropdownMenuItem asChild>
+                                        <Link to="/admin-accounts" className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                                                <Shield className="w-4 h-4" />
+                                            </div>
+                                            <span className="font-medium">لوحة التحكم</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                )}
+                                
+                                <DropdownMenuItem asChild>
+                                    <Link to="/settings" className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                            <Settings className="w-4 h-4" />
+                                        </div>
+                                        <span className="font-medium">الإعدادات</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            
+                            <div className="p-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <LogoutButton 
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                                />
+                            </div>
+                            
+                            {/* <DropdownMenuItem className="p-0 m-0">
                                 <LogoutButton 
                                     variant="ghost" 
-                                    className="flex items-center gap-3 px-3 py-3 text-sm font-medium bg-secondary text-white cursor-pointer hover:text-foreground hover:bg-accent justify-start w-full h-auto"
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium w-full h-auto justify-end hover:bg-destructive/10 hover:text-destructive"
                                 />
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

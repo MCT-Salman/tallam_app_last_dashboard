@@ -1184,4 +1184,6 @@ export const getDashboardStats = () => {
     return api.get('/admin/dashboard/stats');
 };
 
+export const getCouponsByLevelOrUser = (data) => api.post('/coupons/admin/listcoupons', data);
+
 export { api, BASE_URL };
