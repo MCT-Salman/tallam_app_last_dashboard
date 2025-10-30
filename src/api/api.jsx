@@ -493,6 +493,9 @@ export const getUserById = (id) => api.get(`/users/${id}`);
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
 export const toggleUserActive = (id) => api.put(`/users/${id}/toggle-active`);
+// حذف جلسة المستخدم
+export const deleteUserSession = (userId) =>
+    api.delete(`/admin/delete-session`, { data: { userId } });
 
 // --- إدارة المعاملات ---
 // export const getTransactions = (params) => api.get('/admin/transactions', { params });

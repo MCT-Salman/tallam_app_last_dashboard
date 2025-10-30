@@ -118,37 +118,81 @@ const Lesson = () => {
     }
 
     const resetFormData = () => {
-        setForm({
-            title: "",
-            description: "",
-            youtubeUrl: "",
-            youtubeId: "",
-            googleDriveUrl: "",
-            durationSec: "",
-            orderIndex: "",
-            isFreePreview: false
-        })
-        setEditItem(null)
-        // ✅ إعادة تعيين حالة فحص الروابط
-        setLinkValidation({
-            youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
-            googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
-        })
-    }
+  const nextOrder = getNextLessonOrder();
+  
+  setForm({
+    title: "",
+    description: "",
+    youtubeUrl: "",
+    youtubeId: "",
+    googleDriveUrl: "",
+    durationSec: "",
+    orderIndex: nextOrder.toString(), // ✅ تعبئة تلقائية
+    isFreePreview: false
+  })
+  setEditItem(null)
+  // ✅ إعادة تعيين حالة فحص الروابط
+  setLinkValidation({
+    youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+    googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
+  })
+}
 
-    const resetQuestionForm = () => {
-        setQuestionForm({
-            text: "",
-            order: "",
-            options: [
-                { text: "", isCorrect: false },
-                { text: "", isCorrect: false },
-                { text: "", isCorrect: false },
-                { text: "", isCorrect: false }
-            ]
-        })
-        setEditQuestionId(null)
-    }
+    // ✅ دالة للحصول على الترتيب التالي للدروس تلقائياً
+const getNextLessonOrder = () => {
+  if (allLessons.length === 0) return 1;
+  
+  // الحصول على أعلى ترتيب موجود
+  const maxOrder = Math.max(...allLessons.map(lesson => parseInt(lesson.orderIndex) || 0));
+  return maxOrder + 1;
+};
+
+// ✅ تحديث ترتيب الدرس تلقائياً عند تغيير الدروس أو فتح الديالوج
+useEffect(() => {
+  if (!editItem && isDialogOpen && selectedLevel) {
+    const nextOrder = getNextLessonOrder();
+    setForm(prev => ({
+      ...prev,
+      orderIndex: nextOrder.toString()
+    }));
+  }
+}, [allLessons, isDialogOpen, editItem, selectedLevel]);
+
+   const resetQuestionForm = () => {
+  const nextOrder = getNextQuestionOrder();
+  
+  setQuestionForm({
+    text: "",
+    order: nextOrder.toString(), // ✅ تعبئة تلقائية
+    options: [
+      { text: "", isCorrect: false },
+      { text: "", isCorrect: false },
+      { text: "", isCorrect: false },
+      { text: "", isCorrect: false }
+    ]
+  });
+  setEditQuestionId(null);
+};
+
+// ✅ تحديث ترتيب السؤال تلقائياً عند تغيير الأسئلة أو فتح الديالوج
+useEffect(() => {
+  if (!editQuestionId && isQuestionDialogOpen && selectedLevel) {
+    const nextOrder = getNextQuestionOrder();
+    setQuestionForm(prev => ({
+      ...prev,
+      order: nextOrder.toString()
+    }));
+  }
+}, [questions, isQuestionDialogOpen, editQuestionId, selectedLevel]);
+
+    // ✅ دالة للحصول على الترتيب التالي تلقائياً
+    const getNextQuestionOrder = () => {
+        if (questions.length === 0) return 1;
+
+        // الحصول على أعلى ترتيب موجود
+        const maxOrder = Math.max(...questions.map(q => parseInt(q.order) || 0));
+        return maxOrder + 1;
+    };
 
     // جلب الاختصاصات
     const fetchSpecializations = async () => {
@@ -464,104 +508,6 @@ const Lesson = () => {
     }
 
     // تفاصيل الملف
-    // const renderFileDetails = (file) => {
-    //     if (!file) return null
-
-    //     return (
-    //         <div className="space-y-6 text-right">
-    //             {/* المعلومات الأساسية */}
-    //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    //                 <div>
-    //                     <Label className="font-bold">اسم الملف:</Label>
-    //                     <p className="mt-1 text-lg">{file.name}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">نوع الملف:</Label>
-    //                     <p className="mt-1">
-    //                         <Badge variant="outline">
-    //                             {getFileTypeText(file.type)}
-    //                         </Badge>
-    //                     </p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">حجم الملف:</Label>
-    //                     <p className="mt-1">{formatFileSize(file.size)}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">تاريخ الرفع:</Label>
-    //                     <p className="mt-1">{formatDate(file.createdAt)}</p>
-    //                 </div>
-    //             </div>
-
-    //             {/* معلومات التصنيف الهرمي */}
-    //             <div className="border-t pt-4">
-    //                 <h3 className="font-bold mb-3">معلومات التصنيف:</h3>
-    //                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    //                     <div>
-    //                         <Label className="font-medium">الاختصاص:</Label>
-    //                         <p>{getSpecializationName(selectedSpecialization)}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">الكورس:</Label>
-    //                         <p>{getCourseName(selectedCourse)}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">المدرس:</Label>
-    //                         <p>{getInstructorName(selectedInstructor)}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">المستوى:</Label>
-    //                         <p>{getLevelName(selectedLevel)}</p>
-    //                     </div>
-    //                 </div>
-    //             </div>
-
-    //             {/* رابط التحميل */}
-    //             <div className="border-t pt-4">
-    //                 <Label className="font-bold">رابط التحميل:</Label>
-    //                 <div className="mt-2">
-    //                     <a
-    //                         href={getFileUrl(file.url)}
-    //                         target="_blank"
-    //                         rel="noopener noreferrer"
-    //                         className="text-blue-600 hover:underline break-all"
-    //                     >
-    //                         {getFileUrl(file.url)}
-    //                     </a>
-    //                 </div>
-    //                 <div className="mt-2">
-    //                     <Button
-    //                         size="sm"
-    //                         onClick={() => window.open(getFileUrl(file.url), '_blank')}
-    //                     >
-    //                         <Download className="w-4 h-4 ml-1" />
-    //                         تحميل الملف
-    //                     </Button>
-    //                 </div>
-    //             </div>
-
-    //             {/* معلومات إضافية */}
-    //             {/* <div className="border-t pt-4">
-    //                 <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-    //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    //                     <div>
-    //                         <Label className="font-medium">معرف الملف:</Label>
-    //                         <p>{file.id || "غير محدد"}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">معرف المستوى:</Label>
-    //                         <p>{file.courseLevelId || "غير محدد"}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">آخر تحديث:</Label>
-    //                         <p>{formatDate(file.updatedAt)}</p>
-    //                     </div>
-    //                 </div>
-    //             </div> */}
-    //         </div>
-    //     )
-    // }
-
     const renderFileDetails = (file) => {
         if (!file) return null
 
@@ -719,46 +665,6 @@ const Lesson = () => {
                     </CardContent>
                 </Card>
 
-                {/* الإجراءات */}
-                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        // handleDownloadFile(file);
-                        setFileDetailDialog({ isOpen: false, file: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Download className="w-4 h-4" />
-                    تحميل الملف
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        // handleEditFile(file);
-                        setFileDetailDialog({ isOpen: false, file: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Edit className="w-4 h-4" />
-                    تعديل الملف
-                </Button>
-                <Button
-                    variant="destructive"
-                    onClick={() => {
-                        // setDeleteDialog({
-                        //     isOpen: true,
-                        //     itemId: file.id,
-                        //     itemName: file.name
-                        // });
-                        setFileDetailDialog({ isOpen: false, file: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    حذف الملف
-                </Button>
-            </div> */}
             </div>
         )
     }
@@ -1148,13 +1054,6 @@ const Lesson = () => {
     }
 
     // التنسيق
-    // const formatDuration = (seconds) => {
-    //     if (!seconds) return "00:00"
-    //     const mins = Math.floor(seconds / 60)
-    //     const secs = seconds % 60
-    //     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-    // }
-
     const formatDuration = (seconds) => {
         if (!seconds || seconds === 0) return "0 ثانية";
 
@@ -1428,108 +1327,6 @@ const Lesson = () => {
         setQuestionCurrentPage(1)
     }
 
-    // const renderLessonDetails = (lesson) => {
-    //     if (!lesson) return null
-
-    //     return (
-    //         <div className="space-y-4 text-right">
-    //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    //                 <div>
-    //                     <Label className="font-bold">عنوان الدرس:</Label>
-    //                     <p className="mt-1">{lesson.title || "غير محدد"}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">ترتيب الدرس:</Label>
-    //                     <p className="mt-1">{lesson.orderIndex || "غير محدد"}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">المدة:</Label>
-    //                     <p className="mt-1">{formatDuration(lesson.durationSec)}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">الحالة:</Label>
-    //                     <div className="mt-1">
-    //                         <Badge variant={lesson.isActive ? "default" : "secondary"}>
-    //                             {lesson.isActive ? "نشط" : "معطل"}
-    //                         </Badge>
-    //                     </div>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">المعاينة المجانية:</Label>
-    //                     <div className="mt-1">
-    //                         <Badge variant={lesson.isFreePreview ? "default" : "secondary"}>
-    //                             {lesson.isFreePreview ? "مجاني" : "مدفوع"}
-    //                         </Badge>
-    //                     </div>
-    //                 </div>
-    //             </div>
-
-    //             {lesson.description && (
-    //                 <div>
-    //                     <Label className="font-bold">الوصف:</Label>
-    //                     <p className="mt-1 p-3 bg-gray-50 rounded-lg">{lesson.description}</p>
-    //                 </div>
-    //             )}
-
-    //             <div className="grid grid-cols-1 gap-4">
-    //             {lesson.youtubeUrl && (
-    //                 <div>
-    //                     <Label className="font-bold">رابط YouTube:</Label>
-    //                     <div className="flex items-center gap-2 mt-1">
-    //                         <Youtube className="w-4 h-4 text-red-600" />
-    //                         <a
-    //                             href={lesson.youtubeUrl}
-    //                             target="_blank"
-    //                             rel="noopener noreferrer"
-    //                             className="text-blue-600 hover:underline break-all"
-    //                         >
-    //                             {lesson.youtubeUrl}
-    //                         </a>
-    //                     </div>
-    //                 </div>
-    //             )}
-    //                 {lesson.googleDriveUrl && (
-    //                     <div>
-    //                         <Label className="font-bold">رابط Google Drive:</Label>
-    //                         <div className="flex items-center gap-2 mt-1">
-    //                             <Download className="w-4 h-4 text-green-600" />
-    //                             <a
-    //                                 href={lesson.googleDriveUrl}
-    //                                 target="_blank"
-    //                                 rel="noopener noreferrer"
-    //                                 className="text-blue-600 hover:underline break-all"
-    //                             >
-    //                                 {lesson.googleDriveUrl}
-    //                             </a>
-    //                         </div>
-    //                     </div>
-    //                 )}
-    //             </div>
-
-    //             <div className="border-t pt-4">
-    //                 <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-    //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    //                     <div>
-    //                         <Label className="font-medium">YouTube ID:</Label>
-    //                         <p>{lesson.youtubeId || "غير محدد"}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">تاريخ الإنشاء:</Label>
-    //                         <p>{lesson.createdAt || "غير محدد"}</p>
-    //                     </div>
-    //                     <div>
-    //                         <Label className="font-medium">آخر تحديث:</Label>
-    //                         <p>{lesson.updatedAt || "غير محدد"}</p>
-    //                     </div>
-    //                     {/* <div>
-    //                         <Label className="font-medium">معرف الدرس:</Label>
-    //                         <p>{lesson.id || "غير محدد"}</p>
-    //                     </div> */}
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     )
-    // }
 
     const renderLessonDetails = (lesson) => {
         if (!lesson) return null
@@ -1783,68 +1580,7 @@ const Lesson = () => {
         )
     }
 
-    // const renderQuestionDetails = (question) => {
-    //     if (!question) return null
-
-    //     return (
-    //         <div className="space-y-6 text-right">
-    //             {/* المعلومات الأساسية */}
-    //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    //                 <div>
-    //                     <Label className="font-bold">نص السؤال:</Label>
-    //                     <p className="mt-1 text-lg">{question.text}</p>
-    //                 </div>
-    //                 <div>
-    //                     <Label className="font-bold">ترتيب السؤال:</Label>
-    //                     <p className="mt-1">
-    //                         <Badge variant="secondary">{question.order}</Badge>
-    //                     </p>
-    //                 </div>
-    //                 {/* <div>
-    //                     <Label className="font-bold">معرف السؤال:</Label>
-    //                     <p className="mt-1">{question.id}</p>
-    //                 </div> */}
-    //                 <div>
-    //                     <Label className="font-bold">عدد الخيارات:</Label>
-    //                     <p className="mt-1">{question.options?.length || 0}</p>
-    //                 </div>
-    //             </div>
-
-    //             {/* الخيارات */}
-    //             <div className="border-t pt-4">
-    //                 <h3 className="font-bold mb-3">خيارات الإجابة:</h3>
-    //                 <div className="space-y-3">
-    //                     {question.options?.map((option, index) => (
-    //                         <div key={option.id} className={`p-3 rounded-lg border ${option.isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-    //                             <div className="flex items-center justify-between">
-    //                                 <div className="flex items-center gap-3">
-    //                                     {option.isCorrect ? (
-    //                                         <CheckCircle className="w-5 h-5 text-green-600" />
-    //                                     ) : (
-    //                                         <XCircle className="w-5 h-5 text-gray-400" />
-    //                                     )}
-    //                                     <span className={option.isCorrect ? "font-semibold text-green-800" : "text-gray-700"}>
-    //                                         {option.text}
-    //                                     </span>
-    //                                 </div>
-    //                                 <div className="flex items-center gap-2">
-    //                                     {option.isCorrect && (
-    //                                         <Badge variant="default" className="bg-green-600">
-    //                                             الإجابة الصحيحة
-    //                                         </Badge>
-    //                                     )}
-    //                                 </div>
-    //                             </div>
-    //                         </div>
-    //                     ))}
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     )
-    // }
-
     // مكون بطاقة الملف للعرض على الجوال
-
     const renderQuestionDetails = (question) => {
         if (!question) return null
 
@@ -1900,8 +1636,8 @@ const Lesson = () => {
                                 <div
                                     key={option.id}
                                     className={`p-4 rounded-lg border-2 transition-all ${option.isCorrect
-                                            ? 'bg-green-50 border-green-300 shadow-sm'
-                                            : 'bg-gray-50 border-gray-200'
+                                        ? 'bg-green-50 border-green-300 shadow-sm'
+                                        : 'bg-gray-50 border-gray-200'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
@@ -3343,15 +3079,6 @@ const Lesson = () => {
             </CardContent>
 
             {/* Dialog لعرض تفاصيل الدرس */}
-            {/* <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ isOpen: open, lesson: null })}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-right">تفاصيل الدرس</DialogTitle>
-                    </DialogHeader>
-                    {renderLessonDetails(detailDialog.lesson)}
-                </DialogContent>
-            </Dialog> */}
-
             <Dialog open={detailDialog.isOpen} onOpenChange={(open) => setDetailDialog({ isOpen: open, lesson: null })}>
                 <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
                     <DialogHeader>
@@ -3362,15 +3089,6 @@ const Lesson = () => {
             </Dialog>
 
             {/* Dialog لعرض تفاصيل الملف */}
-            {/* <Dialog open={fileDetailDialog.isOpen} onOpenChange={(open) => setFileDetailDialog({ isOpen: open, file: null })}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>تفاصيل الملف</DialogTitle>
-                    </DialogHeader>
-                    {renderFileDetails(fileDetailDialog.file)}
-                </DialogContent>
-            </Dialog> */}
-
             <Dialog open={fileDetailDialog.isOpen} onOpenChange={(open) => setFileDetailDialog({ isOpen: open, file: null })}>
                 <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
                     <DialogHeader>
@@ -3381,14 +3099,6 @@ const Lesson = () => {
             </Dialog>
 
             {/* Dialog لعرض تفاصيل السؤال */}
-            {/* <Dialog open={questionDetailDialog.isOpen} onOpenChange={(open) => setQuestionDetailDialog({ isOpen: open, question: null })}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>تفاصيل السؤال</DialogTitle>
-                    </DialogHeader>
-                    {renderQuestionDetails(questionDetailDialog.question)}
-                </DialogContent>
-            </Dialog> */}
             <Dialog open={questionDetailDialog.isOpen} onOpenChange={(open) => setQuestionDetailDialog({ isOpen: open, question: null })}>
                 <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
                     <DialogHeader>
