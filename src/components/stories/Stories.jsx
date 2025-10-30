@@ -447,10 +447,10 @@ const Stories = () => {
                             <Label className="font-medium">تاريخ الإنشاء:</Label>
                             <p>{formatDate(story.createdAt)}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <Label className="font-medium">آخر تحديث:</Label>
                             <p>{formatDate(story.updatedAt)}</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -1262,12 +1262,12 @@ const Stories = () => {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                             <span className="text-sm font-medium text-gray-700">آخر تحديث</span>
                                             <div className="text-right">
                                                 <span className="font-medium text-gray-900 block">{formatDate(detailDialog.story.updatedAt)}</span>
                                             </div>
-                                        </div>
+                                        </div> */}
                                         
                                         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                             <span className="text-sm font-medium text-gray-700">ترتيب العرض</span>
