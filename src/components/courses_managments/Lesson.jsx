@@ -227,7 +227,7 @@ useEffect(() => {
             setCourses(filteredCourses);
         } catch (err) {
             console.error(err);
-            showErrorToast("فشل تحميل الكورسات");
+            showErrorToast("فشل تحميل المواد");
         }
     };
 
@@ -613,7 +613,7 @@ useEffect(() => {
                             </div>
                             <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg text-center">
                                 <GraduationCap className="w-6 h-6 text-green-600 mb-2" />
-                                <span className="text-sm font-medium text-gray-600">الكورس</span>
+                                <span className="text-sm font-medium text-gray-600">المادة</span>
                                 <span className="font-medium mt-1">{getCourseName(selectedCourse)}</span>
                             </div>
                             <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg text-center">
@@ -2051,19 +2051,19 @@ useEffect(() => {
 
                         {/* ✅ اختيار الكورس */}
                         <div className="space-y-2">
-                            <Label>الكورس</Label>
+                            <Label>المادة</Label>
                             <Select
                                 value={selectedCourse}
                                 onValueChange={setSelectedCourse}
                                 disabled={!selectedSpecialization}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <div className="p-2">
                                         <Input
-                                            placeholder="ابحث عن كورس..."
+                                            placeholder="ابحث عن مادة..."
                                             value={courseSearch}
                                             onChange={(e) => setCourseSearch(e.target.value)}
                                             className="mb-2"
@@ -2087,7 +2087,7 @@ useEffect(() => {
                                 disabled={!selectedCourse}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <div className="p-2">
@@ -2105,7 +2105,7 @@ useEffect(() => {
                                     ))}
                                     {filteredInstructorsForSelect.length === 0 && selectedCourse && (
                                         <div className="p-2 text-sm text-muted-foreground text-center">
-                                            لا توجد مدرسين لهذا الكورس
+                                            لا توجد مدرسين لهذه المادة
                                         </div>
                                     )}
                                 </SelectContent>
@@ -2149,7 +2149,7 @@ useEffect(() => {
                 {!selectedLevel ? (
                     <div className="text-center py-8 text-muted-foreground">
                         {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" :
-                            !selectedCourse ? "يرجى اختيار كورس أولاً" :
+                            !selectedCourse ? "يرجى اختيار مادة أولاً" :
                                 !selectedInstructor ? "يرجى اختيار مدرس أولاً" :
                                     "يرجى اختيار مستوى لعرض المحتوى"}
                     </div>

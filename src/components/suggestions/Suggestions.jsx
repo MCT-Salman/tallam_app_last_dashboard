@@ -243,7 +243,7 @@ const Suggestions = () => {
 
                     <div className="space-y-4">
                         <div>
-                            <Label className="font-bold text-base">الكورس:</Label>
+                            <Label className="font-bold text-base">المادة:</Label>
                             {suggestion.courseLevel ? (
                                 <div className="flex items-center gap-3 mt-2 p-3 bg-gray-50 rounded-lg">
                                     <Book className="w-5 h-5 text-primary" />
@@ -253,7 +253,7 @@ const Suggestions = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <p className="mt-2 text-muted-foreground">لا يوجد كورس مرتبط</p>
+                                <p className="mt-2 text-muted-foreground">لا توجد مادة مرتبطة</p>
                             )}
                         </div>
 
@@ -313,7 +313,7 @@ const Suggestions = () => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Book className="w-4 h-4 text-muted-foreground" />
-                            <span>{suggestion.courseLevel?.name || "لا يوجد كورس"}</span>
+                            <span>{suggestion.courseLevel?.name || "لا يوجد مادة"}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -397,11 +397,11 @@ const Suggestions = () => {
                     {/* Course Filter */}
                     <Select value={courseFilter} onValueChange={setCourseFilter}>
                         <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالكورس" />
+                            <SelectValue placeholder="فلترة بالمادة" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">جميع الكورسات</SelectItem>
-                            <SelectItem value="none">بدون كورس</SelectItem>
+                            <SelectItem value="all">جميع المواد</SelectItem>
+                            <SelectItem value="none">بدون مادة</SelectItem>
                             {uniqueCourses.map(course => (
                                 <SelectItem key={course.id} value={course.id.toString()}>
                                     {course.name}
@@ -418,7 +418,7 @@ const Suggestions = () => {
                         <SelectContent>
                             <SelectItem value="createdAt">تاريخ الإرسال</SelectItem>
                             <SelectItem value="user">اسم المستخدم</SelectItem>
-                            <SelectItem value="course">اسم الكورس</SelectItem>
+                            <SelectItem value="course">اسم المادة</SelectItem>
                             <SelectItem value="message">الرسالة</SelectItem>
                         </SelectContent>
                     </Select>
@@ -485,7 +485,7 @@ const Suggestions = () => {
                                             onClick={() => handleSort("course")}
                                         >
                                             <div className="flex items-center gap-1">
-                                                الكورس
+                                                المادة
                                                 {sortBy === "course" && (
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}

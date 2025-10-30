@@ -48,7 +48,7 @@ const Review = () => {
       }
     } catch (err) {
       console.error("❌ Error fetching courses:", err)
-      showErrorToast("فشل تحميل الكورسات")
+      showErrorToast("فشل تحميل المواد")
     }
   }
 
@@ -80,7 +80,7 @@ const Review = () => {
       setLevels(data || [])
     } catch (err) {
       console.error("❌ Error fetching levels:", err)
-      showErrorToast("فشل تحميل مستويات الكورس")
+      showErrorToast("فشل تحميل مستويات المواد")
       setLevels([])
     }
   }
@@ -306,14 +306,14 @@ const Review = () => {
           <CardHeader className="pb-3 bg-gradient-to-l from-green-50 to-emerald-50 rounded-t-lg">
             <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
               <BookOpen className="w-5 h-5 text-green-600" />
-              معلومات الكورس
+              معلومات المادة
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium text-gray-700">اسم الكورس</span>
+                  <span className="text-sm font-medium text-gray-700">اسم المادة</span>
                   <span className="font-medium text-gray-900">
                     {review.courseLevel?.course?.title || "غير محدد"}
                   </span>
@@ -455,7 +455,7 @@ const Review = () => {
         <div className="text-right">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">إدارة التقييمات</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
-            عرض وإدارة تقييمات المستخدمين للكورسات والمستويات
+            عرض وإدارة تقييمات المستخدمين للمواد والمستويات
           </p>
         </div>
       </div>
@@ -499,10 +499,10 @@ const Review = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* اختيار الكورس */}
             <div className="space-y-2">
-              <Label>اختر الكورس</Label>
+              <Label>اختر المادة</Label>
               <Select value={selectedCourse} onValueChange={handleCourseChange}>
                 <SelectTrigger className="text-right">
-                  <SelectValue placeholder="اختر الكورس" />
+                  <SelectValue placeholder="اختر المادة" />
                 </SelectTrigger>
                 <SelectContent searchable>
                   {courses.map((course) => (
@@ -523,7 +523,7 @@ const Review = () => {
                 disabled={!selectedCourse}
               >
                 <SelectTrigger className="text-right">
-                  <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
+                  <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر المادة أولاً"} />
                 </SelectTrigger>
                 <SelectContent searchable>
                   {levels.map((level) => (
@@ -580,7 +580,7 @@ const Review = () => {
           {!selectedLevel ? (
             <div className="text-center py-12 text-muted-foreground">
               <Star className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-              <p className="text-lg">يرجى اختيار كورس ومستوى لعرض التقييمات</p>
+              <p className="text-lg">يرجى اختيار مادة ومستوى لعرض التقييمات</p>
             </div>
           ) : loading ? (
             <div className="flex justify-center py-8">
@@ -594,7 +594,7 @@ const Review = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">المستخدم</TableHead>
-                      <TableHead className="text-right">الكورس</TableHead>
+                      <TableHead className="text-right">المادة</TableHead>
                       <TableHead className="text-right">المستوى</TableHead>
                       <TableHead className="text-right">التقييم</TableHead>
                       <TableHead className="text-right">التعليق</TableHead>

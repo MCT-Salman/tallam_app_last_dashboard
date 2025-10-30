@@ -92,7 +92,7 @@ const Quizzes = () => {
       setCourses(filteredCourses);
     } catch (err) {
       console.error(err);
-      showErrorToast("فشل تحميل الكورسات");
+      showErrorToast("فشل تحميل المواد");
     }
   };
 
@@ -938,19 +938,19 @@ const Quizzes = () => {
 
             {/* ✅ اختيار الكورس */}
             <div className="space-y-2">
-              <Label>الكورس</Label>
+              <Label>المادة</Label>
               <Select 
                 value={selectedCourse} 
                 onValueChange={setSelectedCourse}
                 disabled={!selectedSpecialization}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                  <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                 </SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
                     <Input
-                      placeholder="ابحث عن كورس..."
+                      placeholder="ابحث عن مادة..."
                       value={courseSearch}
                       onChange={(e) => setCourseSearch(e.target.value)}
                       className="mb-2"
@@ -974,7 +974,7 @@ const Quizzes = () => {
                 disabled={!selectedCourse}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                  <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                 </SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
@@ -992,7 +992,7 @@ const Quizzes = () => {
                   ))}
                   {filteredInstructorsForSelect.length === 0 && selectedCourse && (
                     <div className="p-2 text-sm text-muted-foreground text-center">
-                      لا توجد مدرسين لهذا الكورس
+                      لا توجد مدرسين لهذه المادة
                     </div>
                   )}
                 </SelectContent>
@@ -1095,7 +1095,7 @@ const Quizzes = () => {
         {!selectedLevel ? (
           <div className="text-center py-8 text-muted-foreground">
             {!selectedSpecialization ? "يرجى اختيار اختصاص أولاً" : 
-             !selectedCourse ? "يرجى اختيار كورس أولاً" : 
+             !selectedCourse ? "يرجى اختيار مادة أولاً" : 
              !selectedInstructor ? "يرجى اختيار مدرس أولاً" : 
              "يرجى اختيار مستوى لعرض أسئلته"}
           </div>

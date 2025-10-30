@@ -143,7 +143,7 @@ const handlePreviewUrlChange = (value) => {
             setCourses(data);
         } catch (err) {
             console.error(err);
-            showErrorToast("فشل تحميل الكورسات");
+            showErrorToast("فشل تحميل المواد");
         }
     };
 
@@ -190,7 +190,7 @@ const handlePreviewUrlChange = (value) => {
             setAllLevels(data || []);
         } catch (err) {
             console.error("Error fetching course levels:", err);
-            showErrorToast("فشل تحميل مستويات الكورس");
+            showErrorToast("فشل تحميل مستويات المواد");
             setAllLevels([]);
         } finally {
             setLoading(false);
@@ -327,7 +327,7 @@ const handlePreviewUrlChange = (value) => {
         // if (!form.name.trim()) return showErrorToast("يرجى إدخال عنوان المستوى");
         if (!form.order) return showErrorToast("يرجى إدخال ترتيب المستوى");
         if (!form.instructorId) return showErrorToast("يرجى اختيار المدرب");
-        if (!selectedCourse) return showErrorToast("يرجى اختيار الكورس أولاً");
+        if (!selectedCourse) return showErrorToast("يرجى اختيار المادة أولاً");
         if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة");
 
         setIsSubmitting(true);
@@ -349,7 +349,8 @@ const handlePreviewUrlChange = (value) => {
                 previewUrl: form.previewUrl || '',
                 downloadUrl: form.downloadUrl || '',
                 instructorId: form.instructorId,
-                imageUrl: imageToSend
+                imageUrl: imageToSend,
+                isActive: editItem ? editItem.isActive : true
             };
 
             if (editItem) {
@@ -371,7 +372,8 @@ const handlePreviewUrlChange = (value) => {
                 isFree: false,
                 previewUrl: "",
                 downloadUrl: "",
-                instructorId: ""
+                instructorId: "",
+                isActive: true
             });
             setImageFile(null);
             setImagePreview(null);
@@ -567,7 +569,7 @@ const handlePreviewUrlChange = (value) => {
                             المدرب: {getInstructorName(item.instructorId)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            الكورس: {getCourseName(item.courseId)}
+                            المادة: {getCourseName(item.courseId)}
                         </p>
                     </div>
 
@@ -923,7 +925,7 @@ const LevelDetails = ({ item }) => {
                         <span className="font-medium">التخصص:</span>
                         <span>{getSpecializationName(selectedSpecialization)}</span>
                         <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">الكورس:</span>
+                        <span className="font-medium">المادة:</span>
                         <span>{getCourseName(selectedCourse)}</span>
                     </div>
                 </CardContent>
@@ -1053,7 +1055,7 @@ const LevelDetails = ({ item }) => {
     return (
         <Card dir="rtl">
             <CardHeader className="flex flex-col gap-4" dir="rtl">
-                <CardTitle>إدارة مستويات الكورسات</CardTitle>
+                <CardTitle>إدارة مستويات المواد</CardTitle>
 
                 {/* Course Selection Path */}
                 <div className="space-y-4" dir="rtl">
@@ -1110,20 +1112,20 @@ const LevelDetails = ({ item }) => {
 
                         {/* اختيار الكورس - يعتمد على التخصص المختار */}
                         <div className="space-y-2">
-                            <Label>اختر الكورس</Label>
+                            <Label>اختر المادة</Label>
                             <Select
                                 value={selectedCourse}
                                 onValueChange={setSelectedCourse}
                                 disabled={!selectedSpecialization}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر التخصص أولاً"} />
+                                    <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر التخصص أولاً"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {/* Search input for courses */}
                                     <div className="p-2">
                                         <Input
-                                            placeholder="ابحث عن كورس..."
+                                            placeholder="ابحث عن مادة..."
                                             value={courseSearch}
                                             onChange={(e) => setCourseSearch(e.target.value)}
                                             className="mb-2"
@@ -1430,7 +1432,7 @@ const LevelDetails = ({ item }) => {
  <CardContent>
                 {!selectedCourse ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        {!selectedSpecialization ? "يرجى اختيار تخصص أولاً" : "يرجى اختيار كورس لعرض مستوياته"}
+                        {!selectedSpecialization ? "يرجى اختيار تخصص أولاً" : "يرجى اختيار مادة لعرض مستوياتها"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">
@@ -1579,7 +1581,7 @@ const LevelDetails = ({ item }) => {
                                     )) : (
                                         <TableRow>
                                             <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
-                                                {allLevels.length === 0 ? "لا توجد مستويات لهذا الكورس" : "لا توجد نتائج مطابقة للبحث"}
+                                                {allLevels.length === 0 ? "لا توجد مستويات لهذه المادة" : "لا توجد نتائج مطابقة للبحث"}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -1595,7 +1597,7 @@ const LevelDetails = ({ item }) => {
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    {allLevels.length === 0 ? "لا توجد مستويات لهذا الكورس" : "لا توجد نتائج مطابقة للبحث"}
+                                    {allLevels.length === 0 ? "لا توجد مستويات لهذه المادة" : "لا توجد نتائج مطابقة للبحث"}
                                 </div>
                             )}
                         </div>

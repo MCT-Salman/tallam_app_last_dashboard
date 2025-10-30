@@ -25,7 +25,7 @@ const Courses = () => {
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <h1 className="text-xl md:text-2xl font-bold text-center text-foreground">
-        إدارة الكورسات
+        إدارة المواد
       </h1>
 
       {/* للشاشات الصغيرة - قائمة منسدلة */}

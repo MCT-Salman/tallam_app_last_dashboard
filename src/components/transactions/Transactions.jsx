@@ -344,7 +344,7 @@ const Transactions = () => {
                 'اسم المستخدم': transaction.accessCode?.user?.name || 'غير محدد',
                 'هاتف المستخدم': transaction.accessCode?.user?.phone || 'غير محدد',
                 'الاختصاص': transaction.accessCode?.courseLevel?.course?.specialization?.name || 'غير محدد',
-                'اسم الكورس': transaction.accessCode?.courseLevel?.course?.title || 'غير محدد',
+                'اسم المادة': transaction.accessCode?.courseLevel?.course?.title || 'غير محدد',
                 'اسم المدرس': transaction.accessCode?.courseLevel?.instructor?.name || 'غير محدد',
                 'اسم المستوى': transaction.accessCode?.courseLevel?.name || 'غير محدد',
                 'المبلغ المدفوع': getAmountValue(transaction.amountPaid),
@@ -583,13 +583,13 @@ const Transactions = () => {
                     </div>
                     
                     <div class="section">
-                        <h3>معلومات الكورس</h3>
+                        <h3>معلومات المادة</h3>
                         <div class="row">
                             <span class="label">الاختصاص:</span>
                             <span class="value">${transaction.accessCode?.courseLevel?.course?.specialization?.name || "غير محدد"}</span>
                         </div>
                         <div class="row">
-                            <span class="label">الكورس:</span>
+                            <span class="label">المادة:</span>
                             <span class="value">${transaction.accessCode?.courseLevel?.course?.title || "غير محدد"}</span>
                         </div>
                         <div class="row">
@@ -1000,7 +1000,7 @@ const Transactions = () => {
                     <div className="relative md:col-span-2">
                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="بحث برقم المعاملة أو المستخدم أو الكورس..."
+                            placeholder="بحث برقم المعاملة أو المستخدم أو المادة..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pr-10"
@@ -1121,7 +1121,7 @@ const Transactions = () => {
                                                 onClick={() => handleSort("course")}
                                             >
                                                 <div className="flex items-center gap-1">
-                                                    الكورس
+                                                    المادة
                                                     {sortBy === "course" && (
                                                         <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                     )}
@@ -1515,13 +1515,13 @@ const Transactions = () => {
                                     <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 to-amber-50 rounded-t-lg">
                                         <CardTitle className="text-lg flex items-center gap-2 text-gray-800">
                                             <BookOpen className="w-5 h-5 text-orange-600" />
-                                            معلومات الكورس والوصول
+                                            معلومات المادة والوصول
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="pt-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-4">
-                                                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات الكورس</h4>
+                                                <h4 className="font-semibold text-gray-700 border-b pb-2">معلومات المادة</h4>
                                                 <div className="space-y-3">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-sm text-gray-600">الاختصاص:</span>
@@ -1530,7 +1530,7 @@ const Transactions = () => {
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-sm text-gray-600">اسم الكورس:</span>
+                                                        <span className="text-sm text-gray-600">اسم المادة:</span>
                                                         <span className="font-medium text-gray-900">
                                                             {selectedTransaction.accessCode?.courseLevel?.course?.title || "غير محدد"}
                                                         </span>
@@ -1666,7 +1666,7 @@ const Transactions = () => {
                                             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                                 <span className="text-sm font-medium text-gray-700">نوع المعاملة</span>
                                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                                    شراء كورس
+                                                    شراء مادة
                                                 </Badge>
                                             </div>
                                         </div>

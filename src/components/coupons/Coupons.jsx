@@ -2052,7 +2052,7 @@ const Coupons = () => {
       setCourses(allCourses)
     } catch (err) {
       console.error("❌ Error fetching courses:", err)
-      showErrorToast("فشل تحميل الكورسات")
+      showErrorToast("فشل تحميل المواد")
     }
   }
 
@@ -2132,7 +2132,7 @@ const Coupons = () => {
       setCourseLevels(levelsWithCourseInfo);
     } catch (err) {
       console.error("Error fetching levels:", err);
-      showErrorToast("فشل تحميل مستويات الكورس");
+      showErrorToast("فشل تحميل مستويات المواد");
       setCourseLevels([]);
     }
   }
@@ -2904,7 +2904,7 @@ const Coupons = () => {
         <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
           <RadioGroupItem value="courseLevel" id="courseLevel" />
           <Label htmlFor="courseLevel" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">لكورس دراسي</div>
+            <div className="font-medium">لمادة دراسية</div>
             {/* <div className="text-sm text-muted-foreground">للكورس والمستوى المحدد</div> */}
           </Label>
         </div>
@@ -2918,7 +2918,7 @@ const Coupons = () => {
         <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
           <RadioGroupItem value="both" id="both" />
           <Label htmlFor="both" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">لمستخدم وكورس</div>
+            <div className="font-medium">لمستخدم ومادة</div>
             {/* <div className="text-sm text-muted-foreground">مخصص للمستخدم والمستوى</div> */}
           </Label>
         </div>
@@ -3062,19 +3062,19 @@ const Coupons = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>الكورس</Label>
+                      <Label>المادة</Label>
                       <Select
                         value={form.courseId}
                         onValueChange={(value) => handleFormChange("courseId", value)}
                         disabled={!form.specializationId}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={form.specializationId ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                          <SelectValue placeholder={form.specializationId ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                         </SelectTrigger>
                         <SelectContent>
                           <div className="p-2">
                             <Input
-                              placeholder="ابحث عن كورس..."
+                              placeholder="ابحث عن مادة..."
                               value={courseSearch}
                               onChange={(e) => setCourseSearch(e.target.value)}
                               className="mb-2"
@@ -3100,7 +3100,7 @@ const Coupons = () => {
                         disabled={!form.courseId}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={form.courseId ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                          <SelectValue placeholder={form.courseId ? "اختر المدرس" : "اختر المادة أولاً"} />
                         </SelectTrigger>
                         <SelectContent>
                           <div className="p-2">

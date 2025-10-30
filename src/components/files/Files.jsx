@@ -55,7 +55,7 @@ const Files = () => {
             setCourses(data)
         } catch (err) {
             console.error(err)
-            showErrorToast("فشل تحميل الكورسات")
+            showErrorToast("فشل تحميل المواد")
         }
     }
 
@@ -88,7 +88,7 @@ const Files = () => {
             setLevels(data || [])
         } catch (err) {
             console.error("Error fetching levels:", err)
-            showErrorToast("فشل تحميل مستويات الكورس")
+            showErrorToast("فشل تحميل مستويات المواد")
             setLevels([])
         }
     }
@@ -409,7 +409,7 @@ const Files = () => {
                         <p className="mt-1">{formatDate(file.createdAt)}</p>
                     </div>
                     <div>
-                        <Label className="font-bold">الكورس:</Label>
+                        <Label className="font-bold">المادة:</Label>
                         <p className="mt-1">{getCourseName(file.courseLevel?.courseId)}</p>
                     </div>
                     <div>
@@ -580,10 +580,10 @@ const Files = () => {
                 {/* Course and Level Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label>اختر الكورس</Label>
+                        <Label>اختر المادة</Label>
                         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                             <SelectTrigger>
-                                <SelectValue placeholder="اختر الكورس" />
+                                <SelectValue placeholder="اختر المادة" />
                             </SelectTrigger>
                             <SelectContent>
                                 {courses.map((course) => (
@@ -603,7 +603,7 @@ const Files = () => {
                             disabled={!selectedCourse}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر الكورس أولاً"} />
+                                <SelectValue placeholder={selectedCourse ? "اختر المستوى" : "اختر المادة أولاً"} />
                             </SelectTrigger>
                             <SelectContent>
                                 {levels.map((level) => (
@@ -696,7 +696,7 @@ const Files = () => {
             <CardContent>
                 {!selectedLevel ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        {!selectedCourse ? "يرجى اختيار كورس أولاً" : "يرجى اختيار مستوى لعرض ملفاته"}
+                        {!selectedCourse ? "يرجى اختيار مادة أولاً" : "يرجى اختيار مستوى لعرض ملفاته"}
                     </div>
                 ) : loading ? (
                     <div className="flex justify-center py-8">

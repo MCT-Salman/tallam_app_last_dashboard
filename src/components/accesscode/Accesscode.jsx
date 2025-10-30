@@ -3188,7 +3188,7 @@ const AccessCode = () => {
             setCourses(filteredCourses);
         } catch (err) {
             console.error("❌ فشل تحميل الكورسات:", err);
-            showErrorToast("فشل تحميل الكورسات");
+            showErrorToast("فشل تحميل المواد");
         }
     };
 
@@ -3785,7 +3785,7 @@ const resetAllSelections = () => {
 
     // 📤 دالة توليد الكود
     const handleGenerateCode = async () => {
-        if (!selectedLevel) return showErrorToast("يرجى اختيار مستوى الكورس");
+        if (!selectedLevel) return showErrorToast("يرجى اختيار مستوى المادة");
         if (!form.userId) return showErrorToast("يرجى اختيار المستخدم");
         if (!receiptFile) return showErrorToast("يرجى رفع صورة الإيصال");
         if (!form.amountPaid || parseFloat(form.amountPaid) <= 0) return showErrorToast("يرجى إدخال مبلغ مدفوع صحيح");
@@ -4261,7 +4261,7 @@ const resetAllSelections = () => {
 
                 {item.courseLevel && (
                     <div className="border-t pt-2">
-                        <div className="text-xs text-muted-foreground mb-1">سعر الكورس:</div>
+                        <div className="text-xs text-muted-foreground mb-1">سعر المادة:</div>
                         {item.courseLevel.priceSAR > 0 && (
                             <div className="font-medium text-sm">{item.courseLevel.priceSAR} ل.س</div>
                         )}
@@ -4345,7 +4345,7 @@ const resetAllSelections = () => {
 
                     <div className="space-y-4">
                         <div>
-                            <Label className="font-bold text-base">الكورس:</Label>
+                            <Label className="font-bold text-base">المادة:</Label>
                             <p className="mt-1">{item.courseLevel?.course?.title || "غير محدد"}</p>
                         </div>
 
@@ -4387,7 +4387,7 @@ const resetAllSelections = () => {
 
                         {item.courseLevel && (
                             <div className="space-y-3">
-                                <Label className="font-medium text-base">أسعار الكورس الأصلية</Label>
+                                <Label className="font-medium text-base">أسعار المادة الأصلية</Label>
                                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
                                     {item.courseLevel.priceSAR > 0 && (
                                         <div className="flex justify-between items-center">
@@ -4582,7 +4582,7 @@ const resetAllSelections = () => {
                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             ref={searchInputRef}
-                            placeholder="بحث بالكود أو المستخدم أو الكورس..."
+                            placeholder="بحث بالكود أو المستخدم أو المادة..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pr-10"
@@ -4633,13 +4633,13 @@ const resetAllSelections = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">فلترة بالكورس</Label>
+                        <Label className="text-sm font-medium">فلترة المادة</Label>
                         <Select value={courseFilter} onValueChange={setCourseFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="جميع الكورسات" />
+                                <SelectValue placeholder="جميع المواد" />
                             </SelectTrigger>
                             <SelectContent searchable>
-                                <SelectItem value="all">جميع الكورسات</SelectItem>
+                                <SelectItem value="all">جميع المواد</SelectItem>
                                 {filterCourses.map((course) => (
                                     <SelectItem key={course.id} value={course.id.toString()}>
                                         {course.title}
@@ -4658,7 +4658,7 @@ const resetAllSelections = () => {
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder={
-                                    courseFilter === "all" ? "اختر كورس أولاً" : "جميع المستويات"
+                                    courseFilter === "all" ? "اختر المادة أولاً" : "جميع المستويات"
                                 } />
                             </SelectTrigger>
                             <SelectContent searchable>
@@ -4833,19 +4833,19 @@ const resetAllSelections = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>الكورس</Label>
+                                        <Label>المادة</Label>
                                         <Select
                                             value={selectedCourse}
                                             onValueChange={setSelectedCourse}
                                             disabled={!selectedSpecialization}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                                <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <div className="p-2">
                                                     <Input
-                                                        placeholder="ابحث عن كورس..."
+                                                        placeholder="ابحث عن المادة..."
                                                         value={courseSearch}
                                                         onChange={(e) => setCourseSearch(e.target.value)}
                                                         className="mb-2"
@@ -4870,7 +4870,7 @@ const resetAllSelections = () => {
                                             disabled={!selectedCourse}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                                <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <div className="p-2">
@@ -4888,7 +4888,7 @@ const resetAllSelections = () => {
                                                 ))}
                                                 {instructors.length === 0 && selectedCourse && (
                                                     <div className="p-2 text-sm text-muted-foreground text-center">
-                                                        لا توجد مدرسين لهذا الكورس
+                                                        لا توجد مدرسين لهذه المادة
                                                     </div>
                                                 )}
                                             </SelectContent>
@@ -5219,7 +5219,7 @@ const resetAllSelections = () => {
                                             onClick={() => handleSort("course")}
                                         >
                                             <div className="flex items-center gap-1">
-                                                الكورس
+                                                المادة
                                                 {sortBy === "course" && (
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}
@@ -5240,7 +5240,7 @@ const resetAllSelections = () => {
                                         <TableHead className="table-header">
                                             <div className="space-y-1">
                                                 <div>المعلومات المالية</div>
-                                                <div className="text-xs text-muted-foreground font-normal">(المدفوع + سعر الكورس)</div>
+                                                <div className="text-xs text-muted-foreground font-normal">(المدفوع + سعر المادة)</div>
                                             </div>
                                         </TableHead>
                                         <TableHead
@@ -5603,19 +5603,19 @@ const resetAllSelections = () => {
 
                             {/* اختيار الكورس */}
                             <div className="space-y-2">
-                                <Label>الكورس</Label>
+                                <Label>المادة</Label>
                                 <Select
                                     value={selectedCourse}
                                     onValueChange={setSelectedCourse}
                                     disabled={!selectedSpecialization}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={selectedSpecialization ? "اختر الكورس" : "اختر الاختصاص أولاً"} />
+                                        <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <div className="p-2">
                                             <Input
-                                                placeholder="ابحث عن كورس..."
+                                                placeholder="ابحث عن مادة..."
                                                 value={courseSearch}
                                                 onChange={(e) => setCourseSearch(e.target.value)}
                                                 className="mb-2"
@@ -5641,7 +5641,7 @@ const resetAllSelections = () => {
                                     disabled={!selectedCourse}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر الكورس أولاً"} />
+                                        <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <div className="p-2">
@@ -5659,7 +5659,7 @@ const resetAllSelections = () => {
                                         ))}
                                         {filteredInstructorsForSelect.length === 0 && selectedCourse && (
                                             <div className="p-2 text-sm text-muted-foreground text-center">
-                                                لا توجد مدرسين لهذا الكورس
+                                                لا توجد مدرسين لهذه المادة
                                             </div>
                                         )}
                                     </SelectContent>

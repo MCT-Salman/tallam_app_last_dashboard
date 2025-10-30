@@ -213,7 +213,7 @@ const TeacherReports = () => {
                                             <p className="text-lg font-bold">{reportData.instructor.name}</p>
                                         </div>
                                         <div className="text-center p-4 bg-green-50 rounded-lg">
-                                            <p className="text-sm text-green-600">عدد الكورسات</p>
+                                            <p className="text-sm text-green-600">عدد المواد</p>
                                             <p className="text-lg font-bold">{reportData.totalCourses}</p>
                                         </div>
                                         <div className="text-center p-4 bg-purple-50 rounded-lg">
