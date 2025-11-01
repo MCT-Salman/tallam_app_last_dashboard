@@ -1189,4 +1189,14 @@ export const getDashboardStats = () => {
 
 export const getCouponsByLevelOrUser = (data) => api.post('/coupons/admin/listcoupons', data);
 
+// 🔄 جلب قائمة أكواد المستويات
+export const getCodeLevels = () => {
+    return api.get('/lessons/admin/codelevels');
+};
+
+// 🔄 جلب تفاصيل المستوى بواسطة الترميز
+export const getCodeLevelByEncode = (encode) => {
+    return api.get(`/lessons/admin/CodeLevel/${encode}`);
+};
+
 export { api, BASE_URL };
