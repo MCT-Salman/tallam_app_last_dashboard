@@ -3048,7 +3048,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Clock, Shield, Hash, BarChart3, Users, Upload, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA, CheckCircle } from "lucide-react";
+import { Plus, Clock, Shield, Hash, CreditCard, Users, Upload, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA, CheckCircle } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
@@ -4282,187 +4282,441 @@ const resetAllSelections = () => {
     };
 
     // 👁️ عرض التفاصيل
+    // const renderCodeDetails = (item) => {
+    //     if (!item) return null;
+
+    //     const amountPaid = getAmountPaid(item);
+    //     const coupon = getCouponInfo(item);
+
+    //     return (
+    //         <div className="space-y-6 text-right">
+    //             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    //                 <div className="space-y-4">
+    //                     <div>
+    //                         <Label className="font-bold text-base">الكود:</Label>
+    //                         <div className="flex items-center gap-2 mt-1">
+    //                             <p className="text-lg font-mono font-bold bg-gray-100 px-3 py-2 rounded-lg">
+    //                                 {item.code}
+    //                             </p>
+    //                             <Button
+    //                                 size="sm"
+    //                                 variant="outline"
+    //                                 onClick={() => copyToClipboard(item.code)}
+    //                             >
+    //                                 <Copy className="w-4 h-4" />
+    //                             </Button>
+    //                         </div>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">حالة الاستخدام:</Label>
+    //                         <div className="mt-1">
+    //                             <Badge className={getStatusColor(item.status)}>
+    //                                 {getStatusText(item.status)}
+    //                             </Badge>
+    //                         </div>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">الحالة:</Label>
+    //                         <div className="mt-1">
+    //                             <Badge className={getActiveStatusColor(item.isActive)}>
+    //                                 {getActiveStatusText(item.isActive)}
+    //                             </Badge>
+    //                         </div>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">المستخدم:</Label>
+    //                         <div className="flex items-center gap-2 mt-1">
+    //                             <User className="w-4 h-4 text-muted-foreground" />
+    //                             <div>
+    //                                 <p className="font-medium">{item.user?.name || "غير محدد"}</p>
+    //                                 <p className="text-sm text-muted-foreground" dir="ltr">{item.user?.phone}</p>
+    //                             </div>
+    //                         </div>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">مدة الصلاحية:</Label>
+    //                         <p className="mt-1">{item.validityInMonths || "غير محدد"} شهر</p>
+    //                     </div>
+    //                 </div>
+
+    //                 <div className="space-y-4">
+    //                     <div>
+    //                         <Label className="font-bold text-base">المادة:</Label>
+    //                         <p className="mt-1">{item.courseLevel?.course?.title || "غير محدد"}</p>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">المستوى:</Label>
+    //                         <p className="mt-1">{item.courseLevel?.name || "غير محدد"}</p>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">المدرب:</Label>
+    //                         <p className="mt-1">{item.courseLevel?.instructor?.name || "غير محدد"}</p>
+    //                     </div>
+
+    //                     <div>
+    //                         <Label className="font-bold text-base">تاريخ الإصدار:</Label>
+    //                         <p className="mt-1">{formatDate(item.issuedAt)}</p>
+    //                     </div>
+
+    //                     {item.expiresAt && (
+    //                         <div>
+    //                             <Label className="font-bold text-base">تاريخ الانتهاء:</Label>
+    //                             <p className="mt-1">{formatDate(item.expiresAt)}</p>
+    //                         </div>
+    //                     )}
+    //                 </div>
+    //             </div>
+
+    //             {/* المعلومات المالية */}
+    //             <div className="border-t pt-4">
+    //                 <h3 className="font-bold text-lg mb-3">المعلومات المالية</h3>
+    //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    //                     <div className="space-y-3">
+    //                         <Label className="font-medium text-base">المبلغ المدفوع</Label>
+    //                         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+    //                             <div className="text-2xl font-bold text-blue-800">{amountPaid} ل.س</div>
+    //                             <div className="text-sm text-blue-600 mt-1">المبلغ الفعلي الذي تم دفعه</div>
+    //                         </div>
+    //                     </div>
+
+    //                     {item.courseLevel && (
+    //                         <div className="space-y-3">
+    //                             <Label className="font-medium text-base">أسعار المادة الأصلية</Label>
+    //                             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+    //                                 {item.courseLevel.priceSAR > 0 && (
+    //                                     <div className="flex justify-between items-center">
+    //                                         <span className="text-gray-600">السعر بالسوري:</span>
+    //                                         <span className="font-bold text-lg">{item.courseLevel.priceSAR} ل.س</span>
+    //                                     </div>
+    //                                 )}
+    //                                 {item.courseLevel.priceUSD > 0 && (
+    //                                     <div className="flex justify-between items-center">
+    //                                         <span className="text-gray-600">السعر بالدولار:</span>
+    //                                         <span className="font-bold text-lg">{item.courseLevel.priceUSD} $</span>
+    //                                     </div>
+    //                                 )}
+    //                             </div>
+    //                         </div>
+    //                     )}
+
+    //                     {coupon && (
+    //                         <div className="md:col-span-2">
+    //                             <Label className="font-medium text-base">معلومات الكوبون</Label>
+    //                             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+    //                                 <div className="flex items-center gap-2">
+    //                                     <Tag className="w-4 h-4 text-green-600" />
+    //                                     <span className="font-medium">{coupon.code}</span>
+    //                                     <Badge variant="secondary" className="mr-2">
+    //                                         {coupon.isPercent ? `${coupon.discount}% خصم` : `${coupon.discount} ل.س خصم`}
+    //                                     </Badge>
+    //                                 </div>
+    //                             </div>
+    //                         </div>
+    //                     )}
+
+    //                     {item.transaction && item.transaction.length > 0 && item.transaction[0].notes && (
+    //                         <div className="md:col-span-2">
+    //                             <Label className="font-medium text-base">الملاحظات</Label>
+    //                             <p className="mt-1 p-3 bg-gray-50 rounded border">{item.transaction[0].notes}</p>
+    //                         </div>
+    //                     )}
+    //                 </div>
+    //             </div>
+
+    //             {/* صورة الإيصال */}
+    //             {item.transaction && item.transaction.length > 0 && item.transaction[0].receiptImageUrl && (
+    //                 <div className="mt-6">
+    //                     <Label className="font-medium text-lg block mb-3">صورة الإيصال:</Label>
+    //                     <div className="flex flex-col items-center">
+    //                         <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group">
+    //                             <img
+    //                                 src={getImageUrl(item.transaction[0].receiptImageUrl)}
+    //                                 alt="صورة الإيصال"
+    //                                 className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto cursor-zoom-in transition-all duration-300 group-hover:shadow-lg"
+    //                                 {...imageConfig}
+    //                                 onError={(e) => {
+    //                                     e.target.onerror = null;
+    //                                     e.target.src = "/tallaam_logo2.png";
+    //                                 }}
+    //                                 onClick={() => {
+    //                                     window.open(getImageUrl(item.transaction[0].receiptImageUrl), '_blank');
+    //                                 }}
+    //                             />
+    //                             <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+    //                                 <ZoomIn className="w-3 h-3 inline ml-1" />
+    //                                 انقر للتكبير
+    //                             </div>
+    //                         </div>
+    //                         <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+    //                             <Eye className="w-4 h-4" />
+    //                             انقر على الصورة لعرضها بحجم كامل
+    //                         </p>
+    //                     </div>
+    //                 </div>
+    //             )}
+    //         </div>
+    //     );
+    // };
+
     const renderCodeDetails = (item) => {
-        if (!item) return null;
+    if (!item) return null;
 
-        const amountPaid = getAmountPaid(item);
-        const coupon = getCouponInfo(item);
+    const amountPaid = getAmountPaid(item);
+    const coupon = getCouponInfo(item);
 
-        return (
-            <div className="space-y-6 text-right">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <div>
-                            <Label className="font-bold text-base">الكود:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="text-lg font-mono font-bold bg-gray-100 px-3 py-2 rounded-lg">
-                                    {item.code}
-                                </p>
+    return (
+        <div className="space-y-8 text-right">
+            {/* البطاقة الرئيسية */}
+            <div className="bg-gradient-to-l from-white to-gray-50/50 border border-gray-200 rounded-2xl shadow-sm p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* العمود الأول - المعلومات الأساسية */}
+                    <div className="space-y-6">
+                        {/* الكود */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-bold text-lg text-gray-800 mb-3 block">الكود</Label>
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1">
+                                    <p className="text-xl font-mono font-bold bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg border border-blue-100 text-blue-700 text-center">
+                                        {item.code}
+                                    </p>
+                                </div>
                                 <Button
                                     size="sm"
                                     variant="outline"
+                                    className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 shadow-sm"
                                     onClick={() => copyToClipboard(item.code)}
                                 >
-                                    <Copy className="w-4 h-4" />
+                                    <Copy className="w-4 h-4 ml-1" />
+                                    نسخ
                                 </Button>
                             </div>
                         </div>
 
-                        <div>
-                            <Label className="font-bold text-base">حالة الاستخدام:</Label>
-                            <div className="mt-1">
-                                <Badge className={getStatusColor(item.status)}>
+                        {/* حالة الاستخدام والحالة */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">حالة الاستخدام</Label>
+                                <Badge className={`${getStatusColor(item.status)} px-3 py-1.5 text-sm font-medium rounded-full`}>
                                     {getStatusText(item.status)}
                                 </Badge>
                             </div>
-                        </div>
-
-                        <div>
-                            <Label className="font-bold text-base">الحالة:</Label>
-                            <div className="mt-1">
-                                <Badge className={getActiveStatusColor(item.isActive)}>
+                            
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">الحالة</Label>
+                                <Badge className={`${getActiveStatusColor(item.isActive)} px-3 py-1.5 text-sm font-medium rounded-full`}>
                                     {getActiveStatusText(item.isActive)}
                                 </Badge>
                             </div>
                         </div>
 
-                        <div>
-                            <Label className="font-bold text-base">المستخدم:</Label>
-                            <div className="flex items-center gap-2 mt-1">
-                                <User className="w-4 h-4 text-muted-foreground" />
-                                <div>
-                                    <p className="font-medium">{item.user?.name || "غير محدد"}</p>
-                                    <p className="text-sm text-muted-foreground" dir="ltr">{item.user?.phone}</p>
+                        {/* المستخدم */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-3 block">المستخدم</Label>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                                    <User className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-gray-800">{item.user?.name || "غير محدد"}</p>
+                                    <p className="text-sm text-gray-500 mt-1" dir="ltr">{item.user?.phone || "لا يوجد"}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <Label className="font-bold text-base">مدة الصلاحية:</Label>
-                            <p className="mt-1">{item.validityInMonths || "غير محدد"} شهر</p>
+                        {/* مدة الصلاحية */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-2 block">مدة الصلاحية</Label>
+                            <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                <Calendar className="w-5 h-5 text-green-500" />
+                                <span>{item.validityInMonths || "غير محدد"} شهر</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div>
-                            <Label className="font-bold text-base">المادة:</Label>
-                            <p className="mt-1">{item.courseLevel?.course?.title || "غير محدد"}</p>
+                    {/* العمود الثاني - معلومات الدورة */}
+                    <div className="space-y-6">
+                        {/* المادة */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-2 block">المادة</Label>
+                            <p className="text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
+                                {item.courseLevel?.course?.title || "غير محدد"}
+                            </p>
                         </div>
 
-                        <div>
-                            <Label className="font-bold text-base">المستوى:</Label>
-                            <p className="mt-1">{item.courseLevel?.name || "غير محدد"}</p>
+                        {/* المستوى */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-2 block">المستوى</Label>
+                            <p className="text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
+                                {item.courseLevel?.name || "غير محدد"}
+                            </p>
                         </div>
 
-                        <div>
-                            <Label className="font-bold text-base">المدرب:</Label>
-                            <p className="mt-1">{item.courseLevel?.instructor?.name || "غير محدد"}</p>
-                        </div>
-
-                        <div>
-                            <Label className="font-bold text-base">تاريخ الإصدار:</Label>
-                            <p className="mt-1">{formatDate(item.issuedAt)}</p>
-                        </div>
-
-                        {item.expiresAt && (
-                            <div>
-                                <Label className="font-bold text-base">تاريخ الانتهاء:</Label>
-                                <p className="mt-1">{formatDate(item.expiresAt)}</p>
+                        {/* المدرب */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-2 block">المدرب</Label>
+                            <div className="flex items-center gap-2 text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
+                                <User className="w-4 h-4 text-gray-500" />
+                                {item.courseLevel?.instructor?.name || "غير محدد"}
                             </div>
-                        )}
+                        </div>
+
+                        {/* التواريخ */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">تاريخ الإصدار</Label>
+                                <div className="flex items-center gap-2 text-gray-700">
+                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                    {formatDate(item.issuedAt)}
+                                </div>
+                            </div>
+
+                            {item.expiresAt && (
+                                <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                    <Label className="font-semibold text-gray-700 mb-2 block">تاريخ الانتهاء</Label>
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                        <Calendar className="w-4 h-4 text-orange-500" />
+                                        {formatDate(item.expiresAt)}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                {/* المعلومات المالية */}
-                <div className="border-t pt-4">
-                    <h3 className="font-bold text-lg mb-3">المعلومات المالية</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                            <Label className="font-medium text-base">المبلغ المدفوع</Label>
-                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <div className="text-2xl font-bold text-blue-800">{amountPaid} ل.س</div>
-                                <div className="text-sm text-blue-600 mt-1">المبلغ الفعلي الذي تم دفعه</div>
+            {/* المعلومات المالية */}
+            <div className="bg-gradient-to-l from-white to-blue-50/30 border border-blue-100 rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+                    <h3 className="font-bold text-2xl text-gray-800">المعلومات المالية</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* المبلغ المدفوع */}
+                    <div className="space-y-3">
+                        <Label className="font-semibold text-gray-700 text-lg">المبلغ المدفوع</Label>
+                        <div className="p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg text-white">
+                            <div className="text-3xl font-bold mb-2">{amountPaid} ل.س</div>
+                            <div className="text-blue-100 text-sm flex items-center gap-1">
+                                <CreditCard className="w-4 h-4" />
+                                المبلغ الفعلي الذي تم دفعه
                             </div>
                         </div>
+                    </div>
 
-                        {item.courseLevel && (
-                            <div className="space-y-3">
-                                <Label className="font-medium text-base">أسعار المادة الأصلية</Label>
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
-                                    {item.courseLevel.priceSAR > 0 && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600">السعر بالسوري:</span>
-                                            <span className="font-bold text-lg">{item.courseLevel.priceSAR} ل.س</span>
-                                        </div>
-                                    )}
-                                    {item.courseLevel.priceUSD > 0 && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600">السعر بالدولار:</span>
-                                            <span className="font-bold text-lg">{item.courseLevel.priceUSD} $</span>
-                                        </div>
-                                    )}
-                                </div>
+                    {/* الأسعار الأصلية */}
+                    {item.courseLevel && (
+                        <div className="space-y-3">
+                            <Label className="font-semibold text-gray-700 text-lg">أسعار المادة الأصلية</Label>
+                            <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                                {item.courseLevel.priceSAR > 0 && (
+                                    <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                                        <span className="text-gray-600 flex items-center gap-2">
+                                            <DollarSign className="w-4 h-4 text-green-500" />
+                                            السعر بالسوري:
+                                        </span>
+                                        <span className="font-bold text-xl text-gray-800">{item.courseLevel.priceSAR} ل.س</span>
+                                    </div>
+                                )}
+                                {item.courseLevel.priceUSD > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 flex items-center gap-2">
+                                            <DollarSign className="w-4 h-4 text-blue-500" />
+                                            السعر بالدولار:
+                                        </span>
+                                        <span className="font-bold text-xl text-gray-800">{item.courseLevel.priceUSD} $</span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {coupon && (
-                            <div className="md:col-span-2">
-                                <Label className="font-medium text-base">معلومات الكوبون</Label>
-                                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                                    <div className="flex items-center gap-2">
-                                        <Tag className="w-4 h-4 text-green-600" />
-                                        <span className="font-medium">{coupon.code}</span>
-                                        <Badge variant="secondary" className="mr-2">
-                                            {coupon.isPercent ? `${coupon.discount}% خصم` : `${coupon.discount} ل.س خصم`}
-                                        </Badge>
+                    {/* معلومات الكوبون */}
+                    {coupon && (
+                        <div className="lg:col-span-2">
+                            <Label className="font-semibold text-gray-700 text-lg mb-3 block">معلومات الكوبون</Label>
+                            <div className="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Tag className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-lg text-gray-800">{coupon.code}</span>
+                                            <Badge variant="secondary" className="mr-3 bg-green-100 text-green-700 border-green-200">
+                                                {coupon.isPercent ? `${coupon.discount}% خصم` : `${coupon.discount} ل.س خصم`}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm text-green-600 font-medium">
+                                        تم تطبيق الخصم
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {item.transaction && item.transaction.length > 0 && item.transaction[0].notes && (
-                            <div className="md:col-span-2">
-                                <Label className="font-medium text-base">الملاحظات</Label>
-                                <p className="mt-1 p-3 bg-gray-50 rounded border">{item.transaction[0].notes}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* صورة الإيصال */}
-                {item.transaction && item.transaction.length > 0 && item.transaction[0].receiptImageUrl && (
-                    <div className="mt-6">
-                        <Label className="font-medium text-lg block mb-3">صورة الإيصال:</Label>
-                        <div className="flex flex-col items-center">
-                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 max-w-2xl w-full group">
-                                <img
-                                    src={getImageUrl(item.transaction[0].receiptImageUrl)}
-                                    alt="صورة الإيصال"
-                                    className="max-w-full h-auto max-h-96 rounded-md shadow-md mx-auto cursor-zoom-in transition-all duration-300 group-hover:shadow-lg"
-                                    {...imageConfig}
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = "/tallaam_logo2.png";
-                                    }}
-                                    onClick={() => {
-                                        window.open(getImageUrl(item.transaction[0].receiptImageUrl), '_blank');
-                                    }}
-                                />
-                                <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ZoomIn className="w-3 h-3 inline ml-1" />
-                                    انقر للتكبير
+                    {/* الملاحظات */}
+                    {item.transaction && item.transaction.length > 0 && item.transaction[0].notes && (
+                        <div className="lg:col-span-2">
+                            <Label className="font-semibold text-gray-700 text-lg mb-3 block">الملاحظات</Label>
+                            <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200 shadow-sm">
+                                <div className="flex items-start gap-3">
+                                    <Info className="w-5 h-5 text-amber-500 mt-0.5" />
+                                    <p className="text-amber-800 font-medium leading-relaxed">
+                                        {item.transaction[0].notes}
+                                    </p>
                                 </div>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
-                                <Eye className="w-4 h-4" />
-                                انقر على الصورة لعرضها بحجم كامل
-                            </p>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        );
-    };
+
+            {/* صورة الإيصال */}
+            {item.transaction && item.transaction.length > 0 && item.transaction[0].receiptImageUrl && (
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-1.5 h-8 bg-gradient-to-b from-purple-500 to-pink-600 rounded-full"></div>
+                        <h3 className="font-bold text-2xl text-gray-800">صورة الإيصال</h3>
+                    </div>
+                    
+                    <div className="flex flex-col items-center">
+                        <div className="relative border-2 border-dashed border-gray-300 rounded-2xl p-6 bg-gray-50 max-w-3xl w-full group hover:border-gray-400 transition-all duration-300 cursor-zoom-in">
+                            <img
+                                src={getImageUrl(item.transaction[0].receiptImageUrl)}
+                                alt="صورة الإيصال"
+                                className="max-w-full h-auto max-h-96 rounded-xl shadow-md mx-auto transition-all duration-300 group-hover:shadow-xl group-hover:scale-[1.02]"
+                                {...imageConfig}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "/tallaam_logo2.png";
+                                }}
+                                onClick={() => {
+                                    window.open(getImageUrl(item.transaction[0].receiptImageUrl), '_blank');
+                                }}
+                            />
+                            <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2">
+                                <ZoomIn className="w-4 h-4" />
+                                انقر للتكبير
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4 flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
+                            <Eye className="w-4 h-4" />
+                            انقر على الصورة لعرضها بحجم كامل
+                        </p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
     // 📱 مكون البطاقة للجوال
     const CodeCard = ({ item }) => {

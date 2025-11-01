@@ -1955,7 +1955,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Plus, Edit, DollarSign, Shield, BarChart3, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter, User, Star } from "lucide-react"
+import { Plus, Edit, Copy, Tag, Maximize, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter, User, Star } from "lucide-react"
 import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse, getAllUsersHavePoints } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -2734,67 +2734,265 @@ const Coupons = () => {
   }
 
   // 👁️ عرض التفاصيل الكاملة للكوبون
+  // const renderCouponDetails = (coupon) => {
+  //   if (!coupon) return null
+
+  //   return (
+  //     <div className="space-y-6 text-right">
+  //       {/* المعلومات الأساسية */}
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  //         <div>
+  //           <Label className="font-bold">كود الخصم:</Label>
+  //           <p className="mt-1 text-lg font-mono">{coupon.code}</p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">قيمة الخصم:</Label>
+  //           <p className="mt-1 text-lg">
+  //             {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
+  //           </p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">نوع الخصم:</Label>
+  //           <p className="mt-1">{coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">الحالة:</Label>
+  //           <div className="mt-1">
+  //             <Badge variant={getStatusBadgeVariant(coupon)}>
+  //               {getStatusText(coupon)}
+  //             </Badge>
+  //           </div>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">تاريخ الانتهاء:</Label>
+  //           <p className="mt-1">{formatDate(coupon.expiry)}</p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">الحد الأقصى للاستخدام:</Label>
+  //           <p className="mt-1">{coupon.maxUsage || 'غير محدد'}</p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">مرات الاستخدام:</Label>
+  //           <p className="mt-1">{coupon.usedCount || 0}</p>
+  //         </div>
+  //         <div>
+  //           <Label className="font-bold">المستخدم:</Label>
+  //           <p className="mt-1">{getUserInfo(coupon)}</p>
+  //         </div>
+  //         {coupon.courseLevel && (
+  //           <div>
+  //             <Label className="font-bold">المستوى الدراسي:</Label>
+  //             <p className="mt-1">{getCourseLevelInfo(coupon)}</p>
+  //           </div>
+  //         )}
+  //         {coupon.reason && (
+  //           <div className="md:col-span-2">
+  //             <Label className="font-bold">السبب:</Label>
+  //             <p className="mt-1">{coupon.reason}</p>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   )
+  // }
+
+  const copyToClipboard = (text) => {
+   navigator.clipboard.writeText(text).then(() => {
+               showSuccessToast("تم نسخ الكود إلى الحافظة");
+           }).catch(() => {
+               showErrorToast("فشل نسخ الكود");
+           });
+};
+
   const renderCouponDetails = (coupon) => {
-    if (!coupon) return null
+    if (!coupon) return null;
 
     return (
-      <div className="space-y-6 text-right">
-        {/* المعلومات الأساسية */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="font-bold">كود الخصم:</Label>
-            <p className="mt-1 text-lg font-mono">{coupon.code}</p>
-          </div>
-          <div>
-            <Label className="font-bold">قيمة الخصم:</Label>
-            <p className="mt-1 text-lg">
-              {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
-            </p>
-          </div>
-          <div>
-            <Label className="font-bold">نوع الخصم:</Label>
-            <p className="mt-1">{coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</p>
-          </div>
-          <div>
-            <Label className="font-bold">الحالة:</Label>
-            <div className="mt-1">
-              <Badge variant={getStatusBadgeVariant(coupon)}>
-                {getStatusText(coupon)}
-              </Badge>
+        <div className="space-y-8 text-right">
+            {/* البطاقة الرئيسية */}
+            <div className="bg-gradient-to-l from-white to-green-50/30 border border-green-100 rounded-2xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-10 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full"></div>
+                        <h3 className="font-bold text-2xl text-gray-800">تفاصيل الكوبون</h3>
+                    </div>
+                    <Badge 
+                        variant={getStatusBadgeVariant(coupon)}
+                        className="px-4 py-2 text-base font-semibold rounded-full"
+                    >
+                        {getStatusText(coupon)}
+                    </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* العمود الأول */}
+                    <div className="space-y-6">
+                        {/* كود الخصم */}
+                        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                            <Label className="font-bold text-lg text-gray-800 mb-3 block">كود الخصم</Label>
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1">
+                                    <p className="text-2xl font-mono font-bold bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 rounded-lg border border-green-200 text-green-700 text-center">
+                                        {coupon.code}
+                                    </p>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 transition-all duration-200 shadow-sm"
+                                    onClick={() => copyToClipboard(coupon.code)}
+                                >
+                                    <Copy className="w-4 h-4 ml-1" />
+                                    نسخ
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* قيمة الخصم ونوعه */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">قيمة الخصم</Label>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                        <Percent className="w-4 h-4 text-white" />
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-800">
+                                        {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">نوع الخصم</Label>
+                                <div className="flex items-center gap-2 text-lg font-medium text-gray-800">
+                                    <Tag className="w-4 h-4 text-blue-500" />
+                                    {coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* المستخدم */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-3 block">المستخدم</Label>
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                                <p className="font-medium text-gray-800 text-lg">
+                                    {getUserInfo(coupon) || "غير محدد"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* العمود الثاني */}
+                    <div className="space-y-6">
+                        {/* التواريخ */}
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <Label className="font-semibold text-gray-700 mb-3 block">فترة الصلاحية</Label>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100">
+                                    <span className="text-orange-700 font-medium">تاريخ الانتهاء</span>
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-orange-500" />
+                                        <span className="font-bold text-orange-800">{formatDate(coupon.expiry)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* إحصائيات الاستخدام */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">الحد الأقصى</Label>
+                                <div className="flex items-center gap-2">
+                                    <Maximize className="w-4 h-4 text-purple-500" />
+                                    <span className="text-lg font-bold text-gray-800">
+                                        {coupon.maxUsage || '∞'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">مرات الاستخدام</Label>
+                                <div className="flex items-center gap-2">
+                                    <Users className="w-4 h-4 text-blue-500" />
+                                    <span className="text-lg font-bold text-gray-800">
+                                        {coupon.usedCount || 0}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* المستوى الدراسي */}
+                        {coupon.courseLevel && (
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">المستوى الدراسي</Label>
+                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                    <p className="font-medium text-blue-800 text-center">
+                                        {getCourseLevelInfo(coupon)}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* السبب */}
+                {coupon.reason && (
+                    <div className="mt-6 bg-amber-50 rounded-xl p-5 border border-amber-200 shadow-sm">
+                        <Label className="font-bold text-lg text-amber-800 mb-3 block flex items-center gap-2">
+                            <Info className="w-5 h-5" />
+                            السبب
+                        </Label>
+                        <p className="text-amber-800 font-medium leading-relaxed bg-amber-100/50 p-4 rounded-lg border border-amber-200">
+                            {coupon.reason}
+                        </p>
+                    </div>
+                )}
+
+                {/* شريط التقدم للاستخدام */}
+                {coupon.maxUsage && (
+                    <div className="mt-6 bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                        <Label className="font-semibold text-gray-700 mb-3 block">معدل الاستخدام</Label>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm text-gray-600">
+                                <span>مرات الاستخدام</span>
+                                <span>{coupon.usedCount || 0} / {coupon.maxUsage}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div 
+                                    className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-500"
+                                    style={{
+                                        width: `${Math.min(((coupon.usedCount || 0) / coupon.maxUsage) * 100, 100)}%`
+                                    }}
+                                ></div>
+                            </div>
+                            <div className="text-xs text-gray-500 text-center">
+                                متبقي {Math.max(coupon.maxUsage - (coupon.usedCount || 0), 0)} استخدام
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-          </div>
-          <div>
-            <Label className="font-bold">تاريخ الانتهاء:</Label>
-            <p className="mt-1">{formatDate(coupon.expiry)}</p>
-          </div>
-          <div>
-            <Label className="font-bold">الحد الأقصى للاستخدام:</Label>
-            <p className="mt-1">{coupon.maxUsage || 'غير محدد'}</p>
-          </div>
-          <div>
-            <Label className="font-bold">مرات الاستخدام:</Label>
-            <p className="mt-1">{coupon.usedCount || 0}</p>
-          </div>
-          <div>
-            <Label className="font-bold">المستخدم:</Label>
-            <p className="mt-1">{getUserInfo(coupon)}</p>
-          </div>
-          {coupon.courseLevel && (
-            <div>
-              <Label className="font-bold">المستوى الدراسي:</Label>
-              <p className="mt-1">{getCourseLevelInfo(coupon)}</p>
+
+            {/* ملخص سريع */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white text-center shadow-lg">
+                    <div className="text-2xl font-bold mb-1">{coupon.discount}{coupon.isPercent ? '%' : 'ل.س'}</div>
+                    <div className="text-blue-100 text-sm">قيمة الخصم</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-5 text-white text-center shadow-lg">
+                    <div className="text-2xl font-bold mb-1">{coupon.usedCount || 0}</div>
+                    <div className="text-green-100 text-sm">مرات الاستخدام</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-5 text-white text-center shadow-lg">
+                    <div className="text-2xl font-bold mb-1">{coupon.maxUsage || '∞'}</div>
+                    <div className="text-purple-100 text-sm">الحد الأقصى</div>
+                </div>
             </div>
-          )}
-          {coupon.reason && (
-            <div className="md:col-span-2">
-              <Label className="font-bold">السبب:</Label>
-              <p className="mt-1">{coupon.reason}</p>
-            </div>
-          )}
         </div>
-      </div>
-    )
-  }
+    );
+};
 
   // 📱 مكون بطاقة الكوبون للعرض على الجوال
   const CouponCard = ({ coupon }) => (
