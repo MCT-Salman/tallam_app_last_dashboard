@@ -854,7 +854,7 @@ const Notifications = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -881,60 +881,34 @@ const Notifications = () => {
             </SelectContent>
           </Select>
 
-          {/* User Filter */}
-          {/* <Select value={userFilter} onValueChange={setUserFilter}>
+
+          <Select value={userFilter} onValueChange={setUserFilter}>
             <SelectTrigger>
               <SelectValue placeholder="فلترة بالمستخدم" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent searchable>
               <SelectItem value="all">جميع المستخدمين</SelectItem>
               <SelectItem value="null">إشعارات عامة</SelectItem>
-              {uniqueUsersFromNotifications.map(user => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select> */}
-
-<Select value={userFilter} onValueChange={setUserFilter}>
-  <SelectTrigger>
-    <SelectValue placeholder="فلترة بالمستخدم" />
-  </SelectTrigger>
-  <SelectContent searchable>
-    <SelectItem value="all">جميع المستخدمين</SelectItem>
-    <SelectItem value="null">إشعارات عامة</SelectItem>
-    {users
-      .filter(user => user && user.id && user.name) // تصفية المستخدمين الصالحين
-      .sort((a, b) => a.name?.localeCompare(b.name)) // ترتيب حسب الاسم
-      .map(user => (
-        <SelectItem key={user.id} value={user.id.toString()}>
-          {user.name}
-        </SelectItem>
-      ))
-    }
-  </SelectContent>
-</Select>
-
-          {/* Sort By */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="ترتيب حسب" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt">تاريخ الإرسال</SelectItem>
-              <SelectItem value="title">العنوان</SelectItem>
-              <SelectItem value="user">المستخدم</SelectItem>
-              <SelectItem value="type">النوع</SelectItem>
+              {users
+                .filter(user => user && user.id && user.name) // تصفية المستخدمين الصالحين
+                .sort((a, b) => a.name?.localeCompare(b.name)) // ترتيب حسب الاسم
+                .map(user => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name}
+                  </SelectItem>
+                ))
+              }
             </SelectContent>
           </Select>
+
 
           {/* Items Per Page */}
           <Select
             value={itemsPerPage.toString()}
             onValueChange={(value) => setItemsPerPage(Number(value))}
+            
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-1/2">
               <SelectValue placeholder="عدد العناصر" />
             </SelectTrigger>
             <SelectContent>

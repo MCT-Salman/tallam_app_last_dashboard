@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Image, ListOrdered } from "lucide-react"
+import {
+    Plus, Edit, Trash2, Filter, BadgeCheck, CheckCircle, XCircle, Tag,
+    BookOpen, Megaphone, List, RefreshCw, FileText, X, Play, Pause, Search,
+    ChevronLeft, ChevronRight, Eye, Calendar, Image, ListOrdered
+} from "lucide-react"
 import { getStories, createStory, updateStory, deleteStory, BASE_URL } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { imageConfig } from "@/utils/corsConfig"
@@ -178,7 +182,7 @@ const Stories = () => {
 
     useEffect(() => {
         fetchStories()
-    }, [currentPage, itemsPerPage, searchTerm])
+    }, [])
 
     // فلترة وترتيب البيانات
     const filteredAndSortedStories = useMemo(() => {
@@ -250,7 +254,7 @@ const Stories = () => {
     // إعادة تعيين الصفحة عند تغيير الفلتر
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, statusFilter, typeFilter, itemsPerPage])
+    }, [searchTerm, statusFilter, typeFilter, itemsPerPage, sortBy, sortOrder])
 
     // التعامل مع تغييرات النموذج
     const handleFormChange = (key, value) => {
@@ -422,10 +426,17 @@ const Stories = () => {
     }
 
     // Pagination calculations
-    const totalItems = filteredAndSortedStories.length
+    const totalItems = allStories.length // ✅ غير هذا من filteredAndSortedStories إلى allStories
     const totalPages = Math.ceil(totalItems / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+
+    // ✅ البيانات المعروضة حالياً (من allStories)
+    const currentPageStories = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        return allStories.slice(startIndex, endIndex) // ✅ استخدم allStories هنا
+    }, [allStories, currentPage, itemsPerPage])
 
     // Handle page change
     const handlePageChange = (page) => {
@@ -794,86 +805,192 @@ const Stories = () => {
                     </Dialog>
                 </div>
 
-                {/* Filters Section */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {/* Search */}
-                    <div className="relative">
-                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="بحث بالعنوان..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pr-10"
-                        />
+                {/* 🔍 قسم الفلترة والعرض */}
+                <div className="space-y-6">
+                    {/* شريط الفلاتر الرئيسي */}
+                    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
+                        {/* عنوان القسم */}
+                        <div className="flex items-center gap-2 mb-6">
+                            <Filter className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold text-gray-800">فلاتر المحتوى</h3>
+                        </div>
+
+                        {/* شبكة الفلاتر */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Search - مع تأثيرات تفاعلية */}
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                </div>
+                                <Input
+                                    placeholder="بحث بالعنوان..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pr-10 transition-all duration-200 
+                   border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                   group-hover:border-gray-400 bg-white/80"
+                                />
+                            </div>
+
+                            {/* Status Filter - مع أيقونة */}
+                            <div className="relative group">
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="transition-all duration-200
+                                border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                group-hover:border-gray-400 bg-white/80">
+                                        <div className="flex items-center gap-2">
+                                            <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                                            <SelectValue placeholder="فلترة بالحالة" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        <SelectItem value="all" className="flex items-center gap-2">
+                                            جميع الحالات
+                                        </SelectItem>
+                                        <SelectItem value="active" className="flex items-center gap-2">
+                                            <CheckCircle className="h-4 w-4 text-green-600" />
+                                            نشط
+                                        </SelectItem>
+                                        <SelectItem value="inactive" className="flex items-center gap-2">
+                                            <XCircle className="h-4 w-4 text-red-600" />
+                                            معطل
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Type Filter - مع أيقونة */}
+                            <div className="relative group">
+                                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                    <SelectTrigger className="transition-all duration-200
+                                border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                group-hover:border-gray-400 bg-white/80">
+                                        <div className="flex items-center gap-2">
+                                            <Tag className="h-4 w-4 text-muted-foreground" />
+                                            <SelectValue placeholder="فلترة بالنوع" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        <SelectItem value="all" className="flex items-center gap-2">
+                                            جميع الأنواع
+                                        </SelectItem>
+                                        <SelectItem value="story" className="flex items-center gap-2">
+                                            <BookOpen className="h-4 w-4 text-blue-600" />
+                                            قصص
+                                        </SelectItem>
+                                        <SelectItem value="ad" className="flex items-center gap-2">
+                                            <Megaphone className="h-4 w-4 text-orange-600" />
+                                            إعلانات
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Items Per Page - مع أيقونة */}
+                            <div className="relative group">
+                                <Select
+                                    value={itemsPerPage.toString()}
+                                    onValueChange={(value) => setItemsPerPage(Number(value))}
+                                >
+                                    <SelectTrigger className="transition-all duration-200
+                                border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                group-hover:border-gray-400 bg-white/80">
+                                        <div className="flex items-center gap-2">
+                                            <List className="h-4 w-4 text-muted-foreground" />
+                                            <SelectValue placeholder="عدد العناصر" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        <SelectItem value="5" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                            5 عناصر
+                                        </SelectItem>
+                                        <SelectItem value="10" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                            10 عناصر
+                                        </SelectItem>
+                                        <SelectItem value="20" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            20 عنصر
+                                        </SelectItem>
+                                        <SelectItem value="50" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                            50 عنصر
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* زر الإجراءات السريعة */}
+                            <div className="flex items-end md:col-span-4">
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
+                                    onClick={resetFilters}
+                                >
+                                    <RefreshCw className="h-4 w-4 ml-2" />
+                                    إعادة تعيين الكل
+                                </Button>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Status Filter */}
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالحالة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع الحالات</SelectItem>
-                            <SelectItem value="active">نشط</SelectItem>
-                            <SelectItem value="inactive">معطل</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    {/* شريط النتائج والإحصائيات */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            {/* عرض النتائج - مع تصميم جذاب */}
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white rounded-lg p-2 shadow-sm border">
+                                    <FileText className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-gray-700">
+                                        عرض <span className="font-bold text-primary">{startItem}-{endItem}</span> من أصل
+                                        <span className="font-bold text-gray-900"> {totalItems} </span>
+                                        محتوى
+                                    </p>
+                                    {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            <span className="text-xs text-green-600 font-medium">نتائج مفلترة</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Type Filter */}
-                    <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالنوع" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع الأنواع</SelectItem>
-                            <SelectItem value="story">قصص</SelectItem>
-                            <SelectItem value="ad">إعلانات</SelectItem>
-                        </SelectContent>
-                    </Select>
+                            {/* أزرار الإجراءات */}
+                            <div className="flex items-center gap-3">
+                                {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={resetFilters}
+                                        className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        مسح الفلاتر
+                                    </Button>
+                                )}
 
-                    {/* Items Per Page */}
-                    <Select
-                        value={itemsPerPage.toString()}
-                        onValueChange={(value) => setItemsPerPage(Number(value))}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="عدد العناصر" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5 عناصر</SelectItem>
-                            <SelectItem value="10">10 عناصر</SelectItem>
-                            <SelectItem value="20">20 عنصر</SelectItem>
-                            <SelectItem value="50">50 عنصر</SelectItem>
-                        </SelectContent>
-                    </Select>
 
-                    {/* Sort By */}
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="ترتيب حسب" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="createdAt">تاريخ الإنشاء</SelectItem>
-                            <SelectItem value="title">العنوان</SelectItem>
-                            <SelectItem value="orderIndex">الترتيب</SelectItem>
-                            <SelectItem value="isActive">الحالة</SelectItem>
-                            <SelectItem value="isStory">النوع</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+                            </div>
+                        </div>
 
-                {/* Reset Filters & Results Count */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div className="text-sm text-muted-foreground">
-                        عرض {filteredAndSortedStories.length} من أصل {allStories.length} محتوى
-                        {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && ` (مفلتر)`}
+                        {/* شريط التقدم للإظهار المرئي */}
+                        <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-amber-500 to-purple-900 rounded-full transition-all duration-500"
+                                    style={{
+                                        width: `${(filteredAndSortedStories.length / Math.max(allStories.length, 1)) * 100}%`
+                                    }}
+                                ></div>
+                            </div>
+                            <span className="text-xs text-gray-500 font-medium">
+                                {Math.round((filteredAndSortedStories.length / Math.max(allStories.length, 1)) * 100)}%
+                            </span>
+                        </div>
                     </div>
-
-                    {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && (
-                        <Button variant="outline" size="sm" onClick={resetFilters}>
-                            إعادة تعيين الفلترة
-                        </Button>
-                    )}
                 </div>
             </CardHeader>
 
@@ -929,7 +1046,7 @@ const Stories = () => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredAndSortedStories.length > 0 ? filteredAndSortedStories.map(story => {
+                                    {currentPageStories.length > 0 ? currentPageStories.map(story => {
                                         const isActiveNow = isCurrentlyActive(story)
 
                                         return (
@@ -1041,8 +1158,8 @@ const Stories = () => {
 
                         {/* Cards View - for small screens */}
                         <div className="block md:hidden">
-                            {filteredAndSortedStories.length > 0 ? (
-                                filteredAndSortedStories.map(story => (
+                            {currentPageStories.length > 0 ? (
+                                currentPageStories.map(story => (
                                     <StoryCard key={story.id} story={story} />
                                 ))
                             ) : (
@@ -1094,6 +1211,11 @@ const Stories = () => {
                                                 </Button>
                                             )
                                         })}
+
+                                        {/* إضافة نقاط إذا كانت الصفحات أكثر من 5 */}
+                                        {totalPages > 5 && currentPage < totalPages - 2 && (
+                                            <span className="px-2">...</span>
+                                        )}
                                     </div>
 
                                     <Button

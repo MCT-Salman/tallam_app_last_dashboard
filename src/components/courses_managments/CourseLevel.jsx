@@ -1142,9 +1142,9 @@ const LevelDetails = ({ item }) => {
                     </div>
 
                     {/* زر الإضافة - تحت اختيار التخصص والكورس */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-start">
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
+                            <DialogTrigger asChild className="">
                                 <Button
                                     size="sm"
                                     disabled={!selectedCourse}

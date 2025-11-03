@@ -2862,7 +2862,7 @@ useEffect(() => {
                                 </div>
 
                                 {/* أدوات البحث والفلترة للأسئلة */}
-                                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                <div className="flex flex-wrap flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                     <div className="relative flex-1 sm:flex-none">
                                         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input
@@ -2886,20 +2886,6 @@ useEffect(() => {
                                             <SelectItem value="10">10 عناصر</SelectItem>
                                             <SelectItem value="20">20 عنصر</SelectItem>
                                             <SelectItem value="50">50 عنصر</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-
-                                    <Select
-                                        value={questionSortBy}
-                                        onValueChange={setQuestionSortBy}
-                                        className="w-full sm:w-32"
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="ترتيب حسب" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="order">الترتيب</SelectItem>
-                                            <SelectItem value="text">نص السؤال</SelectItem>
                                         </SelectContent>
                                     </Select>
 

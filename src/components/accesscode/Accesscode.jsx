@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Clock, Shield, Hash, CreditCard, Users, Upload, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA, CheckCircle, Scan } from "lucide-react";
+import { Plus, Clock, BadgeCheck, Ban, CalendarX, List, BookOpen, Layers, RefreshCw, BarChart3, XCircle, CreditCard, Users, UserCheck, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA, CheckCircle, Scan } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
@@ -1714,137 +1714,276 @@ const AccessCode = () => {
         const hasActiveFilters = searchTerm || statusFilter !== "all" || userFilter !== "all" || courseFilter !== "all" || levelFilter !== "all";
 
         return (
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            ref={searchInputRef}
-                            placeholder="بحث بالكود أو المستخدم أو المادة..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pr-10"
-                        />
+            <div className="space-y-6">
+                {/* شريط الفلاتر الرئيسي */}
+                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
+                    {/* عنوان القسم */}
+                    <div className="flex items-center gap-2 mb-6">
+                        <Filter className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-gray-800">فلاتر الأكواد</h3>
                     </div>
 
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالحالة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">جميع الحالات</SelectItem>
-                            <SelectItem value="active">مفعل</SelectItem>
-                            <SelectItem value="inactive">معطل</SelectItem>
-                            <SelectItem value="NOT_USED">غير مستخدم</SelectItem>
-                            <SelectItem value="USED">مستخدم</SelectItem>
-                            <SelectItem value="CANCELLED">ملغى</SelectItem>
-                            <SelectItem value="EXPIRED">منتهي الصلاحية</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={userFilter} onValueChange={setUserFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="فلترة بالمستخدم" />
-                        </SelectTrigger>
-                        <SelectContent searchable>
-                            <SelectItem value="all">جميع المستخدمين</SelectItem>
-                            {users.map((user) => (
-                                <SelectItem key={user.id} value={user.id.toString()}>
-                                    {user.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="عدد العناصر" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5 عناصر</SelectItem>
-                            <SelectItem value="10">10 عناصر</SelectItem>
-                            <SelectItem value="20">20 عنصر</SelectItem>
-                            <SelectItem value="50">50 عنصر</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">فلترة المادة</Label>
-                        <Select value={courseFilter} onValueChange={setCourseFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="جميع المواد" />
-                            </SelectTrigger>
-                            <SelectContent searchable>
-                                <SelectItem value="all">جميع المواد</SelectItem>
-                                {filterCourses.map((course) => (
-                                    <SelectItem key={course.id} value={course.id.toString()}>
-                                        {course.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">فلترة بالمستوى</Label>
-                        <Select
-                            value={levelFilter}
-                            onValueChange={setLevelFilter}
-                            disabled={courseFilter === "all"}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={
-                                    courseFilter === "all" ? "اختر المادة أولاً" : "جميع المستويات"
-                                } />
-                            </SelectTrigger>
-                            <SelectContent searchable>
-                                <SelectItem value="all">جميع المستويات</SelectItem>
-                                {filterLevels
-                                    .filter(level =>
-                                        courseFilter === "all" ||
-                                        level.courseId?.toString() === courseFilter
-                                    )
-                                    .map((level) => (
-                                        <SelectItem key={level.id} value={level.id.toString()}>
-                                            {level.name}
-                                        </SelectItem>
-                                    ))
-                                }
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-end">
-                        {hasActiveFilters && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={resetFilters}
-                                className="w-full"
-                            >
-                                <X className="w-4 h-4 ml-1" />
-                                إعادة تعيين الفلترة
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <div className="text-sm text-muted-foreground">
-                        عرض {filteredAndSortedCodes.length} من أصل {allCodes.length} كود
-                        {hasActiveFilters && ` (مفلتر)`}
-                    </div>
-
-                    {hasActiveFilters && (
-                        <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="flex items-center gap-1">
-                                <Filter className="w-3 h-3" />
-                                مفعل
-                            </Badge>
+                    {/* الصف الأول من الفلاتر */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                        {/* Search - مع تأثيرات تفاعلية */}
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                            </div>
+                            <Input
+                                ref={searchInputRef}
+                                placeholder="بحث ..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pr-10 transition-all duration-200 
+                                     border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                     group-hover:border-gray-400 bg-white/80"
+                            />
                         </div>
-                    )}
+
+                        {/* Status Filter - مع أيقونة */}
+                        <div className="relative group">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="transition-all duration-200
+                                                  border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                                  group-hover:border-gray-400 bg-white/80">
+                                    <div className="flex items-center gap-2">
+                                        <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                                        <SelectValue placeholder="فلترة بالحالة" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                    <SelectItem value="all" className="flex items-center gap-2">
+                                        جميع الحالات
+                                    </SelectItem>
+                                    <SelectItem value="active" className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        مفعل
+                                    </SelectItem>
+                                    <SelectItem value="inactive" className="flex items-center gap-2">
+                                        <XCircle className="h-4 w-4 text-red-600" />
+                                        معطل
+                                    </SelectItem>
+                                    <SelectItem value="NOT_USED" className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4 text-blue-600" />
+                                        غير مستخدم
+                                    </SelectItem>
+                                    <SelectItem value="USED" className="flex items-center gap-2">
+                                        <UserCheck className="h-4 w-4 text-green-600" />
+                                        مستخدم
+                                    </SelectItem>
+                                    <SelectItem value="CANCELLED" className="flex items-center gap-2">
+                                        <Ban className="h-4 w-4 text-orange-600" />
+                                        ملغى
+                                    </SelectItem>
+                                    <SelectItem value="EXPIRED" className="flex items-center gap-2">
+                                        <CalendarX className="h-4 w-4 text-gray-600" />
+                                        منتهي الصلاحية
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* User Filter - مع أيقونة */}
+                        <div className="relative group">
+                            <Select value={userFilter} onValueChange={setUserFilter}>
+                                <SelectTrigger className="transition-all duration-200
+                                                  border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                                  group-hover:border-gray-400 bg-white/80">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="h-4 w-4 text-muted-foreground" />
+                                        <SelectValue placeholder="فلترة بالمستخدم" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent searchable className="bg-white border border-gray-200 shadow-lg max-h-60">
+                                    <SelectItem value="all" className="flex items-center gap-2">
+                                        جميع المستخدمين
+                                    </SelectItem>
+                                    {users.map((user) => (
+                                        <SelectItem key={user.id} value={user.id.toString()} className="flex items-center gap-2">
+                                            <User className="h-4 w-4 text-gray-500" />
+                                            {user.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Items Per Page - مع أيقونة */}
+                        <div className="relative group">
+                            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                                <SelectTrigger className="transition-all duration-200
+                                                  border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                                  group-hover:border-gray-400 bg-white/80">
+                                    <div className="flex items-center gap-2">
+                                        <List className="h-4 w-4 text-muted-foreground" />
+                                        <SelectValue placeholder="عدد العناصر" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                    <SelectItem value="5" className="flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                        5 عناصر
+                                    </SelectItem>
+                                    <SelectItem value="10" className="flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        10 عناصر
+                                    </SelectItem>
+                                    <SelectItem value="20" className="flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        20 عنصر
+                                    </SelectItem>
+                                    <SelectItem value="50" className="flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                        50 عنصر
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* الصف الثاني من الفلاتر */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Course Filter */}
+                        <div className="space-y-3">
+                            <Label className="text-sm font-medium flex items-center gap-2 text-gray-700">
+                                <BookOpen className="h-4 w-4 text-primary" />
+                                فلترة المادة
+                            </Label>
+                            <Select value={courseFilter} onValueChange={setCourseFilter}>
+                                <SelectTrigger className="transition-all duration-200
+                                                  border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                                  hover:border-gray-400 bg-white/80">
+                                    <SelectValue placeholder="جميع المواد" />
+                                </SelectTrigger>
+                                <SelectContent searchable className="bg-white border border-gray-200 shadow-lg">
+                                    <SelectItem value="all" className="flex items-center gap-2">
+                                        جميع المواد
+                                    </SelectItem>
+                                    {filterCourses.map((course) => (
+                                        <SelectItem key={course.id} value={course.id.toString()} className="flex items-center gap-2">
+                                            {/* <Book className="h-4 w-4 text-gray-500" /> */}
+                                            {course.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Level Filter */}
+                        <div className="space-y-3">
+                            <Label className="text-sm font-medium flex items-center gap-2 text-gray-700">
+                                <Layers className="h-4 w-4 text-primary" />
+                                فلترة بالمستوى
+                            </Label>
+                            <Select
+                                value={levelFilter}
+                                onValueChange={setLevelFilter}
+                                disabled={courseFilter === "all"}
+                            >
+                                <SelectTrigger className={`transition-all duration-200
+                                                   border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                                   hover:border-gray-400 bg-white/80 ${courseFilter === "all" ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}>
+                                    <SelectValue placeholder={
+                                        courseFilter === "all" ? "اختر المادة أولاً" : "جميع المستويات"
+                                    } />
+                                </SelectTrigger>
+                                <SelectContent searchable className="bg-white border border-gray-200 shadow-lg">
+                                    <SelectItem value="all" className="flex items-center gap-2">
+                                        جميع المستويات
+                                    </SelectItem>
+                                    {filterLevels
+                                        .filter(level =>
+                                            courseFilter === "all" ||
+                                            level.courseId?.toString() === courseFilter
+                                        )
+                                        .map((level) => (
+                                            <SelectItem key={level.id} value={level.id.toString()} className="flex items-center gap-2">
+                                                {/* <Layer className="h-4 w-4 text-gray-500" /> */}
+                                                {level.name}
+                                            </SelectItem>
+                                        ))
+                                    }
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* زر الإجراءات */}
+                        <div className="flex items-end">
+                            {hasActiveFilters && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-10 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                                    onClick={resetFilters}
+                                >
+                                    <RefreshCw className="h-4 w-4 ml-2" />
+                                    إعادة تعيين الفلترة
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* شريط النتائج والإحصائيات */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        {/* عرض النتائج - مع تصميم جذاب */}
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white rounded-lg p-2 shadow-sm border">
+                                <BarChart3 className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-gray-700">
+                                    عرض <span className="font-bold text-primary">{startItem}-{endItem}</span> من أصل
+                                    <span className="font-bold text-gray-900"> {allCodes.length} </span>
+                                    كود
+                                </p>
+                                {hasActiveFilters && (
+                                    <div className="flex items-center gap-1">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                        <span className="text-xs text-green-600 font-medium">نتائج مفلترة</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* أزرار الإجراءات */}
+                        <div className="flex items-center gap-3">
+                            {hasActiveFilters && (
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-700">
+                                        <Filter className="w-3 h-3" />
+                                        فلاتر مفعلة
+                                    </Badge>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={resetFilters}
+                                        className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        مسح الكل
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* شريط التقدم للإظهار المرئي */}
+                    <div className="mt-3 flex items-center gap-2">
+                        <div className="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-amber-500 to-purple-900 rounded-full transition-all duration-500"
+                                style={{
+                                    width: `${(filteredAndSortedCodes.length / Math.max(allCodes.length, 1)) * 100}%`
+                                }}
+                            ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 font-medium">
+                            {Math.round((filteredAndSortedCodes.length / Math.max(allCodes.length, 1)) * 100)}%
+                        </span>
+                    </div>
                 </div>
             </div>
         );
@@ -2063,15 +2202,15 @@ const AccessCode = () => {
                                                     encodeLoading ? "جاري التحميل..." : "اختر الترميز للتحميل التلقائي"
                                                 } />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <div className="p-2">
+                                            <SelectContent searchable>
+                                                {/* <div className="p-2">
                                                     <Input
                                                         placeholder="ابحث عن ترميز..."
                                                         value={encodeSearch}
                                                         onChange={(e) => setEncodeSearch(e.target.value)}
                                                         className="mb-2"
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {filteredCodeLevels.map((level) => (
                                                     <SelectItem key={level.id} value={level.encode} disabled={!level.encode}>
                                                         <div className="flex flex-col">
@@ -2162,15 +2301,15 @@ const AccessCode = () => {
                                             <SelectTrigger>
                                                 <SelectValue placeholder="اختر الاختصاص" />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <div className="p-2">
+                                            <SelectContent searchable>
+                                                {/* <div className="p-2">
                                                     <Input
                                                         placeholder="ابحث عن اختصاص..."
                                                         value={specializationSearch}
                                                         onChange={(e) => setSpecializationSearch(e.target.value)}
                                                         className="mb-2"
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {specializations.map((spec) => (
                                                     <SelectItem key={spec.id} value={spec.id.toString()}>
                                                         {spec.name || spec.title}
@@ -2189,16 +2328,16 @@ const AccessCode = () => {
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <div className="p-2">
+                                            </SelectTrigger >
+                                            <SelectContent searchable>
+                                                {/* <div className="p-2">
                                                     <Input
                                                         placeholder="ابحث عن المادة..."
                                                         value={courseSearch}
                                                         onChange={(e) => setCourseSearch(e.target.value)}
                                                         className="mb-2"
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {courses.map((course) => (
                                                     <SelectItem key={course.id} value={course.id.toString()}>
                                                         {course.title}
@@ -2220,15 +2359,15 @@ const AccessCode = () => {
                                             <SelectTrigger>
                                                 <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <div className="p-2">
+                                            <SelectContent searchable>
+                                                {/* <div className="p-2">
                                                     <Input
                                                         placeholder="ابحث عن مدرس..."
                                                         value={instructorSearch}
                                                         onChange={(e) => setInstructorSearch(e.target.value)}
                                                         className="mb-2"
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {instructors.map((instructor) => (
                                                     <SelectItem key={instructor.id} value={instructor.id.toString()}>
                                                         {instructor.name}
@@ -2253,15 +2392,15 @@ const AccessCode = () => {
                                             <SelectTrigger>
                                                 <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <div className="p-2">
+                                            <SelectContent searchable>
+                                                {/* <div className="p-2">
                                                     <Input
                                                         placeholder="ابحث عن مستوى..."
                                                         value={levelSearch}
                                                         onChange={(e) => setLevelSearch(e.target.value)}
                                                         className="mb-2"
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {levels.map((level) => (
                                                     <SelectItem key={level.id} value={level.id.toString()}>
                                                         {level.name}

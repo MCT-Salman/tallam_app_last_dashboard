@@ -564,19 +564,7 @@ const Specialization = () => {
                             <SelectItem value="active">نشط</SelectItem>
                             <SelectItem value="inactive">معطل</SelectItem>
                         </SelectContent>
-                    </Select>
-
-                    {/* Sort By */}
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="ترتيب حسب" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="name">الاسم</SelectItem>
-                            <SelectItem value="createdAt">تاريخ الإنشاء</SelectItem>
-                            <SelectItem value="isActive">الحالة</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    </Select>                   
 
                     {/* Items Per Page */}
                     <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
