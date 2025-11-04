@@ -409,7 +409,7 @@ const SelectContent = React.forwardRef(
           {...props}
         >
           {/* Animated Border */}
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-yellow-600  to-purple-900 opacity-10 blur-sm" />
+          <div className="absolute -inset-1 rounded-2xl bg-purple-900 opacity-10 blur-sm" />
           
           <SelectScrollUpButton />
           
@@ -502,7 +502,7 @@ const SelectItem = React.forwardRef(
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-lg py-2.5 px-3 text-sm outline-none transition-all duration-200 data-[disabled]:pointer-events-none data-[disabled]:opacity-30 focus:bg-gradient-to-l focus:from-purple-800 focus:to-yellow-600 focus:text-white focus:shadow-lg",
+        "relative flex w-full cursor-default select-none items-center rounded-lg py-2.5 px-3 text-sm outline-none transition-all duration-200 data-[disabled]:pointer-events-none data-[disabled]:opacity-30  focus:bg-purple-900  focus:text-white focus:shadow-lg",
         "hover:bg-purple-50 hover:scale-[1.02] hover:shadow-md",
         "border border-transparent hover:border-purple-200",
         "group",

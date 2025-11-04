@@ -573,7 +573,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 rounded-lg blur-3xl -z-10"></div>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-secondary bg-clip-text text-transparent">
               لوحة التحكم
             </h1>
             <p className="text-muted-foreground mt-2 flex items-center gap-2">

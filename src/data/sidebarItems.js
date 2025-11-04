@@ -35,46 +35,7 @@ export const singleItems = [
 
 // العناصر المجمعة (داخل الأكورديون)
 export const sidebarGroups = [
-  {
-    id: "app-management",
-    title: "إدارة التطبيق",
-    icon: Settings,
-    items: [
-      {
-        title: "حسابات الطلاب",
-        href: "/accounts",
-        icon: User2
-      },
-      {
-        title: "حسابات المدراء",
-        href: "/admin-accounts",
-        icon: Shield
-      },
-      {
-        title: "الإعدادات",
-        href: "/settings",
-        icon: Settings
-      }
-    ]
-  },
-  {
-    id: "sales",
-    title: "المبيعات والخصومات",
-    icon: DollarSign,
-    items: [
-      {
-        title: "أكواد الشراء",
-        href: "/accesscode",
-        icon: Ticket
-      },
-      {
-        title: "كوبونات الخصم",
-        href: "/coupons",
-        icon: Percent
-      }
-    ]
-  },
-  {
+   {
     id: "courses",
     title: "إدارة المحتوى",
     icon: Book,
@@ -94,6 +55,23 @@ export const sidebarGroups = [
         href: "/notifications",
         icon: Bell
       },
+    ]
+  },
+  {
+    id: "sales",
+    title: "المبيعات والخصومات",
+    icon: DollarSign,
+    items: [
+      {
+        title: "أكواد الشراء",
+        href: "/accesscode",
+        icon: Ticket
+      },
+      {
+        title: "كوبونات الخصم",
+        href: "/coupons",
+        icon: Percent
+      }
     ]
   },
   {
@@ -122,7 +100,29 @@ export const sidebarGroups = [
         icon: Star
       }
     ]
-  }
+  },
+  {
+    id: "app-management",
+    title: "إدارة التطبيق",
+    icon: Settings,
+    items: [
+      {
+        title: "حسابات الطلاب",
+        href: "/accounts",
+        icon: User2
+      },
+      {
+        title: "حسابات المدراء",
+        href: "/admin-accounts",
+        icon: Shield
+      },
+      {
+        title: "الإعدادات",
+        href: "/settings",
+        icon: Settings
+      }
+    ]
+  },
 ]
 
 // العناصر الأساسية للعرض في الشاشات الصغيرة

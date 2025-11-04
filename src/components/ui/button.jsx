@@ -52,24 +52,32 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-purple-800 to-yellow-600 text-white shadow-lg hover:shadow-xl hover:shadow-purple-500/25 hover:scale-105 hover:from-purple-700 hover:to-yellow-600 active:scale-95",
-        
-        destructive: "bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg hover:shadow-xl hover:shadow-red-500/25 hover:scale-105 hover:from-red-700 hover:to-rose-700 active:scale-95",
-        
-        outline: "border-2 border-purple-200 bg-white/80 backdrop-blur-sm text-purple-700 shadow-sm hover:shadow-md hover:bg-purple-50 hover:border-purple-300 hover:scale-105 active:scale-95 hover:text-purple-800",
-        
-        secondary: "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg hover:shadow-xl hover:shadow-gray-500/25 hover:scale-105 hover:from-gray-700 hover:to-gray-800 active:scale-95",
-        
-        ghost: "bg-transparent text-purple-800 hover:bg-purple-50 hover:scale-105 active:scale-95 hover:text-purple-700 hover:shadow-sm",
-        
-        link: "text-purple-600 underline-offset-4 hover:underline hover:text-purple-700 bg-transparent",
-        
-        premium: "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:scale-105 hover:from-amber-600 hover:to-orange-600 active:scale-95",
-        
-        neon: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-105 hover:from-cyan-600 hover:to-blue-600 active:scale-95 border border-cyan-400/50",
-        
-        gradient: "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 bg-size-200 bg-pos-0 hover:bg-pos-100",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
+      // variant: {
+      //   default: "bg-gradient-to-r from-purple-800 to-yellow-600 text-white shadow-lg hover:shadow-xl hover:shadow-purple-500/25 hover:scale-105 hover:from-purple-700 hover:to-yellow-600 active:scale-95",
+        
+      //   destructive: "bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg hover:shadow-xl hover:shadow-red-500/25 hover:scale-105 hover:from-red-700 hover:to-rose-700 active:scale-95",
+        
+      //   outline: "border-2 border-purple-200 bg-white/80 backdrop-blur-sm text-purple-700 shadow-sm hover:shadow-md hover:bg-purple-50 hover:border-purple-300 hover:scale-105 active:scale-95 hover:text-purple-800",
+        
+      //   secondary: "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg hover:shadow-xl hover:shadow-gray-500/25 hover:scale-105 hover:from-gray-700 hover:to-gray-800 active:scale-95",
+        
+      //   ghost: "bg-transparent text-purple-800 hover:bg-purple-50 hover:scale-105 active:scale-95 hover:text-purple-700 hover:shadow-sm",
+        
+      //   link: "text-purple-600 underline-offset-4 hover:underline hover:text-purple-700 bg-transparent",
+        
+      //   premium: "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:scale-105 hover:from-amber-600 hover:to-orange-600 active:scale-95",
+        
+      //   neon: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-105 hover:from-cyan-600 hover:to-blue-600 active:scale-95 border border-cyan-400/50",
+        
+      //   gradient: "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 bg-size-200 bg-pos-0 hover:bg-pos-100",
+      // },
       size: {
         default: "h-12 px-6 py-3 text-base font-semibold",
         sm: "h-10 rounded-lg px-4 py-2 text-sm font-medium",

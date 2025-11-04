@@ -1198,7 +1198,7 @@ const Transactions = () => {
                                 {/* زر التصدير إلى Excel */}
                                 <Button
                                     variant="default"
-                                    size="sm"
+                                    // size="sm"
                                     onClick={handleExportToExcel}
                                     disabled={exportLoading || transactions.length === 0}
                                     className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 transition-all duration-200"
@@ -1211,7 +1211,7 @@ const Transactions = () => {
                                     تصدير Excel
                                 </Button>
 
-                                {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
+                                {/* {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -1221,7 +1221,7 @@ const Transactions = () => {
                                         <X className="w-4 h-4 ml-2" />
                                         إعادة تعيين
                                     </Button>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     </div>

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { ChevronDown, ChevronUp, Loader2, Users, GraduationCap, BookOpen, Layers, Eye, Search, Filter, User, Phone, Hash, ChevronLeft, ChevronRight } from "lucide-react"
-import { 
+import {
   getInstructors,
   getSpecializations,
   getCourses,
@@ -68,28 +68,28 @@ const LevelSubscribersReport = () => {
         const instructorsData = Array.isArray(instRes.data?.data?.data)
           ? instRes.data.data.data
           : Array.isArray(instRes.data?.data?.items)
-          ? instRes.data.data.items
-          : []
+            ? instRes.data.data.items
+            : []
         setInstructors(instructorsData)
 
         // التخصصات
         const specsData = Array.isArray(specRes.data?.data?.data)
           ? specRes.data.data.data
           : Array.isArray(specRes.data?.data?.items)
-          ? specRes.data.data.items
-          : Array.isArray(specRes.data?.data)
-          ? specRes.data.data
-          : []
+            ? specRes.data.data.items
+            : Array.isArray(specRes.data?.data)
+              ? specRes.data.data
+              : []
         setSpecializations(specsData)
 
         // الكورسات
         const coursesData = Array.isArray(coursesRes.data?.data?.items)
           ? coursesRes.data.data.items
           : Array.isArray(coursesRes.data?.data?.data)
-          ? coursesRes.data.data.data
-          : Array.isArray(coursesRes.data)
-          ? coursesRes.data
-          : []
+            ? coursesRes.data.data.data
+            : Array.isArray(coursesRes.data)
+              ? coursesRes.data
+              : []
         setCourses(coursesData)
 
         // المستويات لكل كورس
@@ -115,10 +115,10 @@ const LevelSubscribersReport = () => {
         const allCodes = Array.isArray(codesRes.data?.data)
           ? codesRes.data.data
           : Array.isArray(codesRes.data?.data?.items)
-          ? codesRes.data.data.items
-          : Array.isArray(codesRes.data)
-          ? codesRes.data
-          : []
+            ? codesRes.data.data.items
+            : Array.isArray(codesRes.data)
+              ? codesRes.data
+              : []
         const onlyActive = allCodes.filter(isCodeActive)
         setActiveCodes(onlyActive)
       } catch (e) {
@@ -334,14 +334,14 @@ const LevelSubscribersReport = () => {
                 <p className="text-sm text-muted-foreground mt-1">فلترة وعرض تفصيلي للمشتركين حسب المستوى</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-sm">
                 {totalItems} مستوى
               </Badge>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowFilters(!showFilters)}
                 className="md:hidden"
               >
@@ -356,9 +356,9 @@ const LevelSubscribersReport = () => {
           {/* شريط البحث */}
           <div className="relative">
             <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              value={searchTerm} 
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }} 
+            <Input
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
               placeholder="ابحث بالاسم، الهاتف، المستوى، الدورة..."
               className="pr-10"
             />
@@ -366,7 +366,7 @@ const LevelSubscribersReport = () => {
 
           {/* الفلاتر المتقدمة */}
           <div className={`space-y-4 p-4 rounded-lg border bg-muted/30 ${showFilters ? 'block' : 'hidden md:block'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">المدرس</Label>
                 <Select value={selectedInstructor} onValueChange={(v) => { setSelectedInstructor(v); setCurrentPage(1) }}>
@@ -414,12 +414,27 @@ const LevelSubscribersReport = () => {
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">الحد الأدنى للمشتركين</Label>
-                <Input 
-                  type="number" 
-                  value={minSubscribers} 
-                  onChange={(e) => { setMinSubscribers(e.target.value); setCurrentPage(1) }} 
+                <Input
+                  type="number"
+                  value={minSubscribers}
+                  onChange={(e) => { setMinSubscribers(e.target.value); setCurrentPage(1) }}
                   placeholder="0"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">عدد العناصر</Label>
+                <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1) }}>
+                  <SelectTrigger className="">
+                    <SelectValue placeholder="عدد العناصر" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 عناصر</SelectItem>
+                    <SelectItem value="10">10 عناصر</SelectItem>
+                    <SelectItem value="20">20 عناصر</SelectItem>
+                    <SelectItem value="50">50 عناصر</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -429,18 +444,18 @@ const LevelSubscribersReport = () => {
             <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer"
                     onClick={() => handleSort('instructor')}
                   >
                     <div className="flex items-center gap-1">
-                      المدرس 
+                      المدرس
                       {sortBy === 'instructor' && (
                         sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer"
                     onClick={() => handleSort('specialization')}
                   >
@@ -451,7 +466,7 @@ const LevelSubscribersReport = () => {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer"
                     onClick={() => handleSort('course')}
                   >
@@ -462,7 +477,7 @@ const LevelSubscribersReport = () => {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer"
                     onClick={() => handleSort('level')}
                   >
@@ -473,7 +488,7 @@ const LevelSubscribersReport = () => {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className="cursor-pointer text-right"
                     onClick={() => handleSort('count')}
                   >
@@ -488,8 +503,8 @@ const LevelSubscribersReport = () => {
               </TableHeader>
               <TableBody>
                 {pageRows.length > 0 ? pageRows.map((row, index) => (
-                  <TableRow 
-                    key={row.levelId} 
+                  <TableRow
+                    key={row.levelId}
                     className={index % 2 === 0 ? 'bg-muted/30' : ''}
                   >
                     <TableCell className="font-medium">{row.instructorName}</TableCell>
@@ -500,21 +515,21 @@ const LevelSubscribersReport = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <Badge 
-                          variant={row.count > 0 ? "default" : "secondary"} 
+                        <Badge
+                          variant={row.count > 0 ? "default" : "secondary"}
                           className="text-sm"
                         >
                           {row.count} مشترك
                         </Badge>
                         {row.count > 0 && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => { 
-                              setDetailRow(row); 
-                              setDetailSearch(''); 
-                              setDetailPage(1); 
-                              setDetailOpen(true) 
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setDetailRow(row);
+                              setDetailSearch('');
+                              setDetailPage(1);
+                              setDetailOpen(true)
                             }}
                             className="gap-2"
                           >
@@ -564,21 +579,21 @@ const LevelSubscribersReport = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex items-center justify-between">
-                    <Badge 
-                      variant={row.count > 0 ? "default" : "secondary"} 
+                    <Badge
+                      variant={row.count > 0 ? "default" : "secondary"}
                       className="text-sm"
                     >
                       {row.count} مشترك
                     </Badge>
                     {row.count > 0 && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
-                        onClick={() => { 
-                          setDetailRow(row); 
-                          setDetailSearch(''); 
-                          setDetailPage(1); 
-                          setDetailOpen(true) 
+                        onClick={() => {
+                          setDetailRow(row);
+                          setDetailSearch('');
+                          setDetailPage(1);
+                          setDetailOpen(true)
                         }}
                         className="gap-2"
                       >
@@ -602,26 +617,17 @@ const LevelSubscribersReport = () => {
           {/* الترقيم */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
-              عرض {(pageStart+1)} - {Math.min(pageStart + itemsPerPage, totalItems)} من {totalItems}
+              عرض {(pageStart + 1)} - {Math.min(pageStart + itemsPerPage, totalItems)} من {totalItems}
             </div>
-            
+
             <div className="flex items-center gap-4">
-              <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1) }}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="عدد الصفوف" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10 صفوف</SelectItem>
-                  <SelectItem value="20">20 صفوف</SelectItem>
-                  <SelectItem value="50">50 صفوف</SelectItem>
-                </SelectContent>
-              </Select>
-              
+
+
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setCurrentPage(p => Math.max(1, p-1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -631,10 +637,10 @@ const LevelSubscribersReport = () => {
                   <span className="text-muted-foreground">/</span>
                   <span className="text-sm text-muted-foreground">{totalPages}</span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -684,9 +690,9 @@ const LevelSubscribersReport = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">بحث داخل المشتركين</Label>
-                <Input 
-                  value={detailSearch} 
-                  onChange={(e) => { setDetailSearch(e.target.value); setDetailPage(1) }} 
+                <Input
+                  value={detailSearch}
+                  onChange={(e) => { setDetailSearch(e.target.value); setDetailPage(1) }}
                   placeholder="ابحث بالاسم، الهاتف، أو الكود..."
                 />
               </div>
@@ -759,13 +765,13 @@ const LevelSubscribersReport = () => {
             {/* ترقيم الصفحات داخل الحوار */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
               <div className="text-sm text-muted-foreground">
-                عرض {(detailStart+1)} - {Math.min(detailStart + detailPerPage, detailTotal)} من {detailTotal}
+                عرض {(detailStart + 1)} - {Math.min(detailStart + detailPerPage, detailTotal)} من {detailTotal}
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setDetailPage(p => Math.max(1, p-1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDetailPage(p => Math.max(1, p - 1))}
                   disabled={detailPage === 1}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -775,10 +781,10 @@ const LevelSubscribersReport = () => {
                   <span className="text-muted-foreground">/</span>
                   <span className="text-sm text-muted-foreground">{detailTotalPages}</span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setDetailPage(p => Math.min(detailTotalPages, p+1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDetailPage(p => Math.min(detailTotalPages, p + 1))}
                   disabled={detailPage === detailTotalPages}
                 >
                   <ChevronLeft className="h-4 w-4" />

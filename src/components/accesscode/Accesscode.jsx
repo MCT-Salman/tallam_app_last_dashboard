@@ -159,97 +159,111 @@ const AccessCode = () => {
         }
     };
 
-    // 🔄 دالة جلب تفاصيل المستوى بواسطة الترميز
-    const fetchLevelByEncode = async (encode) => {
-        if (!encode) return;
+   // 🔄 دالة جلب تفاصيل المستوى بواسطة الترميز
+const fetchLevelByEncode = async (encode) => {
+    if (!encode) return;
 
-        setEncodeLoading(true);
-        try {
-            const res = await getCodeLevelByEncode(encode);
-            const levelData = res.data?.data;
+    setEncodeLoading(true);
+    try {
+        const res = await getCodeLevelByEncode(encode);
+        const levelData = res.data?.data;
 
-            if (levelData) {
-                console.log("🎯 بيانات المستوى المسترجعة:", levelData);
+        if (levelData) {
+            console.log("🎯 بيانات المستوى المسترجعة:", levelData);
 
-                // تعبئة البيانات تلقائياً من الاستجابة
-                const course = levelData.course;
-                const instructor = levelData.instructor;
-                const specialization = course?.specialization;
+            // الحصول على المستخدم المحدد إذا كان موجوداً
+            const selectedUser = users.find(user => user.id.toString() === form.userId);
+            const userPhone = selectedUser?.phone;
 
-                if (specialization && course && instructor) {
-                    // 🔄 إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
-                    setSelectedSpecialization("");
-                    setSelectedCourse("");
-                    setSelectedInstructor("");
-                    setSelectedLevel("");
-                    setSpecializationSearch("");
-                    setCourseSearch("");
-                    setInstructorSearch("");
-                    setLevelSearch("");
+            // تحديد العملة بناءً على رقم الهاتف
+            const currencyType = getCurrencyType(userPhone);
+            console.log("💰 نوع العملة المحدد:", currencyType, "للمستخدم:", userPhone);
 
-                    // إعادة تعيين جزء من النموذج
-                    setForm(prev => ({
-                        ...prev,
-                        courseId: "",
-                        courseLevelId: "",
-                        originalPrice: "",
-                        discountAmount: "0",
-                        finalPrice: "",
-                        amountPaid: "",
-                        couponId: "",
-                        useCoupon: false
-                    }));
-                    setCoupons([]);
-                    setAvailableCoupons([]);
+            const course = levelData.course;
+            const instructor = levelData.instructor;
+            const specialization = course?.specialization;
 
-                    // 1. تعيين الاختصاص وجلب الكورسات
-                    setSelectedSpecialization(specialization.id.toString());
-                    await fetchCourses(specialization.id.toString());
+            if (specialization && course && instructor) {
+                // 🔄 إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
+                setSelectedSpecialization("");
+                setSelectedCourse("");
+                setSelectedInstructor("");
+                setSelectedLevel("");
+                setSpecializationSearch("");
+                setCourseSearch("");
+                setInstructorSearch("");
+                setLevelSearch("");
 
-                    // انتظار بسيط لضمان جلب الكورسات
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                // إعادة تعيين جزء من النموذج
+                setForm(prev => ({
+                    ...prev,
+                    courseId: "",
+                    courseLevelId: "",
+                    originalPrice: "",
+                    discountAmount: "0",
+                    finalPrice: "",
+                    amountPaid: "",
+                    couponId: "",
+                    useCoupon: false
+                }));
+                setCoupons([]);
+                setAvailableCoupons([]);
 
-                    // 2. تعيين الكورس وجلب المدرسين
-                    setSelectedCourse(course.id.toString());
-                    await fetchInstructorsByCourse(course.id.toString());
+                // 1. تعيين الاختصاص وجلب الكورسات
+                setSelectedSpecialization(specialization.id.toString());
+                await fetchCourses(specialization.id.toString());
 
-                    // انتظار بسيط لضمان جلب المدرسين
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                // انتظار بسيط لضمان جلب الكورسات
+                await new Promise(resolve => setTimeout(resolve, 200));
 
-                    // 3. تعيين المدرس وجلب المستويات
-                    setSelectedInstructor(instructor.id.toString());
-                    await fetchLevelsByInstructor(instructor.id.toString());
+                // 2. تعيين الكورس وجلب المدرسين
+                setSelectedCourse(course.id.toString());
+                await fetchInstructorsByCourse(course.id.toString());
 
-                    // انتظار بسيط لضمان جلب المستويات
-                    await new Promise(resolve => setTimeout(resolve, 300));
+                // انتظار بسيط لضمان جلب المدرسين
+                await new Promise(resolve => setTimeout(resolve, 200));
 
-                    // 4. تعيين المستوى النهائي
-                    setSelectedLevel(levelData.id.toString());
+                // 3. تعيين المدرس وجلب المستويات
+                setSelectedInstructor(instructor.id.toString());
+                await fetchLevelsByInstructor(instructor.id.toString());
 
-                    // 5. تعيين السعر تلقائياً بعد تأكيد تعيين المستوى
-                    setTimeout(() => {
-                        const selectedLevelData = levels.find(level => level.id === levelData.id);
-                        if (selectedLevelData) {
-                            const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                            console.log("💰 تعيين السعر التلقائي:", price);
-                            setForm(prev => ({
-                                ...prev,
-                                originalPrice: price.toString(),
-                                finalPrice: price.toString(),
-                                amountPaid: price.toString()
-                            }));
-                        }
-                        showSuccessToast("تم تحميل بيانات المستوى تلقائياً");
-                    }, 500);
-                }
+                // انتظار بسيط لضمان جلب المستويات
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // 4. تعيين المستوى النهائي
+                setSelectedLevel(levelData.id.toString());
+
+                // 5. تعيين السعر تلقائياً بعد تأكيد تعيين المستوى مع مراعاة العملة
+                setTimeout(() => {
+                    const selectedLevelData = levels.find(level => level.id === levelData.id);
+                    if (selectedLevelData) {
+                        const price = getPriceByCurrency(selectedLevelData, userPhone);
+                        console.log("💰 تعيين السعر التلقائي بناءً على العملة:", {
+                            price,
+                            currencyType,
+                            userPhone,
+                            priceSAR: selectedLevelData.priceSAR,
+                            priceUSD: selectedLevelData.priceUSD
+                        });
+                        
+                        setForm(prev => ({
+                            ...prev,
+                            originalPrice: price,
+                            finalPrice: price,
+                            amountPaid: price
+                        }));
+                    }
+                    showSuccessToast(`تم تحميل بيانات المستوى تلقائياً - العملة: ${currencyType}`);
+                }, 500);
             }
-        } catch (err) {
-            console.error("❌ فشل جلب بيانات الترميز:", err);
-            showErrorToast("فشل تحميل بيانات الترميز");
-        } finally {
-            setEncodeLoading(false);
         }
-    };
+    } catch (err) {
+        console.error("❌ فشل جلب بيانات الترميز:", err);
+        showErrorToast("فشل تحميل بيانات الترميز");
+    } finally {
+        setEncodeLoading(false);
+    }
+};
 
     const fetchCourses = async (specializationId) => {
         if (!specializationId) {
@@ -405,46 +419,53 @@ const AccessCode = () => {
     };
 
     // 🔍 دالة التحقق من الكوبونات
-    const checkAvailableCoupons = async () => {
-        if (!form.userId || !selectedLevel) {
-            showErrorToast("يرجى اختيار المستخدم والمستوى أولاً");
-            return;
+    // 🔍 دالة التحقق من الكوبونات
+const checkAvailableCoupons = async () => {
+    if (!form.userId || !selectedLevel) {
+        showErrorToast("يرجى اختيار المستخدم والمستوى أولاً");
+        return;
+    }
+
+    setCouponCheckLoading(true);
+    try {
+        const requestData = {
+            courseLevelId: parseInt(selectedLevel),
+            userId: parseInt(form.userId)
+        };
+
+        const res = await getCouponsByLevelOrUser(requestData);
+        let data = [];
+        if (Array.isArray(res.data?.data)) {
+            data = res.data.data;
+        } else if (Array.isArray(res.data?.data?.items)) {
+            data = res.data.data.items;
+        } else if (Array.isArray(res.data)) {
+            data = res.data;
         }
 
-        setCouponCheckLoading(true);
-        try {
-            const requestData = {
-                courseLevelId: parseInt(selectedLevel),
-                userId: parseInt(form.userId)
-            };
+        setAvailableCoupons(data);
+        
+        // عرض رسالة مع نوع العملة
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        const currencyType = getCurrencyType(selectedUser?.phone);
+        const currencyText = currencyType === 'SAR' ? 'ل.س' : '$';
+        
+        showSuccessToast(`تم العثور على ${data.length} كوبون متاح - العملة: ${currencyText}`);
 
-            const res = await getCouponsByLevelOrUser(requestData);
-            let data = [];
-            if (Array.isArray(res.data?.data)) {
-                data = res.data.data;
-            } else if (Array.isArray(res.data?.data?.items)) {
-                data = res.data.data.items;
-            } else if (Array.isArray(res.data)) {
-                data = res.data;
-            }
-
-            setAvailableCoupons(data);
-            showSuccessToast(`تم العثور على ${data.length} كوبون متاح`);
-
-            if (data.length > 0) {
-                setForm(prev => ({ ...prev, useCoupon: true }));
-            }
-
-            return data;
-        } catch (err) {
-            console.error("❌ فشل التحقق من الكوبونات:", err);
-            showErrorToast(err?.response?.data?.message || "فشل التحقق من الكوبونات");
-            setAvailableCoupons([]);
-            return [];
-        } finally {
-            setCouponCheckLoading(false);
+        if (data.length > 0) {
+            setForm(prev => ({ ...prev, useCoupon: true }));
         }
-    };
+
+        return data;
+    } catch (err) {
+        console.error("❌ فشل التحقق من الكوبونات:", err);
+        showErrorToast(err?.response?.data?.message || "فشل التحقق من الكوبونات");
+        setAvailableCoupons([]);
+        return [];
+    } finally {
+        setCouponCheckLoading(false);
+    }
+};
 
     // 🔍 دالة التحقق من الكوبونات للمستخدم والمستوى في التعديل
     const checkAvailableCouponsEdit = async () => {
@@ -495,108 +516,142 @@ const AccessCode = () => {
     };
 
     // حساب السعر النهائي
-    const calculatePriceWithCoupon = async (couponId, courseLevelId) => {
-        if (!couponId || !courseLevelId) return;
+   const calculatePriceWithCoupon = async (couponId, courseLevelId) => {
+    if (!couponId || !courseLevelId) return;
 
-        setPriceLoading(true);
-        try {
-            const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
-            const coupon = availableCoupons.find(c => c.id === parseInt(couponId));
+    setPriceLoading(true);
+    try {
+        const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
+        const coupon = availableCoupons.find(c => c.id === parseInt(couponId));
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
 
-            if (!selectedLevelData || !coupon) {
-                console.log("❌ بيانات غير مكتملة");
-                return;
-            }
-
-            // الحساب المحلي
-            const basePrice = selectedLevelData.priceSAR || selectedLevelData.priceUSD || 0;
-            let discountAmount = 0;
-
-            if (coupon.isPercent) {
-                discountAmount = (basePrice * coupon.discount) / 100;
-            } else {
-                discountAmount = coupon.discount;
-            }
-
-            const finalPrice = basePrice - discountAmount;
-
-            console.log("🧮 الحساب المحلي:", {
-                basePrice,
-                discountAmount,
-                finalPrice,
-                coupon: coupon.code
-            });
-
-            setForm(prev => ({
-                ...prev,
-                originalPrice: basePrice.toString(),
-                discountAmount: discountAmount.toString(),
-                finalPrice: finalPrice.toString(),
-                amountPaid: finalPrice.toString()
-            }));
-
-        } catch (err) {
-            console.error("❌ فشل حساب السعر:", err);
-            showErrorToast("فشل حساب السعر");
-        } finally {
-            setPriceLoading(false);
+        if (!selectedLevelData || !coupon || !selectedUser) {
+            console.log("❌ بيانات غير مكتملة");
+            return;
         }
-    };
 
-    // 💰 حساب السعر النهائي مع الكوبون في التعديل
-    const calculatePriceWithCouponEdit = async (couponId, courseLevelId) => {
-        if (!couponId || !courseLevelId) return;
+        // تحديد العملة بناءً على رقم الهاتف
+        const currencyType = getCurrencyType(selectedUser.phone);
+        const isSyrianUser = currencyType === 'SAR';
+        
+        // تحديد السعر الأساسي بناءً على العملة
+        const basePrice = isSyrianUser ? 
+            (selectedLevelData.priceSAR || 0) : 
+            (selectedLevelData.priceUSD || 0);
 
-        setPriceLoading(true);
-        try {
-            console.log("🔄 حساب السعر في التعديل للكوبون:", couponId, "والمستوى:", courseLevelId);
+        let discountAmount = 0;
+        let finalPrice = basePrice;
 
-            const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
-            const coupon = availableCouponsEdit.find(c => c.id === parseInt(couponId));
-
-            if (!selectedLevelData || !coupon) {
-                console.log("❌ بيانات غير مكتملة في التعديل:", { selectedLevelData, coupon });
-                return;
-            }
-
-            console.log("💰 بيانات الحساب في التعديل:", {
-                levelPrice: selectedLevelData.priceSAR || selectedLevelData.priceUSD,
-                coupon: coupon
-            });
-
-            const res = await calculateFinalPrice(couponId, parseInt(courseLevelId));
-            console.log("💰 استجابة حساب السعر في التعديل:", res);
-
-            const priceData = res.data?.data;
-
-            if (priceData) {
-                setForm(prev => ({
-                    ...prev,
-                    originalPrice: priceData.basePrice?.toString() || prev.originalPrice,
-                    discountAmount: priceData.discount?.toString() || "0",
-                    finalPrice: priceData.finalPrice?.toString() || prev.finalPrice,
-                    amountPaid: priceData.finalPrice?.toString() || prev.amountPaid
-                }));
-            }
-        } catch (err) {
-            console.error("❌ فشل حساب السعر في التعديل:", err);
-            showErrorToast("فشل حساب السعر");
-
-            // الحساب المحلي كبديل
-            calculatePriceLocallyEdit(couponId, courseLevelId);
-        } finally {
-            setPriceLoading(false);
+        // تطبيق الخصم بناءً على نوع الكوبون
+        if (coupon.isPercent) {
+            discountAmount = (basePrice * coupon.discount) / 100;
+        } else {
+            // إذا كان الكوبون بقيمة ثابتة، نستخدمه كما هو
+            discountAmount = coupon.discount;
         }
-    };
 
-    // 🧮 دالة حساب السعر محلياً في التعديل
-    const calculatePriceLocallyEdit = (couponId, courseLevelId) => {
+        finalPrice = basePrice - discountAmount;
+
+        // التأكد من أن الأسعار غير سالبة
+        finalPrice = Math.max(0, finalPrice);
+        discountAmount = Math.max(0, discountAmount);
+
+        console.log("🧮 الحساب بالعملة المناسبة:", {
+            basePrice,
+            discountAmount,
+            finalPrice,
+            coupon: coupon.code,
+            currencyType,
+            isPercent: coupon.isPercent,
+            user: selectedUser.name,
+            phone: selectedUser.phone
+        });
+
+        setForm(prev => ({
+            ...prev,
+            originalPrice: basePrice.toString(),
+            discountAmount: discountAmount.toString(),
+            finalPrice: finalPrice.toString(),
+            amountPaid: finalPrice.toString()
+        }));
+
+    } catch (err) {
+        console.error("❌ فشل حساب السعر:", err);
+        showErrorToast("فشل حساب السعر");
+        
+        // الحساب المحلي كبديل
+        calculatePriceLocally(couponId, courseLevelId);
+    } finally {
+        setPriceLoading(false);
+    }
+};
+
+// 🧮 دالة حساب السعر محلياً
+const calculatePriceLocally = (couponId, courseLevelId) => {
+    const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
+    const coupon = availableCoupons.find(c => c.id === parseInt(couponId));
+    const selectedUser = users.find(user => user.id.toString() === form.userId);
+
+    if (!selectedLevelData || !coupon || !selectedUser) return;
+
+    const currencyType = getCurrencyType(selectedUser.phone);
+    const isSyrianUser = currencyType === 'SAR';
+    
+    const basePrice = isSyrianUser ? 
+        (selectedLevelData.priceSAR || 0) : 
+        (selectedLevelData.priceUSD || 0);
+
+    let discountAmount = 0;
+
+    if (coupon.isPercent) {
+        discountAmount = (basePrice * coupon.discount) / 100;
+    } else {
+        discountAmount = coupon.discount;
+    }
+
+    const finalPrice = Math.max(0, basePrice - discountAmount);
+
+    console.log("🧮 الحساب المحلي بالعملة المناسبة:", {
+        basePrice,
+        discountAmount,
+        finalPrice,
+        currencyType,
+        coupon: coupon.code
+    });
+
+    setForm(prev => ({
+        ...prev,
+        originalPrice: basePrice.toString(),
+        discountAmount: discountAmount.toString(),
+        finalPrice: finalPrice.toString(),
+        amountPaid: finalPrice.toString()
+    }));
+};
+    // 💰 حساب السعر النهائي مع الكوبون في التعديل (بالعملة المناسبة)
+const calculatePriceWithCouponEdit = async (couponId, courseLevelId) => {
+    if (!couponId || !courseLevelId) return;
+
+    setPriceLoading(true);
+    try {
+        console.log("🔄 حساب السعر في التعديل للكوبون:", couponId, "والمستوى:", courseLevelId);
+
         const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
         const coupon = availableCouponsEdit.find(c => c.id === parseInt(couponId));
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
 
-        if (!selectedLevelData || !coupon) return;
+        if (!selectedLevelData || !coupon || !selectedUser) {
+            console.log("❌ بيانات غير مكتملة في التعديل:", { selectedLevelData, coupon, selectedUser });
+            return;
+        }
 
-        const basePrice = selectedLevelData.priceSAR || selectedLevelData.priceUSD || 0;
+        // تحديد العملة بناءً على رقم الهاتف
+        const currencyType = getCurrencyType(selectedUser.phone);
+        const isSyrianUser = currencyType === 'SAR';
+        
+        const basePrice = isSyrianUser ? 
+            (selectedLevelData.priceSAR || 0) : 
+            (selectedLevelData.priceUSD || 0);
+
         let discountAmount = 0;
 
         if (coupon.isPercent) {
@@ -605,12 +660,15 @@ const AccessCode = () => {
             discountAmount = coupon.discount;
         }
 
-        const finalPrice = basePrice - discountAmount;
+        const finalPrice = Math.max(0, basePrice - discountAmount);
 
-        console.log("🧮 الحساب المحلي في التعديل:", {
+        console.log("💰 حساب السعر في التعديل:", {
             basePrice,
             discountAmount,
             finalPrice,
+            currencyType,
+            user: selectedUser.name,
+            phone: selectedUser.phone,
             coupon: coupon.code
         });
 
@@ -621,7 +679,61 @@ const AccessCode = () => {
             finalPrice: finalPrice.toString(),
             amountPaid: finalPrice.toString()
         }));
-    };
+
+    } catch (err) {
+        console.error("❌ فشل حساب السعر في التعديل:", err);
+        showErrorToast("فشل حساب السعر");
+
+        // الحساب المحلي كبديل
+        calculatePriceLocallyEdit(couponId, courseLevelId);
+    } finally {
+        setPriceLoading(false);
+    }
+};
+
+// 🧮 دالة حساب السعر محلياً في التعديل
+const calculatePriceLocallyEdit = (couponId, courseLevelId) => {
+    const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
+    const coupon = availableCouponsEdit.find(c => c.id === parseInt(couponId));
+    const selectedUser = users.find(user => user.id.toString() === form.userId);
+
+    if (!selectedLevelData || !coupon || !selectedUser) return;
+
+    const currencyType = getCurrencyType(selectedUser.phone);
+    const isSyrianUser = currencyType === 'SAR';
+    
+    const basePrice = isSyrianUser ? 
+        (selectedLevelData.priceSAR || 0) : 
+        (selectedLevelData.priceUSD || 0);
+
+    let discountAmount = 0;
+
+    if (coupon.isPercent) {
+        discountAmount = (basePrice * coupon.discount) / 100;
+    } else {
+        discountAmount = coupon.discount;
+    }
+
+    const finalPrice = Math.max(0, basePrice - discountAmount);
+
+    console.log("🧮 الحساب المحلي في التعديل:", {
+        basePrice,
+        discountAmount,
+        finalPrice,
+        currencyType,
+        coupon: coupon.code
+    });
+
+    setForm(prev => ({
+        ...prev,
+        originalPrice: basePrice.toString(),
+        discountAmount: discountAmount.toString(),
+        finalPrice: finalPrice.toString(),
+        amountPaid: finalPrice.toString()
+    }));
+};
+
+   
 
     // 🗑️ دوال الإجراءات
     const handleDeleteCode = async (id) => {
@@ -848,92 +960,95 @@ const AccessCode = () => {
     };
 
     // 🔄 دالة جلب تفاصيل المستوى بواسطة الترميز للتعديل
-    const fetchLevelByEncodeEdit = async (encode) => {
-        if (!encode) return;
+const fetchLevelByEncodeEdit = async (encode) => {
+    if (!encode) return;
 
-        setEncodeLoadingEdit(true);
-        try {
-            const res = await getCodeLevelByEncode(encode);
-            const levelData = res.data?.data;
+    setEncodeLoadingEdit(true);
+    try {
+        const res = await getCodeLevelByEncode(encode);
+        const levelData = res.data?.data;
 
-            if (levelData) {
-                console.log("🎯 بيانات المستوى المسترجعة للتعديل:", levelData);
+        if (levelData) {
+            console.log("🎯 بيانات المستوى المسترجعة للتعديل:", levelData);
 
-                const course = levelData.course;
-                const instructor = levelData.instructor;
-                const specialization = course?.specialization;
+            // الحصول على المستخدم المحدد إذا كان موجوداً
+            const selectedUser = users.find(user => user.id.toString() === form.userId);
+            const userPhone = selectedUser?.phone;
 
-                if (specialization && course && instructor) {
-                    // 🔄 إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
-                    setSelectedSpecialization("");
-                    setSelectedCourse("");
-                    setSelectedInstructor("");
-                    setSelectedLevel("");
-                    setSpecializationSearch("");
-                    setCourseSearch("");
-                    setInstructorSearch("");
-                    setLevelSearch("");
+            // تحديد العملة بناءً على رقم الهاتف
+            const currencyType = getCurrencyType(userPhone);
+            console.log("💰 نوع العملة المحدد للتعديل:", currencyType, "للمستخدم:", userPhone);
 
-                    // إعادة تعيين جزء من النموذج
-                    setForm(prev => ({
-                        ...prev,
-                        courseId: "",
-                        courseLevelId: "",
-                        originalPrice: "",
-                        discountAmount: "0",
-                        finalPrice: "",
-                        amountPaid: "",
-                        couponId: "",
-                        useCoupon: false
-                    }));
-                    setCoupons([]);
-                    setAvailableCouponsEdit([]);
+            const course = levelData.course;
+            const instructor = levelData.instructor;
+            const specialization = course?.specialization;
 
-                    // 1. تعيين الاختصاص وجلب الكورسات
-                    setSelectedSpecialization(specialization.id.toString());
-                    await fetchCourses(specialization.id.toString());
+            if (specialization && course && instructor) {
+                // ... باقي الكود كما هو ...
 
-                    await new Promise(resolve => setTimeout(resolve, 200));
-
-                    // 2. تعيين الكورس وجلب المدرسين
-                    setSelectedCourse(course.id.toString());
-                    await fetchInstructorsByCourse(course.id.toString());
-
-                    await new Promise(resolve => setTimeout(resolve, 200));
-
-                    // 3. تعيين المدرس وجلب المستويات
-                    setSelectedInstructor(instructor.id.toString());
-                    await fetchLevelsByInstructor(instructor.id.toString());
-
-                    await new Promise(resolve => setTimeout(resolve, 300));
-
-                    // 4. تعيين المستوى النهائي
-                    setSelectedLevel(levelData.id.toString());
-
-                    // 5. تعيين السعر تلقائياً
-                    setTimeout(() => {
-                        const selectedLevelData = levels.find(level => level.id === levelData.id);
-                        if (selectedLevelData) {
-                            const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                            console.log("💰 تعيين السعر التلقائي للتعديل:", price);
-                            setForm(prev => ({
-                                ...prev,
-                                originalPrice: price.toString(),
-                                finalPrice: price.toString(),
-                                amountPaid: price.toString()
-                            }));
-                        }
-                        showSuccessToast("تم تحميل بيانات المستوى تلقائياً");
-                    }, 500);
-                }
+                // 5. تعيين السعر تلقائياً مع مراعاة العملة
+                setTimeout(() => {
+                    const selectedLevelData = levels.find(level => level.id === levelData.id);
+                    if (selectedLevelData) {
+                        const price = getPriceByCurrency(selectedLevelData, userPhone);
+                        console.log("💰 تعيين السعر التلقائي للتعديل:", {
+                            price,
+                            currencyType,
+                            userPhone
+                        });
+                        setForm(prev => ({
+                            ...prev,
+                            originalPrice: price,
+                            finalPrice: price,
+                            amountPaid: price
+                        }));
+                    }
+                    showSuccessToast(`تم تحميل بيانات المستوى تلقائياً - العملة: ${currencyType}`);
+                }, 500);
             }
-        } catch (err) {
-            console.error("❌ فشل جلب بيانات الترميز للتعديل:", err);
-            showErrorToast("فشل تحميل بيانات الترميز");
-        } finally {
-            setEncodeLoadingEdit(false);
         }
-    };
+    } catch (err) {
+        console.error("❌ فشل جلب بيانات الترميز للتعديل:", err);
+        showErrorToast("فشل تحميل بيانات الترميز");
+    } finally {
+        setEncodeLoadingEdit(false);
+    }
+};
+
+// 🔄 تحديث السعر تلقائياً عند تغيير المستخدم
+useEffect(() => {
+    if (form.userId && selectedLevel) {
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
+        
+        if (selectedUser && selectedLevelData) {
+            const userPhone = selectedUser.phone;
+            const currencyType = getCurrencyType(userPhone);
+            const price = getPriceByCurrency(selectedLevelData, userPhone);
+            
+            console.log("🔄 تحديث السعر عند تغيير المستخدم:", {
+                user: selectedUser.name,
+                phone: userPhone,
+                currencyType,
+                price
+            });
+            
+            setForm(prev => ({
+                ...prev,
+                originalPrice: price,
+                finalPrice: price,
+                amountPaid: price
+            }));
+            
+            // إذا كان هناك كوبون محدد، إعادة حساب السعر
+            if (form.couponId) {
+                setTimeout(() => {
+                    calculatePriceWithCoupon(form.couponId, selectedLevel);
+                }, 300);
+            }
+        }
+    }
+}, [form.userId, users]);
 
     // 🔄 إعادة تعيين جميع الاختيارات للتعديل
     const resetAllSelectionsEdit = () => {
@@ -1086,6 +1201,37 @@ const AccessCode = () => {
     const formatDate = (dateString) => {
         if (!dateString) return "غير محدد";
         return new Date(dateString).toLocaleDateString('en-US');
+    };
+
+    // 🔍 دالة التحقق من نوع العملة بناءً على رقم الهاتف
+    const getCurrencyType = (phone) => {
+        if (!phone) return 'USD'; // افتراضي دولار إذا لم يكن هناك رقم
+
+        const cleanPhone = phone.toString().replace(/\s+/g, '');
+
+        // إذا بدأ الرقم بـ +963 أو 963 أو 09 فهو سوري
+        if (cleanPhone.startsWith('+963') ||
+            cleanPhone.startsWith('963') ||
+            cleanPhone.startsWith('09')) {
+            return 'SAR';
+        }
+
+        return 'USD';
+    };
+
+    // 💰 دالة الحصول على السعر المناسب بناءً على العملة
+    const getPriceByCurrency = (levelData, phone) => {
+        if (!levelData) return "0";
+
+        const currencyType = getCurrencyType(phone);
+
+        if (currencyType === 'SAR' && levelData.priceSAR > 0) {
+            return levelData.priceSAR.toString();
+        } else if (levelData.priceUSD > 0) {
+            return levelData.priceUSD.toString();
+        }
+
+        return "0";
     };
 
     // 🎯 دوال الحالة Status
@@ -1316,38 +1462,52 @@ const AccessCode = () => {
     };
 
     // 💰 مكون عرض معلومات السعر
-    const PriceDisplay = ({ item }) => {
-        const amountPaid = getAmountPaid(item);
-        const coupon = getCouponInfo(item);
+const PriceDisplay = ({ item }) => {
+    const amountPaid = getAmountPaid(item);
+    const coupon = getCouponInfo(item);
+    
+    // تحديد نوع العملة بناءً على المستخدم
+    const userPhone = item.user?.phone;
+    const currencyType = getCurrencyType(userPhone);
+    const currencySymbol = currencyType === 'SAR' ? 'ل.س' : '$';
 
-        return (
-            <div className="space-y-2">
-                <div>
-                    <div className="text-xs text-muted-foreground">المبلغ المدفوع:</div>
-                    <div className="font-bold text-lg">{amountPaid} ل.س</div>
+    return (
+        <div className="space-y-2">
+            <div>
+                <div className="text-xs text-muted-foreground">المبلغ المدفوع:</div>
+                <div className="font-bold text-lg">{amountPaid} {currencySymbol}</div>
+                <div className="text-xs text-blue-600">
+                    {currencyType === 'SAR' ? 'العملة السورية' : 'العملة بالدولار'}
                 </div>
-
-                {item.courseLevel && (
-                    <div className="border-t pt-2">
-                        <div className="text-xs text-muted-foreground mb-1">سعر المادة:</div>
-                        {item.courseLevel.priceSAR > 0 && (
-                            <div className="font-medium text-sm">{item.courseLevel.priceSAR} ل.س</div>
-                        )}
-                        {item.courseLevel.priceUSD > 0 && (
-                            <div className="text-xs text-muted-foreground">{item.courseLevel.priceUSD} $</div>
-                        )}
-                    </div>
-                )}
-
-                {coupon && (
-                    <Badge variant="outline" className="flex items-center gap-1 mt-1">
-                        <Tag className="w-3 h-3" />
-                        {coupon.code}
-                    </Badge>
-                )}
             </div>
-        );
-    };
+
+            {item.courseLevel && (
+                <div className="border-t pt-2">
+                    <div className="text-xs text-muted-foreground mb-1">سعر المادة:</div>
+                    {currencyType === 'SAR' && item.courseLevel.priceSAR > 0 && (
+                        <div className="font-medium text-sm">{item.courseLevel.priceSAR} ل.س</div>
+                    )}
+                    {currencyType === 'USD' && item.courseLevel.priceUSD > 0 && (
+                        <div className="font-medium text-sm">{item.courseLevel.priceUSD} $</div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                        {currencyType === 'SAR' && item.courseLevel.priceUSD > 0 && 
+                            `(${item.courseLevel.priceUSD} $)`}
+                        {currencyType === 'USD' && item.courseLevel.priceSAR > 0 && 
+                            `(${item.courseLevel.priceSAR} ل.س)`}
+                    </div>
+                </div>
+            )}
+
+            {coupon && (
+                <Badge variant="outline" className="flex items-center gap-1 mt-1">
+                    <Tag className="w-3 h-3" />
+                    {coupon.code}
+                </Badge>
+            )}
+        </div>
+    );
+};
 
     // 👁️ عرض التفاصيل
     const renderCodeDetails = (item) => {
@@ -2047,78 +2207,122 @@ const AccessCode = () => {
     }, [selectedInstructor, selectedCourse]);
 
     useEffect(() => {
-        if (selectedLevel) {
-            handleFormChange("courseLevelId", selectedLevel);
-            fetchActiveCoupons(selectedLevel);
+    if (selectedLevel) {
+        handleFormChange("courseLevelId", selectedLevel);
+        fetchActiveCoupons(selectedLevel);
 
-            const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
-            if (selectedLevelData) {
-                const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                setForm(prev => ({
-                    ...prev,
-                    originalPrice: price.toString(),
-                    finalPrice: price.toString(),
-                    amountPaid: price.toString()
-                }));
-            }
-        } else {
-            setCoupons([]);
-            setAvailableCoupons([]);
+        const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
+        if (selectedLevelData) {
+            // الحصول على بيانات المستخدم المحدد
+            const selectedUser = users.find(user => user.id.toString() === form.userId);
+            const userPhone = selectedUser?.phone;
+            
+            // تحديد السعر بناءً على العملة
+            const price = getPriceByCurrency(selectedLevelData, userPhone);
+            const currencyType = getCurrencyType(userPhone);
+            
+            console.log("💰 تحديث السعر عند اختيار المستوى:", {
+                price,
+                currencyType,
+                userPhone,
+                user: selectedUser?.name
+            });
+            
             setForm(prev => ({
                 ...prev,
-                courseLevelId: "",
-                originalPrice: "",
-                discountAmount: "0",
-                finalPrice: "",
-                amountPaid: "",
-                couponId: "",
-                useCoupon: false
+                originalPrice: price,
+                finalPrice: price,
+                amountPaid: price
             }));
         }
-    }, [selectedLevel, levels]);
+    } else {
+        setCoupons([]);
+        setAvailableCoupons([]);
+        setForm(prev => ({
+            ...prev,
+            courseLevelId: "",
+            originalPrice: "",
+            discountAmount: "0",
+            finalPrice: "",
+            amountPaid: "",
+            couponId: "",
+            useCoupon: false
+        }));
+    }
+}, [selectedLevel, levels]);
 
-    useEffect(() => {
-        if (form.couponId && form.courseLevelId) {
+   useEffect(() => {
+    if (form.couponId && form.courseLevelId) {
+        // الحصول على بيانات المستخدم والمستوى
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
+        
+        if (selectedUser && selectedLevelData) {
+            const currencyType = getCurrencyType(selectedUser.phone);
+            console.log("🎯 تطبيق الكوبون بالعملة:", currencyType, "للمستخدم:", selectedUser.name);
+            
             calculatePriceWithCoupon(form.couponId, form.courseLevelId);
-        } else if (!form.couponId && form.courseLevelId) {
-            const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
-            if (selectedLevelData) {
-                const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                setForm(prev => ({
-                    ...prev,
-                    originalPrice: price.toString(),
-                    discountAmount: "0",
-                    finalPrice: price.toString(),
-                    amountPaid: price.toString()
-                }));
-            }
         }
-    }, [form.couponId, form.courseLevelId, levels]);
+    } else if (!form.couponId && form.courseLevelId) {
+        // إعادة تعيين السعر عند إلغاء الكوبون
+        const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        
+        if (selectedLevelData && selectedUser) {
+            const price = getPriceByCurrency(selectedLevelData, selectedUser.phone);
+            console.log("🔄 إعادة تعيين السعر بدون كوبون:", {
+                price,
+                currency: getCurrencyType(selectedUser.phone),
+                user: selectedUser.name
+            });
+            
+            setForm(prev => ({
+                ...prev,
+                originalPrice: price,
+                discountAmount: "0",
+                finalPrice: price,
+                amountPaid: price
+            }));
+        }
+    }
+}, [form.couponId, form.courseLevelId, levels, users]);
 
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, statusFilter, userFilter, courseFilter, levelFilter, itemsPerPage]);
 
-    // 🔄 حساب السعر تلقائياً عند تغيير الكوبون في التعديل
-    useEffect(() => {
-        if (editDialog.isOpen && form.couponId && form.courseLevelId) {
-            console.log("🎯 حساب السعر تلقائياً في التعديل");
-            calculatePriceWithCoupon(form.couponId, form.courseLevelId);
-        } else if (editDialog.isOpen && !form.couponId && form.courseLevelId) {
-            // إعادة تعيين السعر عند إلغاء الكوبون في التعديل
-            const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
-            if (selectedLevelData) {
-                const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                setForm(prev => ({
-                    ...prev,
-                    originalPrice: price.toString(),
-                    discountAmount: "0",
-                    finalPrice: price.toString(),
-                    amountPaid: price.toString()
-                }));
-            }
+// 🔄 حساب السعر تلقائياً عند تغيير الكوبون في التعديل
+useEffect(() => {
+    if (editDialog.isOpen && form.couponId && form.courseLevelId) {
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
+        
+        if (selectedUser && selectedLevelData) {
+            const currencyType = getCurrencyType(selectedUser.phone);
+            console.log("🎯 حساب السعر تلقائياً في التعديل بالعملة:", currencyType);
+            calculatePriceWithCouponEdit(form.couponId, form.courseLevelId);
         }
-    }, [form.couponId, form.courseLevelId, editDialog.isOpen]);
+    } else if (editDialog.isOpen && !form.couponId && form.courseLevelId) {
+        // إعادة تعيين السعر عند إلغاء الكوبون في التعديل
+        const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
+        const selectedUser = users.find(user => user.id.toString() === form.userId);
+        
+        if (selectedLevelData && selectedUser) {
+            const price = getPriceByCurrency(selectedLevelData, selectedUser.phone);
+            console.log("🔄 إعادة تعيين السعر بدون كوبون في التعديل:", {
+                price,
+                currency: getCurrencyType(selectedUser.phone)
+            });
+            setForm(prev => ({
+                ...prev,
+                originalPrice: price,
+                discountAmount: "0",
+                finalPrice: price,
+                amountPaid: price
+            }));
+        }
+    }
+}, [form.couponId, form.courseLevelId, editDialog.isOpen]);
 
     // 🔄 التحقق التلقائي من الكوبونات في التعديل
     useEffect(() => {
@@ -2441,8 +2645,8 @@ const AccessCode = () => {
                                                 {levels.map((level) => (
                                                     <SelectItem key={level.id} value={level.id.toString()}>
                                                         {level.name}
-                                                        {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`}
-                                                        {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`}
+                                                        {/* {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`} */}
+                                                        {/* {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`} */}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -2528,98 +2732,132 @@ const AccessCode = () => {
 
                                         {form.useCoupon && availableCoupons.length === 0 && !couponCheckLoading && (
                                             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                                                ⚠️ لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
+                                                 لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
                                             </div>
                                         )}
                                     </div>
                                 )}
 
                                 {/* معلومات السعر */}
-                                {(form.originalPrice || form.couponId) && (
-                                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                        <Label className="font-bold text-base text-blue-800">معلومات السعر</Label>
+                               // في قسم عرض معلومات السعر، أضف عرض نوع العملة:
+{(form.originalPrice || form.couponId) && (
+    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex items-center justify-between">
+            <Label className="font-bold text-base text-blue-800">معلومات السعر</Label>
+            {form.userId && (
+                <Badge variant="outline" className="bg-white">
+                    {getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' 
+                        ? 'العملة: السورية (ل.س)' 
+                        : 'العملة: الدولار ($)'
+                    }
+                </Badge>
+            )}
+        </div>
 
-                                        {priceLoading ? (
-                                            <div className="flex justify-center items-center py-4">
-                                                <div className="animate-spin h-6 w-6 border-b-2 rounded-full border-blue-600"></div>
-                                                <span className="mr-2 text-blue-700">جاري حساب السعر...</span>
-                                            </div>
-                                        ) : (
-                                            <div className="grid grid-cols-1 gap-3">
-                                                <div className="space-y-2">
-                                                    <Label>السعر الأصلي</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={form.originalPrice}
-                                                        onChange={(e) => handleFormChange("originalPrice", e.target.value)}
-                                                        placeholder="0.00"
-                                                        min="0"
-                                                        step="0.01"
-                                                        className="bg-white"
-                                                    />
-                                                </div>
+        {priceLoading ? (
+            <div className="flex justify-center items-center py-4">
+                <div className="animate-spin h-6 w-6 border-b-2 rounded-full border-blue-600"></div>
+                <span className="mr-2 text-blue-700">جاري حساب السعر...</span>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-2">
+                    <Label>السعر الأصلي</Label>
+                    <Input
+                        type="number"
+                        value={form.originalPrice}
+                        onChange={(e) => handleFormChange("originalPrice", e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        className="bg-white"
+                        readOnly
+                    />
+                </div>
 
-                                                {parseFloat(form.discountAmount) > 0 && (
-                                                    <>
-                                                        <div className="space-y-2">
-                                                            <Label>مبلغ الخصم</Label>
-                                                            <Input
-                                                                type="number"
-                                                                value={form.discountAmount}
-                                                                readOnly
-                                                                className="bg-green-50 border-green-200 text-green-700 font-bold"
-                                                            />
-                                                        </div>
+                {parseFloat(form.discountAmount) > 0 && (
+                    <>
+                        <div className="space-y-2">
+                            <Label>مبلغ الخصم</Label>
+                            <Input
+                                type="number"
+                                value={form.discountAmount}
+                                readOnly
+                                className="bg-green-50 border-green-200 text-green-700 font-bold"
+                            />
+                        </div>
 
-                                                        <div className="p-3 bg-white rounded border">
-                                                            <div className="space-y-2">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-sm text-gray-600">السعر الأصلي:</span>
-                                                                    <span className="font-medium">{form.originalPrice} ل.س</span>
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-sm text-gray-600">نوع الخصم:</span>
-                                                                    <span className="font-medium">
-                                                                        {availableCoupons.find(c => c.id === parseInt(form.couponId))?.isPercent ?
-                                                                            `نسبة (${availableCoupons.find(c => c.id === parseInt(form.couponId))?.discount}%)` :
-                                                                            `قيمة ثابتة (${availableCoupons.find(c => c.id === parseInt(form.couponId))?.discount} ل.س)`}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-sm text-gray-600">الخصم:</span>
-                                                                    <span className="font-medium text-red-600">-{form.discountAmount} ل.س</span>
-                                                                </div>
-                                                                <div className="border-t pt-2 flex justify-between items-center">
-                                                                    <span className="font-bold text-gray-800">السعر النهائي:</span>
-                                                                    <span className="font-bold text-green-600 text-lg">{form.finalPrice} ل.س</span>
-                                                                </div>
-                                                                {form.couponId && (
-                                                                    <div className="flex justify-between items-center text-xs text-blue-600">
-                                                                        <span>الكوبون المطبق:</span>
-                                                                        <span>{availableCoupons.find(c => c.id === parseInt(form.couponId))?.code}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                <div className="space-y-2">
-                                                    <Label>السعر النهائي *</Label>
-                                                    <Input
-                                                        type="number"
-                                                        value={form.finalPrice}
-                                                        onChange={(e) => handleFormChange("finalPrice", e.target.value)}
-                                                        placeholder="0.00"
-                                                        min="0"
-                                                        step="0.01"
-                                                        className="font-bold text-lg border-2 border-green-200 bg-green-50"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
+                        <div className="p-3 bg-white rounded border">
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">السعر الأصلي:</span>
+                                    <span className="font-medium">
+                                        {form.originalPrice} {
+                                            form.userId ? 
+                                                (getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' ? 'ل.س' : '$')
+                                                : ''
+                                        }
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">نوع الخصم:</span>
+                                    <span className="font-medium">
+                                        {availableCoupons.find(c => c.id === parseInt(form.couponId))?.isPercent ?
+                                            `نسبة (${availableCoupons.find(c => c.id === parseInt(form.couponId))?.discount}%)` :
+                                            `قيمة ثابتة (${availableCoupons.find(c => c.id === parseInt(form.couponId))?.discount} ${
+                                                form.userId ? 
+                                                    (getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' ? 'ل.س' : '$')
+                                                    : ''
+                                            })`}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">الخصم:</span>
+                                    <span className="font-medium text-red-600">
+                                        -{form.discountAmount} {
+                                            form.userId ? 
+                                                (getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' ? 'ل.س' : '$')
+                                                : ''
+                                        }
+                                    </span>
+                                </div>
+                                <div className="border-t pt-2 flex justify-between items-center">
+                                    <span className="font-bold text-gray-800">السعر النهائي:</span>
+                                    <span className="font-bold text-green-600 text-lg">
+                                        {form.finalPrice} {
+                                            form.userId ? 
+                                                (getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' ? 'ل.س' : '$')
+                                                : ''
+                                        }
+                                    </span>
+                                </div>
+                                {form.couponId && (
+                                    <div className="flex justify-between items-center text-xs text-blue-600">
+                                        <span>الكوبون المطبق:</span>
+                                        <span>{availableCoupons.find(c => c.id === parseInt(form.couponId))?.code}</span>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                <div className="space-y-2">
+                    <Label>السعر النهائي *</Label>
+                    <Input
+                        type="number"
+                        value={form.finalPrice}
+                        onChange={(e) => handleFormChange("finalPrice", e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        className="font-bold text-lg border-2 border-green-200 bg-green-50"
+                    />
+                </div>
+            </div>
+        )}
+    </div>
+)}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -3458,11 +3696,15 @@ const AccessCode = () => {
                                         }
                                     </SelectContent>
                                 </Select>
-                                {form.userId && (
-                                    <p className="text-xs text-green-600">
-                                        ✓ المستخدم الحالي: {users.find(u => u.id.toString() === form.userId)?.name || "جاري التحميل..."}
-                                    </p>
-                                )}
+                               {form.userId && (
+    <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">
+         العملة المحددة: {
+            getCurrencyType(users.find(u => u.id.toString() === form.userId)?.phone) === 'SAR' 
+            ? 'السورية (ل.س)' 
+            : 'الدولار ($)'
+        }
+    </div>
+)}
                             </div>
 
                             {/* مدة الصلاحية */}
