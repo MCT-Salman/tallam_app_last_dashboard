@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Filter, UserCheck, Users, UserX, List, RefreshCw, BarChart3, Download, X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock, Globe, Coins, LogOut } from "lucide-react"
+import { Plus, Edit, Trash2, Play, Filter, UserCheck, Users, UserX, List, RefreshCw, BarChart3, Download,
+     X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock,
+      Globe, Coins, LogOut } from "lucide-react"
 import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
@@ -901,7 +903,7 @@ const Account = () => {
                                                 </Button>
                                                 <Button
                                                     size="icon"
-                                                    variant="outline"
+                                                    variant="ghost"
                                                     onClick={() => setSessionDeleteDialog({
                                                         isOpen: true,
                                                         userId: user.id,

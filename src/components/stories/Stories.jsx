@@ -126,48 +126,81 @@ const Stories = () => {
     }
 
     // جلب جميع القصص
+    // const fetchStories = async () => {
+    //     setLoading(true)
+    //     try {
+    //         const params = {
+    //             page: currentPage,
+    //             limit: itemsPerPage,
+    //             q: searchTerm || undefined
+    //         }
+
+    //         console.log("📤 Fetching stories with params:", params)
+
+    //         const res = await getStories(params)
+    //         console.log("📊 Stories API response:", res)
+
+    //         let data = []
+    //         let total = 0
+
+    //         if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+    //             data = res.data.data.data
+    //             total = res.data.data.pagination?.total || data.length
+    //         } else if (Array.isArray(res.data?.data)) {
+    //             data = res.data.data
+    //             total = data.length
+    //         } else if (Array.isArray(res.data)) {
+    //             data = res.data
+    //             total = data.length
+    //         }
+
+    //         setAllStories(data || [])
+    //         setStories(data || [])
+    //         setTotalStories(total || 0)
+    //     } catch (err) {
+    //         console.error("❌ Error fetching stories:", err)
+    //         const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
+    //         showErrorToast(errorMessage)
+    //         setAllStories([])
+    //         setStories([])
+    //         setTotalStories(0)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
     const fetchStories = async () => {
-        setLoading(true)
-        try {
-            const params = {
-                page: currentPage,
-                limit: itemsPerPage,
-                q: searchTerm || undefined
-            }
+    setLoading(true)
+    try {
+        // إزالة المعاملات من API call لأن الفلترة تتم على العميل
+        const res = await getStories()
+        console.log("📊 Stories API response:", res)
 
-            console.log("📤 Fetching stories with params:", params)
+        let data = []
+        let total = 0
 
-            const res = await getStories(params)
-            console.log("📊 Stories API response:", res)
-
-            let data = []
-            let total = 0
-
-            if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-                data = res.data.data.data
-                total = res.data.data.pagination?.total || data.length
-            } else if (Array.isArray(res.data?.data)) {
-                data = res.data.data
-                total = data.length
-            } else if (Array.isArray(res.data)) {
-                data = res.data
-                total = data.length
-            }
-
-            setAllStories(data || [])
-            setStories(data || [])
-            setTotalStories(total || 0)
-        } catch (err) {
-            console.error("❌ Error fetching stories:", err)
-            const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
-            showErrorToast(errorMessage)
-            setAllStories([])
-            setStories([])
-            setTotalStories(0)
-        } finally {
-            setLoading(false)
+        if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+            data = res.data.data.data
+            total = res.data.data.pagination?.total || data.length
+        } else if (Array.isArray(res.data?.data)) {
+            data = res.data.data
+            total = data.length
+        } else if (Array.isArray(res.data)) {
+            data = res.data
+            total = data.length
         }
+
+        setAllStories(data || [])
+        setTotalStories(total || 0)
+    } catch (err) {
+        console.error("❌ Error fetching stories:", err)
+        const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
+        showErrorToast(errorMessage)
+        setAllStories([])
+        setTotalStories(0)
+    } finally {
+        setLoading(false)
     }
+}
 
     // ✅ تحديث ترتيب العرض تلقائياً عند تغيير القصص أو فتح الديالوج
     useEffect(() => {
@@ -185,76 +218,156 @@ const Stories = () => {
     }, [])
 
     // فلترة وترتيب البيانات
-    const filteredAndSortedStories = useMemo(() => {
-        let filtered = [...allStories]
+    // const filteredAndSortedStories = useMemo(() => {
+    //     let filtered = [...allStories]
 
-        // البحث بالعنوان
-        if (searchTerm.trim()) {
-            filtered = filtered.filter(story =>
-                story.title?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
+    //     // البحث بالعنوان
+    //     if (searchTerm.trim()) {
+    //         filtered = filtered.filter(story =>
+    //             story.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    //         )
+    //     }
+
+    //     // فلترة بالحالة
+    //     if (statusFilter !== "all") {
+    //         filtered = filtered.filter(story =>
+    //             statusFilter === "active" ? story.isActive : !story.isActive
+    //         )
+    //     }
+
+    //     // فلترة بالنوع
+    //     if (typeFilter !== "all") {
+    //         filtered = filtered.filter(story =>
+    //             typeFilter === "story" ? story.isStory : !story.isStory
+    //         )
+    //     }
+
+    //     // الترتيب
+    //     filtered.sort((a, b) => {
+    //         let aValue, bValue
+
+    //         switch (sortBy) {
+    //             case "title":
+    //                 aValue = a.title?.toLowerCase() || ""
+    //                 bValue = b.title?.toLowerCase() || ""
+    //                 break
+    //             case "orderIndex":
+    //                 aValue = parseInt(a.orderIndex) || 0
+    //                 bValue = parseInt(b.orderIndex) || 0
+    //                 break
+    //             case "startedAt":
+    //                 aValue = new Date(a.startedAt) || new Date(0)
+    //                 bValue = new Date(b.startedAt) || new Date(0)
+    //                 break
+    //             case "isActive":
+    //                 aValue = a.isActive
+    //                 bValue = b.isActive
+    //                 break
+    //             case "isStory":
+    //                 aValue = a.isStory
+    //                 bValue = b.isStory
+    //                 break
+    //             case "createdAt":
+    //                 aValue = new Date(a.createdAt) || new Date(0)
+    //                 bValue = new Date(b.createdAt) || new Date(0)
+    //                 break
+    //             default:
+    //                 aValue = new Date(a.createdAt) || new Date(0)
+    //                 bValue = new Date(b.createdAt) || new Date(0)
+    //         }
+
+    //         if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+    //         if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+    //         return 0
+    //     })
+
+    //     return filtered
+    // }, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
+
+    // فلترة وترتيب البيانات
+const filteredAndSortedStories = useMemo(() => {
+    console.log("🔄 Filtering stories...", {
+        searchTerm,
+        statusFilter,
+        typeFilter,
+        sortBy,
+        sortOrder,
+        totalStories: allStories.length
+    })
+
+    let filtered = [...allStories]
+
+    // البحث بالعنوان
+    if (searchTerm.trim()) {
+        filtered = filtered.filter(story =>
+            story.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        console.log(`🔍 After search (${searchTerm}):`, filtered.length)
+    }
+
+    // فلترة بالحالة
+    if (statusFilter !== "all") {
+        filtered = filtered.filter(story =>
+            statusFilter === "active" ? story.isActive : !story.isActive
+        )
+        console.log(`🎯 After status filter (${statusFilter}):`, filtered.length)
+    }
+
+    // فلترة بالنوع
+    if (typeFilter !== "all") {
+        filtered = filtered.filter(story =>
+            typeFilter === "story" ? story.isStory : !story.isStory
+        )
+        console.log(`📝 After type filter (${typeFilter}):`, filtered.length)
+    }
+
+    // الترتيب
+    filtered.sort((a, b) => {
+        let aValue, bValue
+
+        switch (sortBy) {
+            case "title":
+                aValue = a.title?.toLowerCase() || ""
+                bValue = b.title?.toLowerCase() || ""
+                break
+            case "orderIndex":
+                aValue = parseInt(a.orderIndex) || 0
+                bValue = parseInt(b.orderIndex) || 0
+                break
+            case "startedAt":
+                aValue = new Date(a.startedAt) || new Date(0)
+                bValue = new Date(b.startedAt) || new Date(0)
+                break
+            case "isActive":
+                aValue = a.isActive
+                bValue = b.isActive
+                break
+            case "isStory":
+                aValue = a.isStory
+                bValue = b.isStory
+                break
+            case "createdAt":
+                aValue = new Date(a.createdAt) || new Date(0)
+                bValue = new Date(b.createdAt) || new Date(0)
+                break
+            default:
+                aValue = new Date(a.createdAt) || new Date(0)
+                bValue = new Date(b.createdAt) || new Date(0)
         }
 
-        // فلترة بالحالة
-        if (statusFilter !== "all") {
-            filtered = filtered.filter(story =>
-                statusFilter === "active" ? story.isActive : !story.isActive
-            )
-        }
+        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+        return 0
+    })
 
-        // فلترة بالنوع
-        if (typeFilter !== "all") {
-            filtered = filtered.filter(story =>
-                typeFilter === "story" ? story.isStory : !story.isStory
-            )
-        }
-
-        // الترتيب
-        filtered.sort((a, b) => {
-            let aValue, bValue
-
-            switch (sortBy) {
-                case "title":
-                    aValue = a.title?.toLowerCase() || ""
-                    bValue = b.title?.toLowerCase() || ""
-                    break
-                case "orderIndex":
-                    aValue = parseInt(a.orderIndex) || 0
-                    bValue = parseInt(b.orderIndex) || 0
-                    break
-                case "startedAt":
-                    aValue = new Date(a.startedAt) || new Date(0)
-                    bValue = new Date(b.startedAt) || new Date(0)
-                    break
-                case "isActive":
-                    aValue = a.isActive
-                    bValue = b.isActive
-                    break
-                case "isStory":
-                    aValue = a.isStory
-                    bValue = b.isStory
-                    break
-                case "createdAt":
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-                    break
-                default:
-                    aValue = new Date(a.createdAt) || new Date(0)
-                    bValue = new Date(b.createdAt) || new Date(0)
-            }
-
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-            return 0
-        })
-
-        return filtered
-    }, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
+    console.log("✅ Final filtered stories:", filtered.length)
+    return filtered
+}, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
 
     // إعادة تعيين الصفحة عند تغيير الفلتر
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, statusFilter, typeFilter, itemsPerPage, sortBy, sortOrder])
+    }, [searchTerm, statusFilter, typeFilter, sortBy, sortOrder, itemsPerPage])
 
     // التعامل مع تغييرات النموذج
     const handleFormChange = (key, value) => {
@@ -426,17 +539,30 @@ const Stories = () => {
     }
 
     // Pagination calculations
-    const totalItems = allStories.length // ✅ غير هذا من filteredAndSortedStories إلى allStories
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
-    const startItem = (currentPage - 1) * itemsPerPage + 1
-    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+    // const totalItems = allStories.length // ✅ غير هذا من filteredAndSortedStories إلى allStories
+    // const totalPages = Math.ceil(totalItems / itemsPerPage)
+    // const startItem = (currentPage - 1) * itemsPerPage + 1
+    // const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
-    // ✅ البيانات المعروضة حالياً (من allStories)
-    const currentPageStories = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage
-        const endIndex = startIndex + itemsPerPage
-        return allStories.slice(startIndex, endIndex) // ✅ استخدم allStories هنا
-    }, [allStories, currentPage, itemsPerPage])
+    // // ✅ البيانات المعروضة حالياً (من allStories)
+    // const currentPageStories = useMemo(() => {
+    //     const startIndex = (currentPage - 1) * itemsPerPage
+    //     const endIndex = startIndex + itemsPerPage
+    //     return allStories.slice(startIndex, endIndex) // ✅ استخدم allStories هنا
+    // }, [allStories, currentPage, itemsPerPage])
+
+    // ✅ البيانات المعروضة حالياً (من filteredAndSortedStories)
+const currentPageStories = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredAndSortedStories.slice(startIndex, endIndex) // ✅ استخدم filteredAndSortedStories هنا
+}, [filteredAndSortedStories, currentPage, itemsPerPage])
+
+// Pagination calculations - تحديث الحسابات
+const totalItems = filteredAndSortedStories.length // ✅ استخدم البيانات المفلترة
+const totalPages = Math.ceil(totalItems / itemsPerPage)
+const startItem = (currentPage - 1) * itemsPerPage + 1
+const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
     // Handle page change
     const handlePageChange = (page) => {

@@ -9,7 +9,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { Search, ChevronLeft, ChevronRight, Eye, Download, Filter, RefreshCw, Calendar as CalendarIcon, DollarSign, Receipt, User, BookOpen, Loader2, Image, FileText, CreditCard, FileSpreadsheet, X } from "lucide-react"
+import {
+    Search, ChevronLeft, ChevronRight, Eye,
+    Download, Filter, RefreshCw, Calendar as CalendarIcon,
+    DollarSign, Receipt, User, BookOpen, Loader2, Image, FileText, List,
+    CreditCard, FileSpreadsheet, X, Sun, CalendarDays, CalendarRange, Check
+} from "lucide-react"
+
+
 import { getTransactions, getTransactionStats } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, subWeeks, subMonths, subYears } from "date-fns"
@@ -528,22 +535,22 @@ const Transactions = () => {
                             <span class="value">${formatAmount(transaction.amountPaid)}</span>
                         </div>
                         ${transaction.coupon ? `
-<div class="section">
-    <h3>معلومات الكوبون</h3>
-    <div class="row">
-        <span class="label">كود الكوبون:</span>
-        <span class="value">${transaction.coupon.code}</span>
-    </div>
-    <div class="row">
-        <span class="label">قيمة الخصم:</span>
-        <span class="value">${transaction.coupon.discount} ${transaction.coupon.isPercent ? '%' : 'ل.س'}</span>
-    </div>
-    <div class="row">
-        <span class="label">نوع الخصم:</span>
-        <span class="value">${transaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</span>
-    </div>
-</div>
-` : ''}
+                            <div class="section">
+                                <h3>معلومات الكوبون</h3>
+                                <div class="row">
+                                    <span class="label">كود الكوبون:</span>
+                                    <span class="value">${transaction.coupon.code}</span>
+                                </div>
+                                <div class="row">
+                                    <span class="label">قيمة الخصم:</span>
+                                    <span class="value">${transaction.coupon.discount} ${transaction.coupon.isPercent ? '%' : 'ل.س'}</span>
+                                </div>
+                                <div class="row">
+                                    <span class="label">نوع الخصم:</span>
+                                    <span class="value">${transaction.coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</span>
+                                </div>
+                            </div>
+                            ` : ''}
                         <div class="row">
                             <span class="label">تاريخ الإنشاء:</span>
                             <span class="value">${formatDate(transaction.createdAt)}</span>
@@ -657,12 +664,12 @@ const Transactions = () => {
     // حساب الإحصائيات بالدولار
     const calculateUSDStats = () => {
         if (!transactions || transactions.length === 0) return { total: 0, average: 0, max: 0 }
-        
+
         const usdAmounts = transactions.map(t => t.accessCode?.courseLevel?.priceUSD || 0)
         const total = usdAmounts.reduce((sum, amount) => sum + amount, 0)
         const average = total / transactions.length
         const max = Math.max(...usdAmounts, 0)
-        
+
         return { total, average, max }
     }
 
@@ -680,8 +687,8 @@ const Transactions = () => {
                             <p className="text-xs font-medium text-blue-900 mb-1">إجمالي المعاملات</p>
                             <p className="text-2xl font-bold text-blue-700">{stats.totalTransactions || 0}</p>
                             <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                              <Receipt className="w-3 h-3" />
-                              معاملة مكتملة
+                                <Receipt className="w-3 h-3" />
+                                معاملة مكتملة
                             </p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -788,101 +795,101 @@ const Transactions = () => {
 
             {/* فلتر التاريخ من - إلى -  */}
             <div className="space-y-2" dir="rtl">
-  <Label className="text-sm">فلتر مخصص</Label>
-  <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-    <PopoverTrigger asChild>
-      <Button
-        variant="outline"
-        className="w-full justify-between text-right"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-sm">
-            {dateRange.from && dateRange.to ? (
-              `${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
-            ) : (
-              "اختر الفترة الزمنية"
-            )}
-          </span>
-          <CalendarIcon className="h-4 w-4" />
-        </div>
-        {dateRange.from && dateRange.to && (
-          <X
-            className="h-4 w-4 text-muted-foreground hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation()
-              resetDateFilter()
-            }}
-          />
-        )}
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-auto p-0 max-w-[95vw]" align="center" sideOffset={5}>
-      <div className="p-4 border-b" dir="rtl">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium">اختر الفترة الزمنية</h4>
-          {dateRange.from && dateRange.to && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetDateFilter}
-              className="h-8 text-xs"
-            >
-              مسح
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {/* التقويم مع الاتجاه LTR للحفاظ على الترتيب الصحيح */}
-      <div dir="ltr">
-        <Calendar
-          mode="range"
-          selected={dateRange}
-          onSelect={setDateRange}
-          numberOfMonths={window.innerWidth < 640 ? 1 : 2}
-          defaultMonth={dateRange.from || new Date()}
-          locale={ar}
-          dir="rtl" // إبقاء التقويم LTR
-          className="text-xs"
-          classNames={{
-           months: "flex flex-col sm:flex-row gap-4 sm:gap-6",
-            month: "space-y-2",
-            caption: "flex justify-center pt-1 relative items-center",
-            caption_label: "text-xs font-medium",
-            nav: "flex items-center",
-            nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
-            table: "w-full border-collapse space-y-0",
-            head_row: "flex",
-            head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.7rem]",
-            row: "flex w-full mt-1",
-            cell: "h-8 w-8 text-center text-xs p-0",
-            day: "h-8 w-8 text-sm",
-          }}
-        />
-      </div>
-      
-      <div className="p-3 border-t bg-muted/50" dir="rtl">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-sm text-muted-foreground">
-            {dateRange.from && dateRange.to ? (
-              `المحدد: ${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
-            ) : (
-              "اختر تاريخ البداية والنهاية"
-            )}
-          </div>
-          <Button
-            onClick={applyCustomDateFilter}
-            disabled={!dateRange.from || !dateRange.to}
-            size="sm"
-            className="text-xs h-8 px-3"
-          >
-            تطبيق
-          </Button>
-        </div>
-      </div>
-    </PopoverContent>
-  </Popover>
-</div>
+                <Label className="text-sm">فلتر مخصص</Label>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-between text-right"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">
+                                    {dateRange.from && dateRange.to ? (
+                                        `${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+                                    ) : (
+                                        "اختر الفترة الزمنية"
+                                    )}
+                                </span>
+                                <CalendarIcon className="h-4 w-4" />
+                            </div>
+                            {dateRange.from && dateRange.to && (
+                                <X
+                                    className="h-4 w-4 text-muted-foreground hover:text-foreground"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        resetDateFilter()
+                                    }}
+                                />
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 max-w-[95vw]" align="center" sideOffset={5}>
+                        <div className="p-4 border-b" dir="rtl">
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-medium">اختر الفترة الزمنية</h4>
+                                {dateRange.from && dateRange.to && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={resetDateFilter}
+                                        className="h-8 text-xs"
+                                    >
+                                        مسح
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* التقويم مع الاتجاه LTR للحفاظ على الترتيب الصحيح */}
+                        <div dir="ltr">
+                            {/* <Calendar
+                                mode="range"
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={window.innerWidth < 640 ? 1 : 2}
+                                defaultMonth={dateRange.from || new Date()}
+                                locale={ar}
+                                dir="rtl" // إبقاء التقويم LTR
+                                className="text-xs"
+                                classNames={{
+                                    months: "flex flex-col sm:flex-row gap-4 sm:gap-6",
+                                    month: "space-y-2",
+                                    caption: "flex justify-center pt-1 relative items-center",
+                                    caption_label: "text-xs font-medium",
+                                    nav: "flex items-center",
+                                    nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+                                    table: "w-full border-collapse space-y-0",
+                                    head_row: "flex",
+                                    head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.7rem]",
+                                    row: "flex w-full mt-1",
+                                    cell: "h-8 w-8 text-center text-xs p-0",
+                                    day: "h-8 w-8 text-sm",
+                                }}
+                            /> */}
+                        </div>
+
+                        <div className="p-3 border-t bg-muted/50" dir="rtl">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="text-sm text-muted-foreground">
+                                    {dateRange.from && dateRange.to ? (
+                                        `المحدد: ${formatDateForDisplay(dateRange.from)} - ${formatDateForDisplay(dateRange.to)}`
+                                    ) : (
+                                        "اختر تاريخ البداية والنهاية"
+                                    )}
+                                </div>
+                                <Button
+                                    onClick={applyCustomDateFilter}
+                                    disabled={!dateRange.from || !dateRange.to}
+                                    size="sm"
+                                    className="text-xs h-8 px-3"
+                                >
+                                    تطبيق
+                                </Button>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
         </div>
     )
 
@@ -987,96 +994,291 @@ const Transactions = () => {
         <Card className="w-full overflow-hidden">
             <CardHeader className="flex flex-col gap-4 p-4 sm:p-6">
                 <CardTitle className="text-lg sm:text-xl">التحويلات المالية والفواتير</CardTitle>
+                {/* 🔍 قسم الفلترة والعرض */}
+                <div className="space-y-6">
+                    {/* إحصائيات سريعة */}
+                    <StatsCards />
 
-                {/* إحصائيات سريعة */}
-                <StatsCards />
+                    {/* شريط الفلاتر الرئيسي */}
+                    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
+                        {/* عنوان القسم */}
+                        <div className="flex items-center gap-2 mb-6">
+                            <Filter className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold text-gray-800">فلاتر المعاملات</h3>
+                        </div>
 
-                {/* فلاتر التاريخ */}
-                <DateFilters />
+                        {/* فلاتر التاريخ */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            {/* فلتر التاريخ السريع */}
+                            <div className="space-y-9">
+                                <Label className="text-sm font-medium flex items-center gap-2 text-gray-700">
+                                    <CalendarIcon className="h-4 w-4 text-primary" />
+                                    فلتر سريع
+                                </Label>
+                                <Select
+                                    value={quickDateFilter}
+                                    onValueChange={(value) => {
+                                        setQuickDateFilter(value)
+                                        setDateRange({ from: null, to: null })
+                                        setCurrentPage(1)
+                                    }}
+                                >
+                                    <SelectTrigger className="transition-all duration-200 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-gray-400 bg-white/80">
+                                        <SelectValue placeholder="اختر فترة زمنية" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        <SelectItem value="all" className="flex items-center gap-2">
+                                            جميع التواريخ
+                                        </SelectItem>
+                                        <SelectItem value="daily" className="flex items-center gap-2">
+                                            {/* <Sun className="h-4 w-4 text-yellow-500" /> */}
+                                            اليوم
+                                        </SelectItem>
+                                        <SelectItem value="weekly" className="flex items-center gap-2">
+                                            {/* <Calendar className="h-4 w-4 text-blue-500" /> */}
+                                            هذا الأسبوع
+                                        </SelectItem>
+                                        <SelectItem value="monthly" className="flex items-center gap-2">
+                                            {/* <CalendarDays className="h-4 w-4 text-green-500" /> */}
+                                            هذا الشهر
+                                        </SelectItem>
+                                        <SelectItem value="yearly" className="flex items-center gap-2">
+                                            {/* <CalendarRange className="h-4 w-4 text-purple-500" /> */}
+                                            هذه السنة
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                {/* Filters Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {/* Search */}
-                    <div className="relative md:col-span-2">
-                        <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="بحث برقم المعاملة أو المستخدم أو المادة..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pr-10"
-                        />
+                            {/* فلتر التاريخ المخصص - حقول تاريخ منفصلة */}
+                            <div className="space-y-3">
+                                <Label className="text-sm font-medium flex items-center gap-2 text-gray-700">
+                                    <CalendarRange className="h-4 w-4 text-primary" />
+                                    فلتر مخصص
+                                </Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* تاريخ البداية */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="start-date" className="text-xs text-gray-500">
+                                            من تاريخ
+                                        </Label>
+                                        <div className="relative">
+                                            {/* <CalendarIcon className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" /> */}
+                                            <Input
+                                                id="start-date"
+                                                type="date"
+                                                value={dateRange.from ? dateRange.from.toISOString().split('T')[0] : ''}
+                                                onChange={(e) => {
+                                                    const newFrom = e.target.value ? new Date(e.target.value) : null
+                                                    setDateRange(prev => ({ ...prev, from: newFrom }))
+                                                }}
+                                                className="pr-8 transition-all duration-200 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-gray-400 bg-white/80"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* تاريخ النهاية */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="end-date" className="text-xs text-gray-500">
+                                            إلى تاريخ
+                                        </Label>
+                                        <div className="relative">
+                                            {/* <CalendarIcon className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" /> */}
+                                            <Input
+                                                id="end-date"
+                                                type="date"
+                                                value={dateRange.to ? dateRange.to.toISOString().split('T')[0] : ''}
+                                                onChange={(e) => {
+                                                    const newTo = e.target.value ? new Date(e.target.value) : null
+                                                    setDateRange(prev => ({ ...prev, to: newTo }))
+                                                }}
+                                                className="pr-8 transition-all duration-200 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-gray-400 bg-white/80"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* أزرار تطبيق ومسح الفلتر المخصص */}
+                                {/* <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={applyCustomDateFilter}
+            disabled={!dateRange.from || !dateRange.to}
+            className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-700"
+          >
+            <Check className="h-3 w-3 ml-1" />
+            تطبيق
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetDateFilter}
+            disabled={!dateRange.from && !dateRange.to}
+            className="flex-1 h-8 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <X className="h-3 w-3 ml-1" />
+            مسح
+          </Button>
+        </div> */}
+                            </div>
+                        </div>
+
+                        {/* شبكة الفلاتر */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Search - مع تأثيرات تفاعلية */}
+                            <div className="relative group md:col-span-2">
+                                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                </div>
+                                <Input
+                                    placeholder="بحث برقم المعاملة أو المستخدم أو المادة..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pr-10 transition-all duration-200 
+                   border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                   group-hover:border-gray-400 bg-white/80"
+                                />
+                            </div>
+
+                            {/* Items Per Page - مع أيقونة */}
+                            <div className="relative group">
+                                <Select
+                                    value={itemsPerPage.toString()}
+                                    onValueChange={(value) => {
+                                        setItemsPerPage(Number(value))
+                                        setCurrentPage(1)
+                                    }}
+                                >
+                                    <SelectTrigger className="transition-all duration-200
+                                border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
+                                group-hover:border-gray-400 bg-white/80">
+                                        <div className="flex items-center gap-2">
+                                            <List className="h-4 w-4 text-muted-foreground" />
+                                            <SelectValue placeholder="عدد العناصر" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        <SelectItem value="5" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                            5 عناصر
+                                        </SelectItem>
+                                        <SelectItem value="10" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                            10 عناصر
+                                        </SelectItem>
+                                        <SelectItem value="20" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            20 عناصر
+                                        </SelectItem>
+                                        <SelectItem value="50" className="flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                            50 عناصر
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* أزرار الإجراءات */}
+                            <div className="flex gap-2 flex-wrap">
+                                {/* <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchData}
+          disabled={loading}
+          className="flex-1 min-w-[120px] border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4 ml-2" />
+          )}
+          تحديث
+        </Button> */}
+
+                                {/* زر التصدير إلى Excel */}
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={handleExportToExcel}
+                                    disabled={exportLoading || transactions.length === 0}
+                                    className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 transition-all duration-200"
+                                >
+                                    {exportLoading ? (
+                                        <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                    ) : (
+                                        <FileSpreadsheet className="w-4 h-4 ml-2" />
+                                    )}
+                                    تصدير Excel
+                                </Button>
+
+                                {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={resetFilters}
+                                        className="flex-1 min-w-[120px] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                                    >
+                                        <X className="w-4 h-4 ml-2" />
+                                        إعادة تعيين
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Items Per Page */}
-                    <Select
-                        value={itemsPerPage.toString()}
-                        onValueChange={(value) => {
-                            setItemsPerPage(Number(value))
-                            setCurrentPage(1)
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="عدد العناصر" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5 عناصر</SelectItem>
-                            <SelectItem value="10">10 عناصر</SelectItem>
-                            <SelectItem value="20">20 عناصر</SelectItem>
-                            <SelectItem value="50">50 عناصر</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    {/* شريط النتائج والإحصائيات */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            {/* عرض النتائج - مع تصميم جذاب */}
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white rounded-lg p-2 shadow-sm border">
+                                    <CreditCard className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-gray-700">
+                                        عرض <span className="font-bold text-primary">{currentPage * itemsPerPage - itemsPerPage + 1} إلى {Math.min(currentPage * itemsPerPage, transactions.length)}</span> من
+                                        <span className="font-bold text-gray-900"> {totalCount} </span>
+                                        معاملة
+                                    </p>
+                                    {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            <span className="text-xs text-green-600 font-medium">نتائج مفلترة</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                    <div className="flex gap-2 flex-wrap">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={fetchData}
-                            disabled={loading}
-                            className="flex-1 min-w-[120px]"
-                        >
-                            {loading ? (
-                                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                            ) : (
-                                <RefreshCw className="w-4 h-4 ml-2" />
-                            )}
-                            تحديث
-                        </Button>
+                            {/* أزرار الإجراءات */}
+                            <div className="flex items-center gap-3">
+                                {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={resetFilters}
+                                        className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        مسح الفلاتر
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
 
-                        {/* زر التصدير إلى Excel */}
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={handleExportToExcel}
-                            disabled={exportLoading || transactions.length === 0}
-                            className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700"
-                        >
-                            {exportLoading ? (
-                                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                            ) : (
-                                <FileSpreadsheet className="w-4 h-4 ml-2" />
-                            )}
-                            تصدير Excel
-                        </Button>
-
-                        {(searchTerm || quickDateFilter !== "all" || dateRange.from || dateRange.to) && (
-                            <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1 min-w-[120px]">
-                                <Filter className="w-4 h-4 ml-2" />
-                                إعادة تعيين
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Results Count */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div className="text-sm text-muted-foreground">
-                        عرض {displayTransactions.length} من أصل {totalCount} معاملة
-                        {(searchTerm || quickDateFilter !== "all" || dateRange.from) && (
-                            <span className="text-blue-600 mr-2">
-                                {getActiveFilterText() && ` - ${getActiveFilterText()}`}
-                                {searchTerm && ` - بحث: "${searchTerm}"`}
+                        {/* شريط التقدم للإظهار المرئي */}
+                        <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-amber-500 to-purple-900 rounded-full transition-all duration-500"
+                                    style={{
+                                        width: `${(totalCount / Math.max(totalCount, 1)) * 100}%`
+                                    }}
+                                ></div>
+                            </div>
+                            <span className="text-xs text-gray-500 font-medium">
+                                {Math.round((endItem / Math.max(totalCount, 1)) * 100)}%
                             </span>
-                        )}
+                        </div>
                     </div>
                 </div>
             </CardHeader>
@@ -1116,6 +1318,17 @@ const Transactions = () => {
                                                     )}
                                                 </div>
                                             </TableHead>
+                                             <TableHead
+                                                className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                                                onClick={() => handleSort("createdAt")}
+                                            >
+                                                <div className="flex items-center gap-1">
+                                                    التاريخ
+                                                    {sortBy === "createdAt" && (
+                                                        <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                                    )}
+                                                </div>
+                                            </TableHead>
                                             <TableHead
                                                 className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
                                                 onClick={() => handleSort("course")}
@@ -1138,19 +1351,9 @@ const Transactions = () => {
                                                     )}
                                                 </div>
                                             </TableHead>
-                                            <TableHead className="whitespace-nowrap">الإيصال</TableHead>
+                                            {/* <TableHead className="whitespace-nowrap">الإيصال</TableHead> */}
                                             <TableHead className="whitespace-nowrap">الكوبون</TableHead>
-                                            <TableHead
-                                                className="cursor-pointer hover:bg-gray-100 whitespace-nowrap"
-                                                onClick={() => handleSort("createdAt")}
-                                            >
-                                                <div className="flex items-center gap-1">
-                                                    التاريخ
-                                                    {sortBy === "createdAt" && (
-                                                        <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                                                    )}
-                                                </div>
-                                            </TableHead>
+                                           
                                             <TableHead className="text-right whitespace-nowrap">الإجراءات</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -1172,6 +1375,9 @@ const Transactions = () => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="whitespace-nowrap">
+                                                    {formatDate(item.createdAt)}
+                                                </TableCell>
+                                                <TableCell className="whitespace-nowrap">
                                                     <div className="flex items-center gap-2">
                                                         <BookOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                                         <div className="min-w-0">
@@ -1187,7 +1393,7 @@ const Transactions = () => {
                                                         {formatAmount(item.amountPaid)}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="whitespace-nowrap">
+                                                {/* <TableCell className="whitespace-nowrap">
                                                     {item.receiptImageUrl ? (
                                                         <Button
                                                             size="sm"
@@ -1202,19 +1408,17 @@ const Transactions = () => {
                                                     ) : (
                                                         <span className="text-gray-500">لا يوجد</span>
                                                     )}
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell className="whitespace-nowrap">
                                                     {item.coupon ? (
                                                         <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
                                                             {item.coupon.code} ({item.coupon.discount}{item.coupon.isPercent ? '%' : 'ل.س'})
                                                         </Badge>
                                                     ) : (
-                                                        <span className="text-gray-500">-</span>
+                                                        <span className="text-gray-500">لا يوجد كوبون مطبق</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="whitespace-nowrap">
-                                                    {formatDate(item.createdAt)}
-                                                </TableCell>
+                                                
                                                 <TableCell className="text-right space-x-2 whitespace-nowrap">
                                                     <Button
                                                         size="icon"
@@ -1234,6 +1438,15 @@ const Transactions = () => {
                                                     >
                                                         <FileText className="w-4 h-4" />
                                                     </Button>
+                                                    <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleViewReceipt(item.receiptImageUrl)}
+                                                            className="w-full sm:w-auto"
+                                                            title="عرض الإيصال"
+                                                        >
+                                                            <Image className="w-4 h-4 ml-2" />
+                                                        </Button>
                                                 </TableCell>
                                             </TableRow>
                                         )) : (
