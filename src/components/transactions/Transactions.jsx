@@ -1773,12 +1773,12 @@ const Transactions = () => {
                                                             {selectedTransaction.accessCode?.code || "غير محدد"}
                                                         </Badge>
                                                     </div>
-                                                    <div className="flex justify-between items-center">
+                                                    {/* <div className="flex justify-between items-center">
                                                         <span className="text-sm text-gray-600">حالة الكود:</span>
                                                         <Badge variant="default" className="bg-green-600">
                                                             🟢 نشط
                                                         </Badge>
-                                                    </div>
+                                                    </div> */}
                                                     {/* <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">تاريخ الإنشاء:</span>
                     <span className="font-medium text-gray-900 text-sm">

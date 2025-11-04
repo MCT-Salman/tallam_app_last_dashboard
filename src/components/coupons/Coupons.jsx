@@ -219,6 +219,7 @@ const Coupons = () => {
       setUsersLoading(false);
     }
   };
+  
 
   // 🔄 جلب الكوبونات
   const fetchCoupons = async () => {
@@ -1422,15 +1423,8 @@ const Coupons = () => {
                         <SelectTrigger>
                           <SelectValue placeholder="اختر المستخدم" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <div className="p-2">
-                            <Input
-                              placeholder="ابحث عن مستخدم..."
-                              value={userSearch}
-                              onChange={(e) => setUserSearch(e.target.value)}
-                              className="mb-2"
-                            />
-                          </div>
+                        <SelectContent searchable>
+                          
                           {filteredUsersForSelect.map((user) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               <div className="flex items-center justify-between w-full">
