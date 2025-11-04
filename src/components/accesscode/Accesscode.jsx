@@ -119,6 +119,8 @@ const AccessCode = () => {
 
     const searchInputRef = useRef(null);
 
+    
+
     // 🔄 دوال جلب البيانات الأساسية
     const fetchUsers = async () => {
         try {
@@ -1425,6 +1427,15 @@ const AccessCode = () => {
 
                         {/* العمود الثاني - معلومات الدورة */}
                         <div className="space-y-6">
+                            {/* الاختصاص */}
+<div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+    <Label className="font-semibold text-gray-700 mb-2 block">الاختصاص</Label>
+    <p className="text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
+        {item.courseLevel?.course?.specialization?.name || 
+         item.courseLevel?.course?.specialization?.title || 
+         "غير محدد"}
+    </p>
+</div>
                             {/* المادة */}
                             <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                                 <Label className="font-semibold text-gray-700 mb-2 block">المادة</Label>
@@ -1443,7 +1454,7 @@ const AccessCode = () => {
 
                             {/* المدرب */}
                             <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                <Label className="font-semibold text-gray-700 mb-2 block">المدرب</Label>
+                                <Label className="font-semibold text-gray-700 mb-2 block">المدرس</Label>
                                 <div className="flex items-center gap-2 text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
                                     <User className="w-4 h-4 text-gray-500" />
                                     {item.courseLevel?.instructor?.name || "غير محدد"}
@@ -1731,7 +1742,8 @@ const AccessCode = () => {
                                 <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                             </div>
                             <Input
-                                ref={searchInputRef}
+                                // ref={searchInputRef}
+                                defaultValue={searchTerm}
                                 placeholder="بحث ..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -1739,6 +1751,7 @@ const AccessCode = () => {
                                      border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                                      group-hover:border-gray-400 bg-white/80"
                             />
+
                         </div>
 
                         {/* Status Filter - مع أيقونة */}
@@ -2137,6 +2150,30 @@ const AccessCode = () => {
         }
     }, [form.couponId, form.courseLevelId, editDialog.isOpen]);
 
+// 🔄 التحقق التلقائي من الكوبونات عند اختيار المستوى والمستخدم (للنموذج الرئيسي)
+useEffect(() => {
+    if (selectedLevel && form.userId && isDialogOpen) {
+        console.log("🔄 تحقق تلقائي من الكوبونات في النموذج الرئيسي:", form.userId, selectedLevel);
+        const timer = setTimeout(() => {
+            checkAvailableCoupons();
+        }, 800); // زيادة الوقت قليلاً لضمان اكتمال التحديثات
+        
+        return () => clearTimeout(timer);
+    }
+}, [selectedLevel, form.userId, isDialogOpen]);
+
+// 🔄 التحقق التلقائي من الكوبونات في نموذج التعديل
+useEffect(() => {
+    if (editDialog.isOpen && selectedLevel && form.userId) {
+        console.log("🔄 تحقق تلقائي من الكوبونات في التعديل:", form.userId, selectedLevel);
+        const timer = setTimeout(() => {
+            checkAvailableCouponsEdit();
+        }, 800);
+        
+        return () => clearTimeout(timer);
+    }
+}, [selectedLevel, form.userId, editDialog.isOpen]);
+
     return (
         <Card>
             <CardHeader className="flex flex-col gap-4">
@@ -2416,7 +2453,7 @@ const AccessCode = () => {
                                 {/* قسم التحقق من الكوبونات */}
                                 {form.userId && selectedLevel && (
                                     <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                        <div className="flex items-center justify-between">
+                                        {/* <div className="flex items-center justify-between">
                                             <Label className="font-medium text-purple-800">التحقق من الكوبونات المتاحة</Label>
                                             <div className="flex items-center gap-2">
                                                 <Switch
@@ -2426,9 +2463,9 @@ const AccessCode = () => {
                                                 />
                                                 <span className="text-sm text-purple-700">استخدام كوبون</span>
                                             </div>
-                                        </div>
+                                        </div> */}
 
-                                        <div className="flex gap-2">
+                                        {/* <div className="flex gap-2">
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -2448,7 +2485,7 @@ const AccessCode = () => {
                                                     </>
                                                 )}
                                             </Button>
-                                        </div>
+                                        </div> */}
 
                                         {availableCoupons.length > 0 && (
                                             <div className="mt-2">
@@ -2701,7 +2738,13 @@ const AccessCode = () => {
                                                 )}
                                             </div>
                                         </TableHead>
-                                        <TableHead
+                                        <TableHead className="table-header">
+                                            <div className="space-y-1">
+                                                <div>معلومات الدورة</div>
+                                                <div className="text-xs text-muted-foreground font-normal">(اختصاص - مادة - مدرس - مستوى)</div>
+                                            </div>
+                                        </TableHead>
+                                        {/* <TableHead
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("course")}
                                         >
@@ -2722,7 +2765,7 @@ const AccessCode = () => {
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}
                                             </div>
-                                        </TableHead>
+                                        </TableHead> */}
                                         <TableHead className="table-header">المدة</TableHead>
                                         <TableHead className="table-header">
                                             <div className="space-y-1">
@@ -2783,11 +2826,25 @@ const AccessCode = () => {
                                                         {item.user?.name || "غير محدد"}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="table-cell">
+                                                {/* <TableCell className="table-cell">
                                                     {item.courseLevel?.course?.title || "غير محدد"}
                                                 </TableCell>
                                                 <TableCell className="table-cell">
                                                     {item.courseLevel?.name || "غير محدد"}
+                                                </TableCell> */}
+                                                <TableCell className="table-cell">
+                                                    <div className="space-y-1">
+                                                        <div className="font-medium">
+                                                            {item.courseLevel?.course?.specialization?.name ||
+                                                                item.courseLevel?.course?.specialization?.title ||
+                                                                "غير محدد"}
+                                                        </div>
+                                                        <div className="text-sm text-muted-foreground">
+                                                            <div> {item.courseLevel?.course?.title || "غير محدد"}</div>
+                                                            <div>{item.courseLevel?.instructor?.name || "غير محدد"}</div>
+                                                            <div>{item.courseLevel?.name || "غير محدد"}</div>
+                                                        </div>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="table-cell">
                                                     {item.validityInMonths ? `${item.validityInMonths} شهر` : "غير محدد"}
