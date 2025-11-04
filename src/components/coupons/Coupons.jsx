@@ -1485,7 +1485,7 @@ const Coupons = () => {
             </div>
 
             {/* شبكة الفلاتر */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Search - مع تأثيرات تفاعلية */}
               <div className="relative group md:col-span-1">
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
@@ -1640,7 +1640,7 @@ const Coupons = () => {
               </div>
 
               {/* زر الإجراءات السريعة */}
-              <div className="flex items-end md:col-span-1">
+              {/* <div className="flex items-end md:col-span-1">
                 <Button
                   variant="outline"
                   className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
@@ -1649,7 +1649,7 @@ const Coupons = () => {
                   <RefreshCw className="h-4 w-4 ml-2" />
                   إعادة تعيين الكل
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
 

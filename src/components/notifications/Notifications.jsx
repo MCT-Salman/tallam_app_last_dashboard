@@ -873,7 +873,7 @@ const Notifications = () => {
           <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
         </div>
         <Input
-          placeholder="بحث في العناوين أو المحتوى..."
+          placeholder="بحث ..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pr-10 transition-all duration-200 
@@ -976,7 +976,7 @@ const Notifications = () => {
       </div>
 
       {/* زر الإجراءات السريعة */}
-      <div className="flex items-end md:col-span-4">
+      {/* <div className="flex items-end md:col-span-4">
         <Button
           variant="outline"
           className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
@@ -985,7 +985,7 @@ const Notifications = () => {
           <RefreshCw className="h-4 w-4 ml-2" />
           إعادة تعيين الكل
         </Button>
-      </div>
+      </div> */}
     </div>
   </div>
 

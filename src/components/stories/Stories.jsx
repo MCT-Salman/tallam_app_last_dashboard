@@ -1048,7 +1048,7 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                             </div>
 
                             {/* زر الإجراءات السريعة */}
-                            <div className="flex items-end md:col-span-4">
+                            {/* <div className="flex items-end md:col-span-4">
                                 <Button
                                     variant="outline"
                                     className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
@@ -1057,7 +1057,7 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                     <RefreshCw className="h-4 w-4 ml-2" />
                                     إعادة تعيين الكل
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 

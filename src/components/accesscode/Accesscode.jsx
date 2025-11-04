@@ -119,7 +119,7 @@ const AccessCode = () => {
 
     const searchInputRef = useRef(null);
 
-    
+
 
     // 🔄 دوال جلب البيانات الأساسية
     const fetchUsers = async () => {
@@ -1428,14 +1428,14 @@ const AccessCode = () => {
                         {/* العمود الثاني - معلومات الدورة */}
                         <div className="space-y-6">
                             {/* الاختصاص */}
-<div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-    <Label className="font-semibold text-gray-700 mb-2 block">الاختصاص</Label>
-    <p className="text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
-        {item.courseLevel?.course?.specialization?.name || 
-         item.courseLevel?.course?.specialization?.title || 
-         "غير محدد"}
-    </p>
-</div>
+                            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <Label className="font-semibold text-gray-700 mb-2 block">الاختصاص</Label>
+                                <p className="text-lg font-medium text-gray-800 bg-gray-50 px-3 py-2 rounded-lg">
+                                    {item.courseLevel?.course?.specialization?.name ||
+                                        item.courseLevel?.course?.specialization?.title ||
+                                        "غير محدد"}
+                                </p>
+                            </div>
                             {/* المادة */}
                             <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                                 <Label className="font-semibold text-gray-700 mb-2 block">المادة</Label>
@@ -1814,7 +1814,7 @@ const AccessCode = () => {
                                     </SelectItem>
                                     {users.map((user) => (
                                         <SelectItem key={user.id} value={user.id.toString()} className="flex items-center gap-2">
-                                            <User className="h-4 w-4 text-gray-500" />
+                                            {/* <User className="h-4 w-4 text-gray-500" /> */}
                                             {user.name}
                                         </SelectItem>
                                     ))}
@@ -1923,7 +1923,7 @@ const AccessCode = () => {
                         </div>
 
                         {/* زر الإجراءات */}
-                        <div className="flex items-end">
+                        {/* <div className="flex items-end">
                             {hasActiveFilters && (
                                 <Button
                                     variant="outline"
@@ -1934,7 +1934,7 @@ const AccessCode = () => {
                                     إعادة تعيين الفلترة
                                 </Button>
                             )}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -2150,29 +2150,29 @@ const AccessCode = () => {
         }
     }, [form.couponId, form.courseLevelId, editDialog.isOpen]);
 
-// 🔄 التحقق التلقائي من الكوبونات عند اختيار المستوى والمستخدم (للنموذج الرئيسي)
-useEffect(() => {
-    if (selectedLevel && form.userId && isDialogOpen) {
-        console.log("🔄 تحقق تلقائي من الكوبونات في النموذج الرئيسي:", form.userId, selectedLevel);
-        const timer = setTimeout(() => {
-            checkAvailableCoupons();
-        }, 800); // زيادة الوقت قليلاً لضمان اكتمال التحديثات
-        
-        return () => clearTimeout(timer);
-    }
-}, [selectedLevel, form.userId, isDialogOpen]);
+    // 🔄 التحقق التلقائي من الكوبونات عند اختيار المستوى والمستخدم (للنموذج الرئيسي)
+    useEffect(() => {
+        if (selectedLevel && form.userId && isDialogOpen) {
+            console.log("🔄 تحقق تلقائي من الكوبونات في النموذج الرئيسي:", form.userId, selectedLevel);
+            const timer = setTimeout(() => {
+                checkAvailableCoupons();
+            }, 800); // زيادة الوقت قليلاً لضمان اكتمال التحديثات
 
-// 🔄 التحقق التلقائي من الكوبونات في نموذج التعديل
-useEffect(() => {
-    if (editDialog.isOpen && selectedLevel && form.userId) {
-        console.log("🔄 تحقق تلقائي من الكوبونات في التعديل:", form.userId, selectedLevel);
-        const timer = setTimeout(() => {
-            checkAvailableCouponsEdit();
-        }, 800);
-        
-        return () => clearTimeout(timer);
-    }
-}, [selectedLevel, form.userId, editDialog.isOpen]);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedLevel, form.userId, isDialogOpen]);
+
+    // 🔄 التحقق التلقائي من الكوبونات في نموذج التعديل
+    useEffect(() => {
+        if (editDialog.isOpen && selectedLevel && form.userId) {
+            console.log("🔄 تحقق تلقائي من الكوبونات في التعديل:", form.userId, selectedLevel);
+            const timer = setTimeout(() => {
+                checkAvailableCouponsEdit();
+            }, 800);
+
+            return () => clearTimeout(timer);
+        }
+    }, [selectedLevel, form.userId, editDialog.isOpen]);
 
     return (
         <Card>
@@ -2298,14 +2298,14 @@ useEffect(() => {
                                                 <Badge variant="outline" className="bg-white">
                                                     {selectedLevel ? getLevelName(selectedLevel) : "---"}
                                                 </Badge>
-                                                <Button
+                                                {/* <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={resetAllSelections}
                                                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                 >
                                                     إعادة تعيين الكل
-                                                </Button>
+                                                </Button> */}
                                             </div>
                                         </div>
                                     </div>

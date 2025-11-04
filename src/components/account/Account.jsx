@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Edit, Trash2, Play, Filter, UserCheck, Users, UserX, List, RefreshCw, BarChart3, Download,
-     X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock,
-      Globe, Coins, LogOut } from "lucide-react"
+import {
+    Plus, Edit, Trash2, Play, Filter, UserCheck, Users, UserX, List, RefreshCw, BarChart3, Download,
+    X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock,
+    Globe, Coins, LogOut
+} from "lucide-react"
 import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { BASE_URL } from "@/api/api"
@@ -590,7 +592,7 @@ const Account = () => {
                         </div>
 
                         {/* شبكة الفلاتر */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                             {/* Search - مع تأثيرات تفاعلية */}
                             <div className="relative group">
                                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
@@ -694,7 +696,7 @@ const Account = () => {
                             </div>
 
                             {/* زر الإجراءات السريعة */}
-                            <div className="flex items-end">
+                            {/* <div className="flex items-end">
                                 <Button
                                     variant="outline"
                                     className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
@@ -703,7 +705,7 @@ const Account = () => {
                                     <RefreshCw className="h-4 w-4 ml-2" />
                                     إعادة تعيين
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
