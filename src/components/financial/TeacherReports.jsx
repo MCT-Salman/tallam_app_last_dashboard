@@ -381,43 +381,67 @@ const TeacherReports = () => {
                                 </CardContent>
                             </Card>
 
-                            {/* All Students Summary */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">إجمالي الطلاب</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="text-right">اسم الطالب</TableHead>
-                                                <TableHead className="text-right">الهاتف</TableHead>
-                                                <TableHead className="text-right">إجمالي المبالغ المدفوعة</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {reportData.allStudents.map((student) => (
-                                                <TableRow key={student.id}>
-                                                    <TableCell className="text-right">{student.name}</TableCell>
-                                                    <TableCell className="text-right" dir="ltr">{student.phone}</TableCell>
-                                                    <TableCell className="text-right font-medium">
-                                                        {student.totalPaid?.toLocaleString()} ل.س
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                            {/* Total Row */}
-                                            <TableRow className="bg-gray-50">
-                                                <TableCell colSpan={2} className="text-right font-bold">
-                                                    الإجمالي:
-                                                </TableCell>
-                                                <TableCell className="text-right font-bold text-green-600">
-                                                    {totalAmount.toLocaleString()} ل.س
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </CardContent>
-                            </Card>
+                            {/* All Access Codes Details */}
+<Card>
+    <CardHeader>
+        <CardTitle className="text-lg">تفاصيل جميع الأكواد</CardTitle>
+    </CardHeader>
+    <CardContent>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="text-right">الكود</TableHead>
+                    <TableHead className="text-right">اسم الطالب</TableHead>
+                    <TableHead className="text-right">الهاتف</TableHead>
+                    <TableHead className="text-right">المادة</TableHead>
+                    <TableHead className="text-right">المستوى</TableHead>
+                    <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-right">المبلغ</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {reportData.levels.flatMap(levelData => 
+                    levelData.accessCodesCount.map((accessCode, index) => (
+                        <TableRow key={`${levelData.courseLevel.id}-${accessCode.code || index}`}>
+                            <TableCell className="text-right font-mono font-medium">
+                                {accessCode.code}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                {accessCode.user?.name || "غير محدد"}
+                            </TableCell>
+                            <TableCell className="text-right" dir="ltr">
+                                {accessCode.user?.phone || "غير محدد"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                {levelData.course.title}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                {levelData.courseLevel.name}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                {accessCode.issuedAt ? new Date(accessCode.issuedAt).toLocaleDateString('ar-EG') : "غير محدد"}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                                {accessCode.transaction?.[0]?.amountPaid ? 
+                                    parseInt(accessCode.transaction[0].amountPaid).toLocaleString() : 0
+                                } ل.س
+                            </TableCell>
+                        </TableRow>
+                    ))
+                )}
+                {/* صف المجموع */}
+                <TableRow className="bg-gray-50 font-bold">
+                    <TableCell colSpan={6} className="text-right">
+                        الإجمالي الكلي:
+                    </TableCell>
+                    <TableCell className="text-right text-green-600">
+                        {totalAmount.toLocaleString()} ل.س
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
+    </CardContent>
+</Card>
                         </div>
                     )}
 
