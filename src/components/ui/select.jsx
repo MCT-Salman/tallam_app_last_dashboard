@@ -253,7 +253,7 @@ const SelectTrigger = React.forwardRef(
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "group flex h-12 w-full items-center justify-between rounded-xl border-2 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium transition-all duration-300 ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+        "group flex h-12 w-full items-center justify-between rounded-xl border-2 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium transition-all duration-300 ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
         "shadow-lg hover:shadow-xl focus:shadow-2xl",
         "border-gray-200 hover:border-purple-300 focus:border-purple-500",
         "hover:scale-[1.02] focus:scale-[1.02]",
@@ -425,7 +425,7 @@ const SelectContent = React.forwardRef(
                   value={internalSearch}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className={cn(
-                    "flex w-full rounded-lg border-2 bg-white/80 backdrop-blur-sm px-10 py-2.5 text-sm font-medium ring-offset-background placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all duration-300",
+                    "flex w-full rounded-lg border-2 bg-white/80 backdrop-blur-sm px-10 py-2.5 text-sm font-medium ring-offset-background placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-300",
                     "border-purple-200 focus:border-purple-900 focus:bg-white",
                     "shadow-inner focus:shadow-lg"
                   )}
