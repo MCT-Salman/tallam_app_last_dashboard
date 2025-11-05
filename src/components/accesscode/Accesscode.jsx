@@ -2811,7 +2811,6 @@ const AccessCode = () => {
                                 )}
 
                                 {/* معلومات السعر */}
-                               // في قسم عرض معلومات السعر، أضف عرض نوع العملة:
                                 {(form.originalPrice || form.couponId) && (
                                     <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                         <div className="flex items-center justify-between">
@@ -3000,7 +2999,7 @@ const AccessCode = () => {
 
                                 <Button
                                     onClick={handleGenerateCode}
-                                    disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid || (form.useCoupon && !form.couponId)}
+                                    disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid }
                                 >
                                     {priceLoading ? "جاري حساب السعر..." : "توليد الكود"}
                                 </Button>

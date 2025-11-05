@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Plus, Edit, Copy, BadgeCheck, CheckCircle, ArrowDown, LayoutGrid, List, ArrowUp, X, XCircle, DollarSign, RefreshCw, Ticket, Book, Tag, Maximize, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter, User, Star } from "lucide-react"
+import { Plus, Edit, Copy, BadgeCheck, CheckCircle, ArrowDown, LayoutGrid, List, ArrowUp, X, XCircle, DollarSign, RefreshCw, Ticket, Book, Tag, Maximize, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter, User, Star, Info } from "lucide-react"
 import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse, getAllUsersHavePoints } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -53,7 +53,7 @@ const Coupons = () => {
     instructorId: "",
     courseLevelId: "",
     userId: "",
-    reason: "",
+    reason: "لا يوجد",
     couponType: "courseLevel" // "courseLevel", "user", "both", "none"
   })
 

@@ -519,6 +519,11 @@ const Specialization = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="spec-image">الصورة *</Label>
+                                    <div className="flex-1">
+                                        <p className="text-xl font-mono font-bold bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg border border-blue-100 text-blue-700 text-center">
+                                            أبعاد الصورة  177w - 177h
+                                        </p>
+                                    </div>
                                     <Input id="spec-image" type="file" accept="image/*" onChange={onImageChange} />
                                     {imagePreview && (
                                         <div className="mt-2">
