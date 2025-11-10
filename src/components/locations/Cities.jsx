@@ -443,7 +443,7 @@ const Cities = () => {
       <AlertDialog open={deleteDialog.isOpen} onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}>
         <AlertDialogContent className="text-right" dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من حذف "{deleteDialog.name}"؟</AlertDialogTitle>
+            <AlertDialogTitle className="text-right">هل أنت متأكد من حذف "{deleteDialog.name}"؟</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-row-reverse gap-2">
             <AlertDialogAction className="bg-red-500 hover:bg-red-600" onClick={() => handleDelete(deleteDialog.id)}>

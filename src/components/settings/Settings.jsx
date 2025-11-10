@@ -10,8 +10,8 @@
 // import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 // import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 // import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
-// import { Save, Phone, MessageCircle, Settings, Plus, Edit, Trash2, ToggleLeft, ToggleRight, MoreVertical } from "lucide-react"
-// import { getContactSettings, getAllSettings, updateSetting, addSetting, updateAllSettings } from "@/api/api"
+// import { Save, Phone, MessageCircle, Settings, Plus, Edit, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
+// import { getAllSettings, updateSetting, addSetting, updateAllSettings } from "@/api/api"
 // import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 // const SettingsComp = () => {
@@ -28,12 +28,9 @@
 //   // حالة جميع الإعدادات
 //   const [allSettings, setAllSettings] = useState([])
 //   const [newSetting, setNewSetting] = useState({ key: "", value: "" })
-//   const [editSetting, setEditSetting] = useState({ key: "", value: "" })
 
 //   // حالات الدايلوج
 //   const [addDialogOpen, setAddDialogOpen] = useState(false)
-//   const [editDialogOpen, setEditDialogOpen] = useState(false)
-//   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, settingId: null, settingKey: "" })
 
 //   // قاموس لترجمة المفاتيح إلى العربية
 //   const keyTranslations = {
@@ -45,38 +42,13 @@
 //     'maintenanceMode': 'وضع الصيانة',
 //     'registrationOpen': 'فتح التسجيل',
 //     'notificationsEnabled': 'تفعيل الإشعارات',
-//     'darkMode': 'الوضع الليلي'
-//   }
-
-//   // تحديد إذا كان الإعداد من نوع التواصل
-//   const isContactSetting = (key) => {
-//     return key === 'whatsapp' || key === 'telegram';
+//     'darkMode': 'الوضع الليلي',
+//     'allowdb': 'سماح قاعدة البيانات'
 //   }
 
 //   // الحصول على الاسم المعرب للمفتاح
 //   const getTranslatedKey = (key) => {
 //     return keyTranslations[key] || key;
-//   }
-
-//   // جلب إعدادات التواصل
-//   const fetchContactSettings = async () => {
-//     setLoading(true)
-//     try {
-//       const res = await getContactSettings()
-//       console.log("📞 Contact settings response:", res.data)
-      
-//       if (res.data?.success) {
-//         setContactSettings({
-//           whatsapp: res.data.data?.whatsapp || "",
-//           telegram: res.data.data?.telegram || ""
-//         })
-//       }
-//     } catch (err) {
-//       console.error("❌ Error fetching contact settings:", err)
-//       showErrorToast(err?.response?.data?.message || "فشل تحميل إعدادات التواصل")
-//     } finally {
-//       setLoading(false)
-//     }
 //   }
 
 //   // جلب جميع الإعدادات
@@ -87,7 +59,17 @@
 //       console.log("⚙️ All settings response:", res.data)
       
 //       if (res.data?.success) {
-//         setAllSettings(res.data.data || [])
+//         const settings = res.data.data || []
+//         setAllSettings(settings)
+        
+//         // استخراج إعدادات التواصل من جميع الإعدادات
+//         const whatsappSetting = settings.find(s => s.key === 'whatsapp')
+//         const telegramSetting = settings.find(s => s.key === 'telegram')
+        
+//         setContactSettings({
+//           whatsapp: whatsappSetting?.value || "",
+//           telegram: telegramSetting?.value || ""
+//         })
 //       }
 //     } catch (err) {
 //       console.error("❌ Error fetching all settings:", err)
@@ -105,11 +87,13 @@
 //         whatsapp: contactSettings.whatsapp,
 //         telegram: contactSettings.telegram
 //       }
+      
 //       const res = await updateAllSettings(data)
 //       console.log("💾 Save contact settings response:", res.data)
       
 //       if (res.data?.success) {
 //         showSuccessToast("تم حفظ إعدادات التواصل بنجاح")
+//         fetchAllSettings() // تحديث البيانات
 //       }
 //     } catch (err) {
 //       console.error("❌ Error saving contact settings:", err)
@@ -122,40 +106,17 @@
 //   // تفعيل/تعطيل إعداد
 //   const handleToggleSetting = async (key, currentValue) => {
 //     try {
-//       const newValue = currentValue === "true" ? "false" : "true"
+//       const newValue = !(currentValue === "true" || currentValue === true)
 //       const res = await updateSetting(key, newValue)
 //       console.log("🔄 Toggle setting response:", res.data)
       
 //       if (res.data?.success) {
-//         showSuccessToast(`تم ${newValue === "true" ? "تفعيل" : "تعطيل"} ${getTranslatedKey(key)} بنجاح`)
+//         showSuccessToast(`تم ${newValue ? "تفعيل" : "تعطيل"} ${getTranslatedKey(key)} بنجاح`)
 //         fetchAllSettings()
 //       }
 //     } catch (err) {
 //       console.error("❌ Error toggling setting:", err)
 //       showErrorToast(err?.response?.data?.message || "فشل تحديث الإعداد")
-//     }
-//   }
-
-//   // تعديل إعداد نصي (مثل الواتساب والتليجرام)
-//   const handleEditSetting = async () => {
-//     if (!editSetting.key || !editSetting.value) {
-//       showErrorToast("يرجى ملء جميع الحقول")
-//       return
-//     }
-
-//     try {
-//       const res = await updateSetting(editSetting.key, editSetting.value)
-//       console.log("✏️ Edit setting response:", res.data)
-      
-//       if (res.data?.success) {
-//         showSuccessToast(`تم تعديل ${getTranslatedKey(editSetting.key)} بنجاح`)
-//         setEditDialogOpen(false)
-//         setEditSetting({ key: "", value: "" })
-//         fetchAllSettings()
-//       }
-//     } catch (err) {
-//       console.error("❌ Error editing setting:", err)
-//       showErrorToast(err?.response?.data?.message || "فشل تعديل الإعداد")
 //     }
 //   }
 
@@ -167,7 +128,14 @@
 //     }
 
 //     try {
-//       const res = await addSetting(newSetting)
+//       // تحويل القيمة إلى النوع المناسب
+//       const data = {
+//         key: newSetting.key,
+//         value: newSetting.value === "true" ? true : 
+//                newSetting.value === "false" ? false : newSetting.value
+//       }
+
+//       const res = await addSetting(data)
 //       console.log("➕ Add setting response:", res.data)
       
 //       if (res.data?.success) {
@@ -179,43 +147,6 @@
 //     } catch (err) {
 //       console.error("❌ Error adding setting:", err)
 //       showErrorToast(err?.response?.data?.message || "فشل إضافة الإعداد")
-//     }
-//   }
-
-//   // حفظ جميع الإعدادات
-//   const handleSaveAllSettings = async () => {
-//     setSaving(true)
-//     try {
-//       const data = {}
-//       allSettings.forEach(setting => {
-//         data[setting.key] = setting.value
-//       })
-      
-//       const res = await updateAllSettings(data)
-//       console.log("💾 Save all settings response:", res.data)
-      
-//       if (res.data?.success) {
-//         showSuccessToast("تم حفظ جميع الإعدادات بنجاح")
-//       }
-//     } catch (err) {
-//       console.error("❌ Error saving all settings:", err)
-//       showErrorToast(err?.response?.data?.message || "فشل حفظ الإعدادات")
-//     } finally {
-//       setSaving(false)
-//     }
-//   }
-
-//   // حذف إعداد
-//   const handleDeleteSetting = async (settingId) => {
-//     try {
-//       // هنا تحتاج لإضافة دالة deleteSetting في الـ API
-//       // await deleteSetting(settingId)
-//       showSuccessToast("تم حذف الإعداد بنجاح")
-//       setDeleteDialog({ isOpen: false, settingId: null, settingKey: "" })
-//       fetchAllSettings()
-//     } catch (err) {
-//       console.error("❌ Error deleting setting:", err)
-//       showErrorToast(err?.response?.data?.message || "فشل حذف الإعداد")
 //     }
 //   }
 
@@ -234,121 +165,30 @@
 //     }))
 //   }
 
-//   const handleEditSettingChange = (field, value) => {
-//     setEditSetting(prev => ({
-//       ...prev,
-//       [field]: value
-//     }))
+//   // الحصول على قيمة الإعداد للعرض
+//   const getDisplayValue = (setting) => {
+//     const value = setting.value;
+//     if (value === "true" || value === true) return "مفعل";
+//     if (value === "false" || value === false) return "معطل";
+//     return value;
 //   }
 
-//   // فتح دايولوج التعديل
-//   const openEditDialog = (setting) => {
-//     setEditSetting({ key: setting.key, value: setting.value })
-//     setEditDialogOpen(true)
+//   // التحقق من إذا كان الإعداد مفعل
+//   const isSettingEnabled = (setting) => {
+//     const value = setting.value;
+//     return value === "true" || value === true;
 //   }
 
 //   // تحميل البيانات عند تغيير التبويب
 //   useEffect(() => {
-//     if (activeTab === "contact") {
-//       fetchContactSettings()
-//     } else if (activeTab === "general") {
-//       fetchAllSettings()
-//     }
+//     fetchAllSettings()
 //   }, [activeTab])
-
-//   // بطاقة الإعداد للعرض على الجوال
-//   const SettingCard = ({ setting }) => (
-//     <Card className="mb-4">
-//       <CardContent className="p-4">
-//         <div className="space-y-3">
-//           <div className="flex items-start justify-between">
-//             <div className="flex-1">
-//               <h3 className="font-bold text-lg mb-2 text-right">
-//                 {getTranslatedKey(setting.key)}
-//               </h3>
-//               <div className="flex flex-wrap gap-2 justify-end">
-//                 <Badge variant="secondary" className="text-xs">
-//                   {setting.value}
-//                 </Badge>
-//                 <Badge variant="outline" className="text-xs">
-//                   {setting.updatedAt ? new Date(setting.updatedAt).toLocaleDateString('en-US') : '---'}
-//                 </Badge>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* حالة التفعيل - فقط للإعدادات غير التواصلية */}
-//           {!isContactSetting(setting.key) && (
-//             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-//               <span className="text-sm font-medium">الحالة:</span>
-//               <div className="flex items-center gap-2">
-//                 {setting.value === "true" ? (
-//                   <Badge variant="default" className="bg-green-600 text-xs">
-//                     مفعل
-//                   </Badge>
-//                 ) : (
-//                   <Badge variant="secondary" className="text-xs">معطل</Badge>
-//                 )}
-//                 <Switch
-//                   checked={setting.value === "true"}
-//                   onCheckedChange={() => handleToggleSetting(setting.key, setting.value)}
-//                 />
-//               </div>
-//             </div>
-//           )}
-//         </div>
-
-//         <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t">
-//           {isContactSetting(setting.key) ? (
-//             // إعدادات التواصل - زر تعديل فقط
-//             <Button
-//               size="sm"
-//               variant="outline"
-//               onClick={() => openEditDialog(setting)}
-//               className="flex-1"
-//             >
-//               <Edit className="w-4 h-4 ml-1" />
-//               تعديل
-//             </Button>
-//           ) : (
-//             // الإعدادات الأخرى - تفعيل/تعطيل
-//             <Button
-//               size="sm"
-//               variant="outline"
-//               onClick={() => handleToggleSetting(setting.key, setting.value)}
-//               className="flex-1"
-//             >
-//               {setting.value === "true" ? <ToggleLeft className="w-4 h-4 ml-1" /> : <ToggleRight className="w-4 h-4 ml-1" />}
-//               {setting.value === "true" ? "تعطيل" : "تفعيل"}
-//             </Button>
-//           )}
-          
-//           <Button
-//             size="sm"
-//             variant="destructive"
-//             onClick={() => setDeleteDialog({
-//               isOpen: true,
-//               settingId: setting.id,
-//               settingKey: setting.key
-//             })}
-//             className="flex-1"
-//           >
-//             <Trash2 className="w-4 h-4 ml-1" />
-//             حذف
-//           </Button>
-//         </div>
-//       </CardContent>
-//     </Card>
-//   )
 
 //   return (
 //     <div className="space-y-6">
 //       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //         <div className="text-right">
 //           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">الإعدادات</h1>
-//           {/* <p className="text-muted-foreground text-sm sm:text-base">
-//             إدارة إعدادات التطبيق وتخصيص التجربة
-//           </p> */}
 //         </div>
 //       </div>
 
@@ -444,7 +284,7 @@
 //                   <div className="flex flex-col sm:flex-row gap-3 justify-start">
 //                     <Button
 //                       variant="outline"
-//                       onClick={fetchContactSettings}
+//                       onClick={fetchAllSettings}
 //                       disabled={saving}
 //                       className="flex-1 sm:flex-none"
 //                     >
@@ -476,7 +316,7 @@
 //               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
 //                 <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
 //                   <DialogTrigger asChild>
-//                     <Button  className="flex-1 sm:flex-none">
+//                     <Button className="flex-1 sm:flex-none">
 //                       إضافة إعداد
 //                       <Plus className="w-4 h-4 ml-1" />
 //                     </Button>
@@ -516,12 +356,12 @@
 //                 </Dialog>
 
 //                 <Button
-//                   onClick={handleSaveAllSettings}
-//                   disabled={saving}
-//                   className="flex-1 sm:flex-none flex items-center gap-2"
+//                   onClick={fetchAllSettings}
+//                   disabled={loading}
+//                   variant="outline"
+//                   className="flex-1 sm:flex-none"
 //                 >
-//                   {saving ? "جاري الحفظ..." : "حفظ الكل"}
-//                   <Save className="w-4 h-4" />
+//                   {loading ? "جاري التحميل..." : "تحديث"}
 //                 </Button>
 //               </div>
 //             </CardHeader>
@@ -531,170 +371,51 @@
 //                   <div className="animate-spin h-8 w-8 border-b-2 rounded-full border-gray-900"></div>
 //                 </div>
 //               ) : (
-//                 <>
-//                   {/* عرض الجدول للشاشات المتوسطة والكبيرة */}
-//                   <div className="hidden md:block">
-//                     <Table>
-//                       <TableHeader>
-//                         <TableRow>
-//                           <TableHead className="text-right">الإعداد</TableHead>
-//                           <TableHead className="text-right">القيمة</TableHead>
-//                           <TableHead className="text-right">الحالة</TableHead>
-//                           <TableHead className="text-right">آخر تحديث</TableHead>
-//                           <TableHead className="text-right">الإجراءات</TableHead>
-//                         </TableRow>
-//                       </TableHeader>
-//                       <TableBody>
-//                         {allSettings.map((setting) => (
-//                           <TableRow key={setting.id}>
-//                             <TableCell className="font-medium text-right">
-//                               {getTranslatedKey(setting.key)}
-//                             </TableCell>
-//                             <TableCell className="text-right">
-//                               <Badge variant="secondary">
-//                                 {setting.value}
+//                 <div className="space-y-4">
+//                   {allSettings.filter(setting => setting.key !== 'whatsapp' && setting.key !== 'telegram').map((setting) => (
+//                     <Card key={setting.id} className="p-4">
+//                       <div className="flex items-center justify-between">
+//                         <div className="flex-1 text-right">
+//                           <h3 className="font-bold text-lg">
+//                             {getTranslatedKey(setting.key)}
+//                           </h3>
+//                           <p className="text-sm text-muted-foreground">
+//                             القيمة: {getDisplayValue(setting)}
+//                           </p>
+//                           <p className="text-xs text-muted-foreground">
+//                             آخر تحديث: {setting.updatedAt ? new Date(setting.updatedAt).toLocaleDateString('ar-EG') : '---'}
+//                           </p>
+//                         </div>
+//                         <div className="flex items-center gap-3">
+//                           <div className="flex items-center gap-2">
+//                             {isSettingEnabled(setting) ? (
+//                               <Badge variant="default" className="bg-green-600">
+//                                 مفعل
 //                               </Badge>
-//                             </TableCell>
-//                             <TableCell className="text-right">
-//                               {!isContactSetting(setting.key) && (
-//                                 <div className="flex items-center gap-2 justify-end">
-//                                   {setting.value === "true" ? (
-//                                     <Badge variant="default" className="bg-green-600">
-//                                       مفعل
-//                                     </Badge>
-//                                   ) : (
-//                                     <Badge variant="secondary">معطل</Badge>
-//                                   )}
-//                                   <Switch
-//                                     checked={setting.value === "true"}
-//                                     onCheckedChange={() => handleToggleSetting(setting.key, setting.value)}
-//                                   />
-//                                 </div>
-//                               )}
-//                             </TableCell>
-//                             <TableCell className="text-right text-sm">
-//                               {setting.updatedAt ? new Date(setting.updatedAt).toLocaleDateString('en-US') : '---'}
-//                             </TableCell>
-//                             <TableCell className="text-right">
-//                               <div className="flex gap-2 justify-end">
-//                                 {isContactSetting(setting.key) ? (
-//                                   <Button
-//                                     size="sm"
-//                                     variant="outline"
-//                                     onClick={() => openEditDialog(setting)}
-//                                   >
-//                                     <Edit className="w-4 h-4 ml-1" />
-//                                     تعديل
-//                                   </Button>
-//                                 ) : (
-//                                   <Button
-//                                     size="sm"
-//                                     variant="outline"
-//                                     onClick={() => handleToggleSetting(setting.key, setting.value)}
-//                                   >
-//                                     {setting.value === "true" ? <ToggleLeft className="w-4 h-4 ml-1" /> : <ToggleRight className="w-4 h-4 ml-1" />}
-//                                     {setting.value === "true" ? "تعطيل" : "تفعيل"}
-//                                   </Button>
-//                                 )}
-//                                 <Button
-//                                   size="sm"
-//                                   variant="destructive"
-//                                   onClick={() => setDeleteDialog({
-//                                     isOpen: true,
-//                                     settingId: setting.id,
-//                                     settingKey: setting.key
-//                                   })}
-//                                 >
-//                                   <Trash2 className="w-4 h-4 ml-1" />
-//                                   حذف
-//                                 </Button>
-//                               </div>
-//                             </TableCell>
-//                           </TableRow>
-//                         ))}
-//                       </TableBody>
-//                     </Table>
-//                   </div>
-
-//                   {/* عرض البطاقات للشاشات الصغيرة */}
-//                   <div className="block md:hidden space-y-4">
-//                     {allSettings.map((setting) => (
-//                       <SettingCard key={setting.id} setting={setting} />
-//                     ))}
-//                   </div>
-//                 </>
+//                             ) : (
+//                               <Badge variant="secondary">معطل</Badge>
+//                             )}
+//                             <Switch
+//                               checked={isSettingEnabled(setting)}
+//                               onCheckedChange={() => handleToggleSetting(setting.key, setting.value)}
+//                             />
+//                           </div>
+//                         </div>
+//                       </div>
+//                     </Card>
+//                   ))}
+//                 </div>
 //               )}
 
-//               {allSettings.length === 0 && !loading && (
+//               {allSettings.filter(setting => setting.key !== 'whatsapp' && setting.key !== 'telegram').length === 0 && !loading && (
 //                 <div className="text-center py-8 text-muted-foreground">
-//                   لا توجد إعدادات
+//                   لا توجد إعدادات عامة
 //                 </div>
 //               )}
 //             </CardContent>
 //           </Card>
 //         </TabsContent>
 //       </Tabs>
-
-//       {/* دايولوج تعديل الإعداد */}
-//       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-//         <DialogContent className="sm:max-w-md">
-//           <DialogHeader>
-//             <DialogTitle className="text-right">تعديل الإعداد</DialogTitle>
-//           </DialogHeader>
-//           <div className="space-y-4 mt-2 text-right">
-//             <div className="space-y-2">
-//               <Label>الإعداد</Label>
-//               <Input
-//                 value={getTranslatedKey(editSetting.key)}
-//                 disabled
-//                 className="text-right bg-gray-50"
-//               />
-//             </div>
-//             <div className="space-y-2">
-//               <Label>القيمة</Label>
-//               <Input
-//                 value={editSetting.value}
-//                 onChange={(e) => handleEditSettingChange("value", e.target.value)}
-//                 placeholder="أدخل القيمة الجديدة"
-//                 className="text-right"
-//               />
-//             </div>
-//             <Button 
-//               onClick={handleEditSetting}
-//               className="w-full flex items-center gap-2"
-//             >
-//               <Save className="w-4 h-4" />
-//               حفظ التعديل
-//             </Button>
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-
-//       {/* دايولوج حذف الإعداد */}
-//       <AlertDialog
-//         open={deleteDialog.isOpen}
-//         onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
-//       >
-//         <AlertDialogContent className="text-right" dir="rtl">
-//           <AlertDialogHeader>
-//             <AlertDialogTitle className="text-right">هل أنت متأكد من الحذف؟</AlertDialogTitle>
-//             <AlertDialogDescription className="text-right">
-//               سيتم حذف "{getTranslatedKey(deleteDialog.settingKey)}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
-//             </AlertDialogDescription>
-//           </AlertDialogHeader>
-//           <AlertDialogFooter className="flex flex-row-reverse gap-2">
-//             <AlertDialogAction
-//               className="bg-red-500 hover:bg-red-600"
-//               onClick={() => handleDeleteSetting(deleteDialog.settingId)}
-//             >
-//               حذف
-//             </AlertDialogAction>
-//             <AlertDialogCancel onClick={() => setDeleteDialog({ isOpen: false, settingId: null, settingKey: "" })}>
-//               إلغاء
-//             </AlertDialogCancel>
-//           </AlertDialogFooter>
-//         </AlertDialogContent>
-//       </AlertDialog>
 //     </div>
 //   )
 // }
@@ -714,7 +435,7 @@ import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
-import { Save, Phone, MessageCircle, Settings, Plus, Edit, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
+import { Save, Phone, MessageCircle, Settings, Plus, Edit, Trash2, ToggleLeft, ToggleRight, Globe, Mail, Facebook, Instagram, MessageCircleIcon, Smartphone  } from "lucide-react"
 import { getAllSettings, updateSetting, addSetting, updateAllSettings } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -727,6 +448,16 @@ const SettingsComp = () => {
   const [contactSettings, setContactSettings] = useState({
     whatsapp: "",
     telegram: ""
+  })
+
+  // حالة إعدادات السوشال ميديا
+  const [socialSettings, setSocialSettings] = useState({
+    facebook: "",
+    instagram: "",
+    website: "",
+    email: "",
+    whatsappOTP: "",
+
   })
   
   // حالة جميع الإعدادات
@@ -747,7 +478,13 @@ const SettingsComp = () => {
     'registrationOpen': 'فتح التسجيل',
     'notificationsEnabled': 'تفعيل الإشعارات',
     'darkMode': 'الوضع الليلي',
-    'allowdb': 'سماح قاعدة البيانات'
+    'allowdb': 'سماح قاعدة البيانات',
+    'facebook': 'رابط فيسبوك',
+    'instagram': 'رابط انستجرام',
+    'website': 'الموقع الإلكتروني',
+    'email': 'البريد الإلكتروني',
+    'whatsappOTP': 'واتساب OTP',
+    'allowShowCount': 'عرض العداد'
   }
 
   // الحصول على الاسم المعرب للمفتاح
@@ -773,6 +510,21 @@ const SettingsComp = () => {
         setContactSettings({
           whatsapp: whatsappSetting?.value || "",
           telegram: telegramSetting?.value || ""
+        })
+
+        // استخراج إعدادات السوشال ميديا
+        const facebookSetting = settings.find(s => s.key === 'facebook')
+        const instagramSetting = settings.find(s => s.key === 'instagram')
+        const websiteSetting = settings.find(s => s.key === 'website')
+        const emailSetting = settings.find(s => s.key === 'email')
+        const whatsappOTPSetting = settings.find(s => s.key === 'whatsappOTP')
+        
+        setSocialSettings({
+          facebook: facebookSetting?.value || "",
+          instagram: instagramSetting?.value || "",
+          website: websiteSetting?.value || "",
+          email: emailSetting?.value || "",
+          whatsappOTP: whatsappOTPSetting?.value || ""
         })
       }
     } catch (err) {
@@ -804,6 +556,49 @@ const SettingsComp = () => {
       showErrorToast(err?.response?.data?.message || "فشل حفظ الإعدادات")
     } finally {
       setSaving(false)
+    }
+  }
+
+  // حفظ إعدادات السوشال ميديا
+  const handleSaveSocialSettings = async () => {
+    setSaving(true)
+    try {
+      const data = {
+        facebook: socialSettings.facebook,
+        instagram: socialSettings.instagram,
+        website: socialSettings.website,
+        email: socialSettings.email,
+        whatsappOTP: whatsappOTPSetting.whatsappOTP
+      }
+      
+      const res = await updateAllSettings(data)
+      console.log("💾 Save social settings response:", res.data)
+      
+      if (res.data?.success) {
+        showSuccessToast("تم حفظ إعدادات السوشال ميديا بنجاح")
+        fetchAllSettings() // تحديث البيانات
+      }
+    } catch (err) {
+      console.error("❌ Error saving social settings:", err)
+      showErrorToast(err?.response?.data?.message || "فشل حفظ الإعدادات")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // تحديث إعداد سوشال ميديا فردي
+  const handleUpdateSocialSetting = async (key, value) => {
+    try {
+      const res = await updateSetting(key, value)
+      console.log("🔄 Update social setting response:", res.data)
+      
+      if (res.data?.success) {
+        showSuccessToast(`تم تحديث ${getTranslatedKey(key)} بنجاح`)
+        fetchAllSettings()
+      }
+    } catch (err) {
+      console.error("❌ Error updating social setting:", err)
+      showErrorToast(err?.response?.data?.message || "فشل تحديث الإعداد")
     }
   }
 
@@ -862,6 +657,13 @@ const SettingsComp = () => {
     }))
   }
 
+  const handleSocialChange = (field, value) => {
+    setSocialSettings(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
   const handleNewSettingChange = (field, value) => {
     setNewSetting(prev => ({
       ...prev,
@@ -897,10 +699,14 @@ const SettingsComp = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" dir="rtl">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="contact" className="flex items-center gap-2 text-sm sm:text-base">
             <MessageCircle className="w-4 h-4" />
             إعدادات التواصل
+          </TabsTrigger>
+          <TabsTrigger value="social" className="flex items-center gap-2 text-sm sm:text-base">
+            <Globe className="w-4 h-4" />
+            السوشال ميديا
           </TabsTrigger>
           <TabsTrigger value="general" className="flex items-center gap-2 text-sm sm:text-base">
             <Settings className="w-4 h-4" />
@@ -1009,6 +815,201 @@ const SettingsComp = () => {
           </Card>
         </TabsContent>
 
+        {/* إعدادات السوشال ميديا */}
+        <TabsContent value="social" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-right text-lg sm:text-xl">
+                <Globe className="w-5 h-5" />
+                إعدادات السوشال ميديا
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-b-2 rounded-full border-gray-900"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* فيسبوك */}
+                    <div className="space-y-3 text-right">
+                      <div className="flex flex-wrap items-center gap-2 justify-start">
+                        <Label htmlFor="facebook" className="text-base font-medium">
+                          رابط فيسبوك
+                        </Label>
+                        <Facebook className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="facebook"
+                          dir="ltr"
+                          value={socialSettings.facebook}
+                          onChange={(e) => handleSocialChange("facebook", e.target.value)}
+                          placeholder="https://facebook.com/username"
+                          className="pr-4 text-right text-sm sm:text-base"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateSocialSetting("facebook", socialSettings.facebook)}
+                          disabled={saving}
+                          size="sm"
+                          variant="outline"
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    </div>
+
+                     {/* واتساب otp */}
+                    <div className="space-y-3 text-right">
+                      <div className="flex flex-wrap items-center gap-2 justify-start">
+                        <Label htmlFor="whatsappOTP" className="text-base font-medium">
+                          رقم واتساب otp
+                        </Label>
+                        <Smartphone   className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="whatsappOTP"
+                          dir="ltr"
+                          value={socialSettings.whatsappOTP}
+                          onChange={(e) => handleSocialChange("whatsappOTP", e.target.value)}
+                          placeholder="+963123456789"
+                          className="pr-4 text-right text-sm sm:text-base"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateSocialSetting("whatsappOTP", socialSettings.facebook)}
+                          disabled={saving}
+                          size="sm"
+                          variant="outline"
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* انستجرام */}
+                    <div className="space-y-3 text-right">
+                      <div className="flex flex-wrap items-center gap-2 justify-start">
+                        <Label htmlFor="instagram" className="text-base font-medium">
+                          رابط انستجرام
+                        </Label>
+                        <Instagram className="w-4 h-4 text-pink-600" />
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="instagram"
+                          dir="ltr"
+                          value={socialSettings.instagram}
+                          onChange={(e) => handleSocialChange("instagram", e.target.value)}
+                          placeholder="https://instagram.com/username"
+                          className="pr-4 text-right text-sm sm:text-base"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateSocialSetting("instagram", socialSettings.instagram)}
+                          disabled={saving}
+                          size="sm"
+                          variant="outline"
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* الموقع الإلكتروني */}
+                    <div className="space-y-3 text-right">
+                      <div className="flex flex-wrap items-center gap-2 justify-start">
+                        <Label htmlFor="website" className="text-base font-medium">
+                          الموقع الإلكتروني
+                        </Label>
+                        <Globe className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="website"
+                          dir="ltr"
+                          value={socialSettings.website}
+                          onChange={(e) => handleSocialChange("website", e.target.value)}
+                          placeholder="https://example.com"
+                          className="pr-4 text-right text-sm sm:text-base"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateSocialSetting("website", socialSettings.website)}
+                          disabled={saving}
+                          size="sm"
+                          variant="outline"
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* البريد الإلكتروني */}
+                    <div className="space-y-3 text-right">
+                      <div className="flex flex-wrap items-center gap-2 justify-start">
+                        <Label htmlFor="email" className="text-base font-medium">
+                          البريد الإلكتروني
+                        </Label>
+                        <Mail className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="email"
+                          dir="ltr"
+                          value={socialSettings.email}
+                          onChange={(e) => handleSocialChange("email", e.target.value)}
+                          placeholder="email@example.com"
+                          className="pr-4 text-right text-sm sm:text-base"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateSocialSetting("email", socialSettings.email)}
+                          disabled={saving}
+                          size="sm"
+                          variant="outline"
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* أزرار الحفظ */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-start">
+                    <Button
+                      variant="outline"
+                      onClick={fetchAllSettings}
+                      disabled={saving}
+                      className="flex-1 sm:flex-none"
+                    >
+                      إعادة تحميل
+                    </Button>
+                    <Button
+                      onClick={handleSaveSocialSettings}
+                      disabled={saving}
+                      className="flex-1 sm:flex-none flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      {saving ? "جاري الحفظ..." : "حفظ الكل"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* الإعدادات العامة */}
         <TabsContent value="general" className="space-y-6">
           <Card>
@@ -1076,7 +1077,9 @@ const SettingsComp = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {allSettings.filter(setting => setting.key !== 'whatsapp' && setting.key !== 'telegram').map((setting) => (
+                  {allSettings.filter(setting => 
+                    !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email','whatsappOTP'].includes(setting.key)
+                  ).map((setting) => (
                     <Card key={setting.id} className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 text-right">
@@ -1104,14 +1107,6 @@ const SettingsComp = () => {
                               onCheckedChange={() => handleToggleSetting(setting.key, setting.value)}
                             />
                           </div>
-                          {/* <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleToggleSetting(setting.key, setting.value)}
-                          >
-                            {isSettingEnabled(setting) ? <ToggleLeft className="w-4 h-4 ml-1" /> : <ToggleRight className="w-4 h-4 ml-1" />}
-                            {isSettingEnabled(setting) ? "تعطيل" : "تفعيل"}
-                          </Button> */}
                         </div>
                       </div>
                     </Card>
@@ -1119,7 +1114,9 @@ const SettingsComp = () => {
                 </div>
               )}
 
-              {allSettings.filter(setting => setting.key !== 'whatsapp' && setting.key !== 'telegram').length === 0 && !loading && (
+              {allSettings.filter(setting => 
+                !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email','whatsappOTP'].includes(setting.key)
+              ).length === 0 && !loading && (
                 <div className="text-center py-8 text-muted-foreground">
                   لا توجد إعدادات عامة
                 </div>
