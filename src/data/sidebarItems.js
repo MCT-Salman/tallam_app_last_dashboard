@@ -12,10 +12,11 @@ import {
   Image, 
   Star, 
   User2, 
-  CreditCard, 
   Book,
   Shield,
-  FileText
+  FileText,
+  Map,
+  CreditCard
 } from "lucide-react"
 
 // العناصر الفردية (خارج الأكورديون)
@@ -109,6 +110,11 @@ export const sidebarGroups = [
         title: "حسابات المدراء",
         href: "/admin-accounts",
         icon: Shield
+      },
+      {
+        title: "إدارة المواقع",
+        href: "/locations",
+        icon: Map
       },
       {
         title: "الإعدادات",

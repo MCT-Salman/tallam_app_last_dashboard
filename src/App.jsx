@@ -28,6 +28,7 @@ import Accesscode from "@/components/accesscode/Accesscode"
 import Review from "@/components/review/Review"
 import Admins_Accounts from "@/components/account/Admins_Accounts"
 import TeacherReports from "./components/financial/TeacherReports"
+import LocationsManagement from "@/components/locations/LocationsManagement"
 
 const App = () => {
   return (
@@ -135,6 +136,41 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <SettingsComp />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/locations" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsManagement initialTab="cities" />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/cities" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsManagement initialTab="cities" />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/areas" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsManagement initialTab="areas" />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/points-of-sale" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsManagement initialTab="points" />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/payment-methods" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsManagement initialTab="payments" />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

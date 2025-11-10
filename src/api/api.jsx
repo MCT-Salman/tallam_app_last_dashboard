@@ -681,4 +681,34 @@ export const getCodeLevelByEncode = (encode) => {
     return api.get(`/lessons/admin/CodeLevel/${encode}`);
 };
 
+// --- إدارة المدن ---
+export const getCities = (params) => api.get('/cities/admin', { params });
+export const getCityById = (id) => api.get(`/cities/admin/${id}`);
+export const createCity = (data) => api.post('/cities/admin', data);
+export const updateCity = (id, data) => api.put(`/cities/admin/${id}`, data);
+export const deleteCity = (id) => api.delete(`/cities/admin/${id}`);
+
+// --- إدارة المناطق ---
+export const getAreas = (params) => api.get('/areas/admin', { params });
+export const getAreaById = (id) => api.get(`/areas/admin/${id}`);
+export const createArea = (data) => api.post('/areas/admin', data);
+export const updateArea = (id, data) => api.put(`/areas/admin/${id}`, data);
+export const deleteArea = (id) => api.delete(`/areas/admin/${id}`);
+
+// --- إدارة نقاط البيع ---
+export const getPointsOfSale = (params) => api.get('/pointsofsale/admin', { params });
+export const getPointOfSaleById = (id) => api.get(`/pointsofsale/admin/${id}`);
+export const createPointOfSale = (data) => api.post('/pointsofsale/admin', data);
+export const updatePointOfSale = (id, data) => api.put(`/pointsofsale/admin/${id}`, data);
+export const deletePointOfSale = (id) => api.delete(`/pointsofsale/admin/${id}`);
+export const togglePointOfSaleActive = (id, isActive) => api.put(`/pointsofsale/admin/${id}/active`, { isActive });
+
+// --- إدارة طرق الدفع ---
+export const getPaymentMethods = (params) => api.get('/paymentmethods/admin', { params });
+export const getPaymentMethodById = (id) => api.get(`/paymentmethods/admin/${id}`);
+export const createPaymentMethod = (data) => api.post('/paymentmethods/admin', data);
+export const updatePaymentMethod = (id, data) => api.put(`/paymentmethods/admin/${id}`, data);
+export const deletePaymentMethod = (id) => api.delete(`/paymentmethods/admin/${id}`);
+export const togglePaymentMethodActive = (id, isActive) => api.put(`/paymentmethods/admin/${id}/active`, { isActive });
+
 export { api, BASE_URL };
