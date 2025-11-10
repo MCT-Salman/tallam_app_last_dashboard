@@ -311,7 +311,7 @@ const Areas = () => {
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="اختر المدينة" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent searchable>
                         {cities.map(c => (
                           <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                         ))}
@@ -458,7 +458,7 @@ const Areas = () => {
                 <SelectTrigger className="text-right">
                   <SelectValue placeholder="اختر المدينة" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent searchable>
                   {cities.map(c => (
                     <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                   ))}

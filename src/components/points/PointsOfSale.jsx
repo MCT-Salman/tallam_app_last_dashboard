@@ -344,7 +344,7 @@ const PointsOfSale = () => {
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="اختر المنطقة" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent searchable>
                         {areas.map(a => (
                           <SelectItem key={a.id} value={String(a.id)}>{a.name} - {a.city?.name}</SelectItem>
                         ))}
@@ -581,7 +581,7 @@ const PointsOfSale = () => {
                 <SelectTrigger className="text-right">
                   <SelectValue placeholder="اختر المنطقة" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent searchable>
                   {areas.map(a => (
                     <SelectItem key={a.id} value={String(a.id)}>{a.name} - {a.city?.name}</SelectItem>
                   ))}
