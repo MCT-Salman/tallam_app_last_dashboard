@@ -441,20 +441,60 @@ const PaymentMethods = () => {
       </Card>
 
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-right">تفاصيل وسيلة الدفع</DialogTitle>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-right text-xl font-bold text-gray-900">
+              تفاصيل وسيلة الدفع
+            </DialogTitle>
+            <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto"></div>
           </DialogHeader>
+
           {selected && (
-            <div className="space-y-3 text-right">
-              <div><span className="text-sm text-muted-foreground">المعرف:</span> <span className="font-medium">{selected.id}</span></div>
-              <div><span className="text-sm text-muted-foreground">الشركة:</span> <span className="font-medium">{selected.company}</span></div>
-              <div><span className="text-sm text-muted-foreground">الاسم:</span> <span className="font-medium">{selected.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">الكود/الحساب:</span> <span className="font-medium" dir="ltr">{selected.code}</span></div>
-              <div><span className="text-sm text-muted-foreground">الحالة:</span> <span className="font-medium">{selected.isActive ? "نشط" : "معطل"}</span></div>
-              <div><span className="text-sm text-muted-foreground">تاريخ الإنشاء:</span> <span className="font-medium">{selected.createdAt}</span></div>
+            <div className="space-y-4 mt-4">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">الشركة:</span>
+                <span className="font-bold text-blue-600 text-lg">
+                  {selected.company}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">اسم وسيلة الدفع:</span>
+                <span className="font-bold text-purple-600">
+                  {selected.name}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">الكود/الحساب:</span>
+                </div>
+                <div className="bg-white p-3 rounded-md border border-gray-300 text-left">
+                  <code className="font-mono font-bold text-green-600 text-lg break-all" dir="ltr">
+                    {selected.code}
+                  </code>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">الحالة:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${selected.isActive
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
+                  }`}>
+                  {selected.isActive ? " نشط" : " معطل"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء:</span>
+                <span className="font-medium text-orange-600 bg-white px-3 py-1 rounded-md border border-orange-200">
+                  {selected.createdAt}
+                </span>
+              </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
 

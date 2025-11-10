@@ -145,10 +145,10 @@ const PointsOfSale = () => {
         setPoints(prev => prev.map(point =>
           point.id === selected.id
             ? {
-                ...point,
-                ...payload,
-                area: updatedArea ? { ...updatedArea } : point.area
-              }
+              ...point,
+              ...payload,
+              area: updatedArea ? { ...updatedArea } : point.area
+            }
             : point
         ))
         setSelected(prev => prev ? { ...prev, ...payload, area: updatedArea ? { ...updatedArea } : prev.area } : prev)
@@ -482,22 +482,78 @@ const PointsOfSale = () => {
       </Card>
 
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-right">تفاصيل نقطة البيع</DialogTitle>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-right text-xl font-bold text-gray-900">
+              تفاصيل نقطة البيع
+            </DialogTitle>
+            <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto"></div>
           </DialogHeader>
+
           {selected && (
-            <div className="space-y-3 text-right">
-              <div><span className="text-sm text-muted-foreground">المعرف:</span> <span className="font-medium">{selected.id}</span></div>
-              <div><span className="text-sm text-muted-foreground">الاسم:</span> <span className="font-medium">{selected.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">العنوان:</span> <span className="font-medium">{selected.address}</span></div>
-              <div><span className="text-sm text-muted-foreground">الهاتف:</span> <span className="font-medium" dir="ltr">{selected.phone}</span></div>
-              <div><span className="text-sm text-muted-foreground">الحالة:</span> <span className="font-medium">{selected.isActive ? "نشط" : "معطل"}</span></div>
-              <div><span className="text-sm text-muted-foreground">المنطقة:</span> <span className="font-medium">{selected.area?.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">المدينة:</span> <span className="font-medium">{selected.area?.city?.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">تاريخ الإنشاء:</span> <span className="font-medium">{selected.createdAt}</span></div>
+            <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">اسم نقطة البيع:</span>
+                <span className="font-bold text-blue-600 text-lg">
+                  {selected.name}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">العنوان:</span>
+                <div className="bg-white p-3 rounded-md border border-gray-300 text-right">
+                  <span className="font-medium text-gray-800 leading-relaxed">
+                    {selected.address}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">رقم الهاتف:</span>
+                <span className="font-bold text-green-600 bg-white px-3 py-1 rounded-md border border-green-200" dir="ltr">
+                  {selected.phone}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">الحالة:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${selected.isActive
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
+                  }`}>
+                  {selected.isActive ? " نشط" : " معطل"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 p-4 bg-gradient-to-l from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                <div className="text-center mb-2">
+                  <span className="text-sm font-bold text-blue-800">المعلومات الجغرافية</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2 bg-white rounded-md border border-blue-100">
+                  <span className="text-sm font-medium text-blue-700">المنطقة:</span>
+                  <span className="font-bold text-blue-800">
+                    {selected.area?.name || "غير محدد"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-2 bg-white rounded-md border border-blue-100">
+                  <span className="text-sm font-medium text-blue-700">المدينة:</span>
+                  <span className="font-bold text-blue-800">
+                    {selected.area?.city?.name || "غير محدد"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء:</span>
+                <span className="font-medium text-orange-600 bg-white px-3 py-1 rounded-md border border-orange-200">
+                  {selected.createdAt}
+                </span>
+              </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
 

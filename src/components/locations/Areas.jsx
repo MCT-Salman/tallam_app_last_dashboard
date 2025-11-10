@@ -473,18 +473,42 @@ const Areas = () => {
       </Dialog>
 
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-right">تفاصيل المنطقة</DialogTitle>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-right text-xl font-bold text-gray-900">
+              تفاصيل المنطقة
+            </DialogTitle>
+            <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto"></div>
           </DialogHeader>
+
           {selected && (
-            <div className="space-y-3 text-right">
-              <div><span className="text-sm text-muted-foreground">المعرف:</span> <span className="font-medium">{selected.id}</span></div>
-              <div><span className="text-sm text-muted-foreground">الاسم:</span> <span className="font-medium">{selected.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">المدينة:</span> <span className="font-medium">{selected.city?.name}</span></div>
-              <div><span className="text-sm text-muted-foreground">الحالة:</span> <span className="font-medium">{(selected.isActive ?? true) ? "نشط" : "معطل"}</span></div>
+            <div className="space-y-4 mt-4">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">اسم المنطقة:</span>
+                <span className="font-bold text-blue-600 text-lg">
+                  {selected.name}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">المدينة:</span>
+                <span className="font-bold text-green-600 bg-white px-3 py-1 rounded-md border border-green-200">
+                  {selected.city?.name || "غير محدد"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-sm font-medium text-gray-600">الحالة:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${(selected.isActive ?? true)
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-red-100 text-red-800 border border-red-200"
+                  }`}>
+                  {(selected.isActive ?? true) ? " نشط" : " معطل"}
+                </span>
+              </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
 
