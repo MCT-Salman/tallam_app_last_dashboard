@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogContent, AlertDialogHeader,
+   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Edit, Trash2, Eye, UserPlus, List, RefreshCw, BarChart3, Download, X, User, Mail, Phone, Calendar, Key, UserCheck, UserX, Globe, Clock, Shield, Search, ChevronLeft, ChevronRight, Filter, Play, Pause } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, List,  BarChart3,  X, User, Mail, Phone, Calendar,
+   UserCheck, UserX, Globe, Clock, Shield, Search, ChevronLeft, ChevronRight, Filter, Play, Pause } from "lucide-react"
 import { createAdmin, getAdminsList, updateAdmin, deleteAdmin } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -52,13 +54,13 @@ const Admins_Accounts = () => {
     setLoading(true)
     try {
       const res = await getAdminsList()
-      console.log("👥 Admins list response:", res.data)
+      console.log(" Admins list response:", res.data)
 
       if (res.data?.success) {
         setAdmins(res.data.data?.admins || [])
       }
     } catch (err) {
-      console.error("❌ Error fetching admins:", err)
+      console.error(" Error fetching admins:", err)
       showErrorToast(err?.response?.data?.message || "فشل تحميل قائمة المدراء")
     } finally {
       setLoading(false)
@@ -89,10 +91,10 @@ const Admins_Accounts = () => {
         isActive: Boolean(form.isActive)
       }
 
-      console.log("📤 Sending admin data:", adminData)
+      console.log(" Sending admin data:", adminData)
 
       const res = await createAdmin(adminData)
-      console.log("➕ Create admin response:", res.data)
+      console.log(" Create admin response:", res.data)
 
       if (res.data?.success) {
         showSuccessToast("تم إنشاء حساب المدير بنجاح")
@@ -101,7 +103,7 @@ const Admins_Accounts = () => {
         fetchAdmins()
       }
     } catch (err) {
-      console.error("❌ Error creating admin:", err)
+      console.error(" Error creating admin:", err)
       showErrorToast(err?.response?.data?.message || "فشل إنشاء حساب المدير")
     } finally {
       setSaving(false)
@@ -131,10 +133,10 @@ const Admins_Accounts = () => {
         adminData.password = form.password
       }
 
-      console.log("📤 Updating admin data:", adminData)
+      console.log(" Updating admin data:", adminData)
 
       const res = await updateAdmin(selectedAdmin.id, adminData)
-      console.log("✏️ Update admin response:", res.data)
+      console.log(" Update admin response:", res.data)
 
       if (res.data?.success) {
         showSuccessToast("تم تحديث بيانات المدير بنجاح")
@@ -143,7 +145,7 @@ const Admins_Accounts = () => {
         fetchAdmins()
       }
     } catch (err) {
-      console.error("❌ Error updating admin:", err)
+      console.error(" Error updating admin:", err)
       showErrorToast(err?.response?.data?.message || "فشل تحديث بيانات المدير")
     } finally {
       setSaving(false)
@@ -165,14 +167,14 @@ const Admins_Accounts = () => {
       }
 
       const res = await updateAdmin(adminId, adminData)
-      console.log("🔄 Toggle admin status response:", res.data)
+      console.log(" Toggle admin status response:", res.data)
 
       if (res.data?.success) {
         showSuccessToast(`تم ${newStatus ? "تفعيل" : "تعطيل"} حساب المدير بنجاح`)
         fetchAdmins()
       }
     } catch (err) {
-      console.error("❌ Error toggling admin status:", err)
+      console.error(" Error toggling admin status:", err)
       showErrorToast(err?.response?.data?.message || "فشل تحديث حالة المدير")
     }
   }
@@ -181,7 +183,7 @@ const Admins_Accounts = () => {
   const handleDeleteAdmin = async (adminId) => {
     try {
       const res = await deleteAdmin(adminId)
-      console.log("🗑️ Delete admin response:", res.data)
+      console.log(" Delete admin response:", res.data)
 
       if (res.data?.success) {
         showSuccessToast("تم حذف المدير بنجاح")
@@ -189,7 +191,7 @@ const Admins_Accounts = () => {
         fetchAdmins()
       }
     } catch (err) {
-      console.error("❌ Error deleting admin:", err)
+      console.error(" Error deleting admin:", err)
       showErrorToast(err?.response?.data?.message || "فشل حذف المدير")
     }
   }
@@ -439,12 +441,15 @@ const Admins_Accounts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="text-right">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">إدارة حسابات المدراء</h1>
-        </div>
+      <Card>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              إدارة المدراء ({admins.length})
+            </CardTitle>
 
-        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               إضافة مدير جديد
@@ -564,21 +569,6 @@ const Admins_Accounts = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* الحالة */}
-                {/* <div className="space-y-2 flex items-center gap-2"> */}
-                {/* <div className="space-y-2 mt-6.5">
-                    <Button
-                      variant={form.isActive ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleFormChange("isActive", !form.isActive)}
-                      className="flex items-center gap-1"
-                    >
-                      {form.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      {form.isActive ? "نشط" : "معطل"}
-                    </Button>
-                  </div> */}
-                {/* </div> */}
               </div>
 
               <Separator />
@@ -594,15 +584,6 @@ const Admins_Accounts = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              قائمة المدراء ({admins.length})
-            </CardTitle>
           </div>
 
           {/* Filters Section */}
@@ -693,18 +674,6 @@ const Admins_Accounts = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* زر الإجراءات السريعة */}
-                {/* <div className="flex items-end">
-                  <Button
-                    variant="outline"
-                    className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-                    onClick={resetFilters}
-                  >
-                    <RefreshCw className="h-4 w-4 ml-2" />
-                    إعادة تعيين
-                  </Button>
-                </div> */}
               </div>
             </div>
 
@@ -1002,14 +971,14 @@ const Admins_Accounts = () => {
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedAdmin.user?.name}</h2>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                        @{selectedAdmin.username}
+                        {selectedAdmin.username}@
                       </Badge>
                       <Badge variant={selectedAdmin.user?.isActive ? "default" : "secondary"}
                         className={selectedAdmin.user?.isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-500"}>
                         {selectedAdmin.user?.isActive ? "🟢 نشط" : "🔴 معطل"}
                       </Badge>
                       <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-                        {selectedAdmin.user?.role === "SUPER_ADMIN" ? "👑 مدير عام" : "🛡️ مدير"}
+                        {selectedAdmin.user?.role === "SUPER_ADMIN" ? " مدير عام" : " مدير"}
                       </Badge>
                     </div>
                   </div>
@@ -1106,46 +1075,6 @@ const Admins_Accounts = () => {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* أزرار الإجراءات */}
-              {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    openEditDialog(selectedAdmin)
-                    setViewDialogOpen(false)
-                  }}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  <Edit className="w-4 h-4" />
-                  تعديل البيانات
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => handleToggleAdminStatus(selectedAdmin.id, selectedAdmin.user?.isActive)}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  {selectedAdmin.user?.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  {selectedAdmin.user?.isActive ? "تعطيل الحساب" : "تفعيل الحساب"}
-                </Button>
-                
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setDeleteDialog({
-                      isOpen: true,
-                      adminId: selectedAdmin.id,
-                      adminName: selectedAdmin.user?.name
-                    })
-                    setViewDialogOpen(false)
-                  }}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  حذف الحساب
-                </Button>
-              </div> */}
             </div>
           )}
         </DialogContent>
@@ -1267,21 +1196,6 @@ const Admins_Accounts = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* الحالة */}
-                {/* <div className="space-y-2 flex items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={form.isActive ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleFormChange("isActive", !form.isActive)}
-                      className="flex items-center gap-1"
-                    >
-                      {form.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      {form.isActive ? "نشط" : "معطل"}
-                    </Button>
-                  </div>
-                </div> */}
               </div>
 
               <Separator />

@@ -1,5 +1,6 @@
 // src\components\layout\Header.jsx
-import { User, Settings, FileText, HelpCircle, CreditCard, BookOpen, Bell, DollarSign, Percent, User as UserIcon, Shield } from "lucide-react"
+import { User, Settings, CreditCard,
+     BookOpen, Bell,  Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import {

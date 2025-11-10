@@ -7,15 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Star, Search, Filter, User, MessageCircle, Calendar, BookOpen, Eye } from "lucide-react"
-import { getReviews, getCourses, getCourseLevels } from "@/api/api"
+import { Star, Search, Filter, User, MessageCircle, Calendar, BookOpen, Eye, Trash2 } from "lucide-react"
+import { getReviews, getCourses, getCourseLevels, deleteReview } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
-
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 const Review = () => {
   const [loading, setLoading] = useState(false)
   const [reviews, setReviews] = useState([])
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 })
-  
+
   // بيانات التصفية
   const [courses, setCourses] = useState([])
   const [levels, setLevels] = useState([])
@@ -25,6 +25,7 @@ const Review = () => {
 
   // حالة لعرض التفاصيل
   const [detailDialog, setDetailDialog] = useState({ isOpen: false, review: null })
+  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, reviewId: null, reviewInfo: "" })
 
   // دالة لتنظيف وعرض الصورة
   const getImageUrl = (imageUrl) => {
@@ -97,7 +98,7 @@ const Review = () => {
     try {
       const res = await getReviews(levelId)
       console.log("⭐ Reviews response:", res.data)
-      
+
       if (res.data?.success) {
         setReviews(res.data.data?.reviews || [])
         setStats(res.data.data?.stats || { averageRating: 0, totalReviews: 0 })
@@ -109,6 +110,23 @@ const Review = () => {
       setStats({ averageRating: 0, totalReviews: 0 })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId)
+      showSuccessToast("تم حذف التقييم بنجاح")
+
+      // إعادة تحميل التقييمات بعد الحذف
+      if (selectedLevel) {
+        fetchReviews(selectedLevel)
+      }
+
+      setDeleteDialog({ isOpen: false, reviewId: null, reviewInfo: "" })
+    } catch (err) {
+      console.error("❌ Error deleting review:", err)
+      showErrorToast(err?.response?.data?.message || "فشل حذف التقييم")
     }
   }
 
@@ -139,11 +157,10 @@ const Review = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-4 h-4 ${
-              star <= rating 
-                ? 'text-yellow-400 fill-yellow-400' 
+            className={`w-4 h-4 ${star <= rating
+                ? 'text-yellow-400 fill-yellow-400'
                 : 'text-gray-300'
-            }`}
+              }`}
           />
         ))}
         <span className="text-sm text-gray-600 mr-2">({rating})</span>
@@ -175,8 +192,8 @@ const Review = () => {
             <div className="relative flex-shrink-0">
               <div className="w-32 h-32 bg-gray-200 rounded-2xl shadow-lg border-4 border-white overflow-hidden">
                 {review.user?.avatarUrl ? (
-                  <img 
-                    src={getImageUrl(review.user.avatarUrl)} 
+                  <img
+                    src={getImageUrl(review.user.avatarUrl)}
                     alt={review.user.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -195,29 +212,29 @@ const Review = () => {
                 #{review.id}
               </div>
             </div>
-            
+
             <div className="flex-1">
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
                 تقييم #{review.id}
               </h2>
-              
+
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-white">
                   ⭐ {review.rating}/5
                 </Badge>
-                
+
                 <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
                   <BookOpen className="w-3 h-3 ml-1" />
                   {review.courseLevel?.course?.title}
                 </Badge>
-                
+
                 {review.comment && (
                   <Badge variant="default" className="bg-green-600 hover:bg-green-700">
                     💬 يحتوي على تعليق
                   </Badge>
                 )}
               </div>
-              
+
               {/* معلومات سريعة */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2 text-gray-700">
@@ -257,7 +274,7 @@ const Review = () => {
                     {renderStars(review.rating)}
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-600" />
@@ -289,7 +306,7 @@ const Review = () => {
                     {review.user?.name || "غير محدد"}
                   </span>
                 </div>
-                
+
                 {/* <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
                   <span className="text-sm font-medium text-gray-700">معرف المستخدم</span>
                   <span className="font-medium text-gray-900">
@@ -318,7 +335,7 @@ const Review = () => {
                     {review.courseLevel?.course?.title || "غير محدد"}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
                   <span className="text-sm font-medium text-gray-700">المستوى</span>
                   <span className="font-medium text-gray-900">
@@ -326,7 +343,7 @@ const Review = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
                   <span className="text-sm font-medium text-gray-700">معرف المستوى</span>
@@ -378,8 +395,8 @@ const Review = () => {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                 {review.user?.avatarUrl ? (
-                  <img 
-                    src={getImageUrl(review.user.avatarUrl)} 
+                  <img
+                    src={getImageUrl(review.user.avatarUrl)}
                     alt={review.user.name}
                     className="w-10 h-10 rounded-full object-cover"
                     onError={(e) => {
@@ -442,7 +459,19 @@ const Review = () => {
             onClick={() => setDetailDialog({ isOpen: true, review })}
           >
             <Eye className="w-4 h-4 ml-1" />
-            التفاصيل
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="flex-1"
+            onClick={() => setDeleteDialog({
+              isOpen: true,
+              reviewId: review.id,
+              reviewInfo: `تقييم ${review.user?.name} للمادة ${review.courseLevel?.course?.title}`
+            })}
+          >
+            <Trash2 className="w-4 h-4 ml-1" />
+
           </Button>
         </div>
       </CardContent>
@@ -517,8 +546,8 @@ const Review = () => {
             {/* اختيار المستوى */}
             <div className="space-y-2">
               <Label>اختر المستوى</Label>
-              <Select 
-                value={selectedLevel} 
+              <Select
+                value={selectedLevel}
                 onValueChange={handleLevelChange}
                 disabled={!selectedCourse}
               >
@@ -529,7 +558,7 @@ const Review = () => {
                   {levels.map((level) => (
                     <SelectItem key={level.id} value={level.id.toString()}>
                       {level.name}
-                       {/* (ترتيب: {level.order}) */}
+                      {/* (ترتيب: {level.order}) */}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -572,7 +601,7 @@ const Review = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-right">
             <Star className="w-5 h-5" />
-            قائمة التقييمات 
+            قائمة التقييمات
             {selectedLevel && ` (${filteredReviews.length})`}
           </CardTitle>
         </CardHeader>
@@ -613,8 +642,8 @@ const Review = () => {
                             </div>
                             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                               {review.user?.avatarUrl ? (
-                                <img 
-                                  src={getImageUrl(review.user.avatarUrl)} 
+                                <img
+                                  src={getImageUrl(review.user.avatarUrl)}
                                   alt={review.user.name}
                                   className="w-8 h-8 rounded-full object-cover"
                                   onError={(e) => {
@@ -659,7 +688,17 @@ const Review = () => {
                               onClick={() => setDetailDialog({ isOpen: true, review })}
                             >
                               <Eye className="w-4 h-4 ml-1" />
-                              عرض التفاصيل
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setDeleteDialog({
+                                isOpen: true,
+                                reviewId: review.id,
+                                reviewInfo: `تقييم ${review.user?.name} للمادة ${review.courseLevel?.course?.title}`
+                              })}
+                            >
+                              <Trash2 className="w-4 h-4 ml-1" />
                             </Button>
                           </div>
                         </TableCell>
@@ -704,6 +743,32 @@ const Review = () => {
           {renderReviewDetails(detailDialog.review)}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteDialog.isOpen}
+        onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
+      >
+        <AlertDialogContent className="text-right" dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-right">هل أنت متأكد من حذف هذا التقييم؟</AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              سيتم حذف التقييم "{deleteDialog.reviewInfo}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-row-reverse gap-2">
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => handleDeleteReview(deleteDialog.reviewId)}
+            >
+              حذف
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setDeleteDialog({ isOpen: false, reviewId: null, reviewInfo: "" })}>
+              إلغاء
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

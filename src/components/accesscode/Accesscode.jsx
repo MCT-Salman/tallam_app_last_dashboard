@@ -1,45 +1,46 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+     AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Clock, BadgeCheck, Ban, CalendarX, List, BookOpen, Layers, RefreshCw, BarChart3, XCircle, CreditCard, Users, UserCheck, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy, User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter, X, BookA, CheckCircle, Scan } from "lucide-react";
+import { Plus, Clock, BadgeCheck, Ban, CalendarX, List, BookOpen, Layers, BarChart3, XCircle,
+     CreditCard, Users, UserCheck, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy,
+      User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter,
+       X, CheckCircle, Scan } from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
     deleteAccessCode,
     updateAccessCodeStatus,
     getActiveCouponsByLevel,
-    calculateFinalPrice,
     updateAccessCode,
     getCouponsByLevelOrUser,
     getCodeLevels,
-    getCodeLevelByEncode
+    getCodeLevelByEncode,
+    getAllUsers,
+    getCourses,
+    getCourseLevels,
+    getSpecializations,
+    getInstructorsByCourse,
+    BASE_URL
 } from "@/api/api";
-import { getAllUsers } from "@/api/api";
-import { getCourses } from "@/api/api";
-import { getCourseLevels } from "@/api/api";
-import { getSpecializations } from "@/api/api";
-import { getInstructorsByCourse } from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
-import { BASE_URL } from "@/api/api";
 import { imageConfig } from "@/utils/corsConfig";
 
 const AccessCode = () => {
     // الحالات الأساسية
-    const [codes, setCodes] = useState([]);
     const [allCodes, setAllCodes] = useState([]);
     const [users, setUsers] = useState([]);
     const [courses, setCourses] = useState([]);
     const [levels, setLevels] = useState([]);
-    const [coupons, setCoupons] = useState([]);
     const [availableCoupons, setAvailableCoupons] = useState([]);
     const [loading, setLoading] = useState(false);
     const [priceLoading, setPriceLoading] = useState(false);
@@ -106,20 +107,19 @@ const AccessCode = () => {
     const [filterCourses, setFilterCourses] = useState([]);
     const [filterLevels, setFilterLevels] = useState([]);
 
-    // 🔄 حالات الترميز الجديدة
+    //  حالات الترميز الجديدة
     const [codeLevels, setCodeLevels] = useState([]);
     const [selectedEncode, setSelectedEncode] = useState("");
     const [encodeSearch, setEncodeSearch] = useState("");
     const [encodeLoading, setEncodeLoading] = useState(false);
 
-    // 🔄  حالات الترميز للتعديل
+    //   حالات الترميز للتعديل
     const [selectedEncodeEdit, setSelectedEncodeEdit] = useState("");
     const [encodeSearchEdit, setEncodeSearchEdit] = useState("");
     const [encodeLoadingEdit, setEncodeLoadingEdit] = useState(false);
 
-    const searchInputRef = useRef(null);
 
-    // 🔄 دوال جلب البيانات الأساسية
+    //  دوال جلب البيانات الأساسية
     const fetchUsers = async () => {
         try {
             const res = await getAllUsers();
@@ -127,7 +127,7 @@ const AccessCode = () => {
                 Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
             setUsers(data);
         } catch (err) {
-            console.error("❌ فشل تحميل المستخدمين:", err);
+            console.error(" فشل تحميل المستخدمين:", err);
             showErrorToast("فشل تحميل المستخدمين");
         }
     };
@@ -140,24 +140,24 @@ const AccessCode = () => {
                     Array.isArray(res.data?.data) ? res.data.data : [];
             setSpecializations(data);
         } catch (err) {
-            console.error("❌ فشل تحميل الاختصاصات:", err);
+            console.error(" فشل تحميل الاختصاصات:", err);
             showErrorToast("فشل تحميل الاختصاصات");
         }
     };
 
-    // 🔄 دالة جلب قائمة الترميزات
+    //  دالة جلب قائمة الترميزات
     const fetchCodeLevels = async () => {
         try {
             const res = await getCodeLevels();
             const data = Array.isArray(res.data?.data) ? res.data.data : [];
             setCodeLevels(data);
         } catch (err) {
-            console.error("❌ فشل تحميل الترميزات:", err);
+            console.error(" فشل تحميل الترميزات:", err);
             showErrorToast("فشل تحميل قائمة الترميزات");
         }
     };
 
-    // 🔄 دالة جلب تفاصيل المستوى بواسطة الترميز
+    //  دالة جلب تفاصيل المستوى بواسطة الترميز
     const fetchLevelByEncode = async (encode) => {
         if (!encode) return;
 
@@ -167,7 +167,7 @@ const AccessCode = () => {
             const levelData = res.data?.data;
 
             if (levelData) {
-                console.log("🎯 بيانات المستوى المسترجعة:", levelData);
+                console.log(" بيانات المستوى المسترجعة:", levelData);
 
                 // الحصول على المستخدم المحدد إذا كان موجوداً
                 const selectedUser = users.find(user => user.id.toString() === form.userId);
@@ -175,14 +175,14 @@ const AccessCode = () => {
 
                 // تحديد العملة بناءً على رقم الهاتف
                 const currencyType = getCurrencyType(userPhone);
-                console.log("💰 نوع العملة المحدد:", currencyType, "للمستخدم:", userPhone);
+                console.log(" نوع العملة المحدد:", currencyType, "للمستخدم:", userPhone);
 
                 const course = levelData.course;
                 const instructor = levelData.instructor;
                 const specialization = course?.specialization;
 
                 if (specialization && course && instructor) {
-                    // 🔄 إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
+                    //  إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
                     setSelectedSpecialization("");
                     setSelectedCourse("");
                     setSelectedInstructor("");
@@ -204,7 +204,6 @@ const AccessCode = () => {
                         couponId: "",
                         useCoupon: false
                     }));
-                    setCoupons([]);
                     setAvailableCoupons([]);
 
                     // 1. تعيين الاختصاص وجلب الكورسات
@@ -236,7 +235,7 @@ const AccessCode = () => {
                         const selectedLevelData = levels.find(level => level.id === levelData.id);
                         if (selectedLevelData) {
                             const price = getPriceByCurrency(selectedLevelData, userPhone);
-                            console.log("💰 تعيين السعر التلقائي بناءً على العملة:", {
+                            console.log(" تعيين السعر التلقائي بناءً على العملة:", {
                                 price,
                                 currencyType,
                                 userPhone,
@@ -256,7 +255,7 @@ const AccessCode = () => {
                 }
             }
         } catch (err) {
-            console.error("❌ فشل جلب بيانات الترميز:", err);
+            console.error(" فشل جلب بيانات الترميز:", err);
             showErrorToast("فشل تحميل بيانات الترميز");
         } finally {
             setEncodeLoading(false);
@@ -280,7 +279,7 @@ const AccessCode = () => {
             );
             setCourses(filteredCourses);
         } catch (err) {
-            console.error("❌ فشل تحميل الكورسات:", err);
+            console.error(" فشل تحميل الكورسات:", err);
             showErrorToast("فشل تحميل المواد");
         }
     };
@@ -307,7 +306,7 @@ const AccessCode = () => {
 
             setInstructors(data || []);
         } catch (err) {
-            console.error("❌ فشل تحميل المدرسين:", err);
+            console.error(" فشل تحميل المدرسين:", err);
             showErrorToast("فشل تحميل المدرسين");
             setInstructors([]);
         }
@@ -348,7 +347,7 @@ const AccessCode = () => {
 
             setLevels(filteredLevels || []);
         } catch (err) {
-            console.error("❌ فشل تحميل مستويات المدرس:", err);
+            console.error(" فشل تحميل مستويات المدرس:", err);
             showErrorToast("فشل تحميل مستويات المدرس");
             setLevels([]);
         }
@@ -356,7 +355,6 @@ const AccessCode = () => {
 
     const fetchActiveCoupons = async (levelId) => {
         if (!levelId) {
-            setCoupons([]);
             return;
         }
 
@@ -369,12 +367,10 @@ const AccessCode = () => {
                 data = res.data;
             }
 
-            setCoupons(data);
             return data;
         } catch (err) {
-            console.error("❌ فشل تحميل الكوبونات:", err);
+            console.error(" فشل تحميل الكوبونات:", err);
             showErrorToast("فشل تحميل الكوبونات");
-            setCoupons([]);
             return [];
         }
     };
@@ -385,7 +381,6 @@ const AccessCode = () => {
             const res = await getAllAccessCodes();
             const data = Array.isArray(res.data?.data) ? res.data.data : [];
             setAllCodes(data);
-            setCodes(data);
 
             // استخراج الكورسات والمستويات الفريدة للفلترة
             const uniqueCourses = [];
@@ -409,14 +404,14 @@ const AccessCode = () => {
             setFilterLevels(uniqueLevels);
 
         } catch (err) {
-            console.error("❌ فشل تحميل الأكواد:", err);
+            console.error(" فشل تحميل الأكواد:", err);
             showErrorToast("فشل تحميل الأكواد");
         } finally {
             setLoading(false);
         }
     };
 
-    // 🔍 دالة التحقق من الكوبونات
+    //  دالة التحقق من الكوبونات
     const checkAvailableCoupons = async () => {
         if (!form.userId || !selectedLevel) {
             showErrorToast("يرجى اختيار المستخدم والمستوى أولاً");
@@ -455,7 +450,7 @@ const AccessCode = () => {
 
             return data;
         } catch (err) {
-            console.error("❌ فشل التحقق من الكوبونات:", err);
+            console.error(" فشل التحقق من الكوبونات:", err);
             showErrorToast(err?.response?.data?.message || "فشل التحقق من الكوبونات");
             setAvailableCoupons([]);
             return [];
@@ -464,7 +459,7 @@ const AccessCode = () => {
         }
     };
 
-    // 🔍 دالة التحقق من الكوبونات للمستخدم والمستوى في التعديل
+    //  دالة التحقق من الكوبونات للمستخدم والمستوى في التعديل
     const checkAvailableCouponsEdit = async () => {
         if (!form.userId || !selectedLevel) {
             showErrorToast("يرجى اختيار المستخدم والمستوى أولاً");
@@ -478,7 +473,7 @@ const AccessCode = () => {
                 userId: parseInt(form.userId)
             };
 
-            console.log("🔍 التحقق من الكوبونات للتعديل:", requestData);
+            console.log(" التحقق من الكوبونات للتعديل:", requestData);
             const res = await getCouponsByLevelOrUser(requestData);
 
             let data = [];
@@ -495,15 +490,15 @@ const AccessCode = () => {
 
             // إذا كان هناك كوبون محدد مسبقاً، تأكد من أنه متاح
             if (form.couponId && data.some(coupon => coupon.id.toString() === form.couponId)) {
-                console.log("✅ الكوبون الحالي متاح في القائمة");
+                console.log(" الكوبون الحالي متاح في القائمة");
             } else if (form.couponId) {
-                console.log("⚠️ الكوبون الحالي غير متاح، إزالته");
+                console.log(" الكوبون الحالي غير متاح، إزالته");
                 setForm(prev => ({ ...prev, couponId: "" }));
             }
 
             return data;
         } catch (err) {
-            console.error("❌ فشل التحقق من الكوبونات للتعديل:", err);
+            console.error(" فشل التحقق من الكوبونات للتعديل:", err);
             showErrorToast(err?.response?.data?.message || "فشل التحقق من الكوبونات");
             setAvailableCouponsEdit([]);
             return [];
@@ -523,7 +518,7 @@ const AccessCode = () => {
             const selectedUser = users.find(user => user.id.toString() === form.userId);
 
             if (!selectedLevelData || !coupon || !selectedUser) {
-                console.log("❌ بيانات غير مكتملة");
+                console.log(" بيانات غير مكتملة");
                 return;
             }
 
@@ -553,7 +548,7 @@ const AccessCode = () => {
             finalPrice = Math.max(0, finalPrice);
             discountAmount = Math.max(0, discountAmount);
 
-            console.log("🧮 الحساب بالعملة المناسبة:", {
+            console.log(" الحساب بالعملة المناسبة:", {
                 basePrice,
                 discountAmount,
                 finalPrice,
@@ -573,7 +568,7 @@ const AccessCode = () => {
             }));
 
         } catch (err) {
-            console.error("❌ فشل حساب السعر:", err);
+            console.error(" فشل حساب السعر:", err);
             showErrorToast("فشل حساب السعر");
 
             // الحساب المحلي كبديل
@@ -583,7 +578,7 @@ const AccessCode = () => {
         }
     };
 
-    // 🧮 دالة حساب السعر محلياً
+    //  دالة حساب السعر محلياً
     const calculatePriceLocally = (couponId, courseLevelId) => {
         const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
         const coupon = availableCoupons.find(c => c.id === parseInt(couponId));
@@ -608,7 +603,7 @@ const AccessCode = () => {
 
         const finalPrice = Math.max(0, basePrice - discountAmount);
 
-        console.log("🧮 الحساب المحلي بالعملة المناسبة:", {
+        console.log(" الحساب المحلي بالعملة المناسبة:", {
             basePrice,
             discountAmount,
             finalPrice,
@@ -624,7 +619,7 @@ const AccessCode = () => {
             amountPaid: finalPrice.toString()
         }));
     };
-    // 💰 حساب السعر النهائي مع الكوبون في التعديل (بالعملة المناسبة)
+    //  حساب السعر النهائي مع الكوبون في التعديل (بالعملة المناسبة)
     const calculatePriceWithCouponEdit = async (couponId, courseLevelId) => {
         if (!couponId || !courseLevelId) return;
 
@@ -637,7 +632,7 @@ const AccessCode = () => {
             const selectedUser = users.find(user => user.id.toString() === form.userId);
 
             if (!selectedLevelData || !coupon || !selectedUser) {
-                console.log("❌ بيانات غير مكتملة في التعديل:", { selectedLevelData, coupon, selectedUser });
+                console.log(" بيانات غير مكتملة في التعديل:", { selectedLevelData, coupon, selectedUser });
                 return;
             }
 
@@ -659,7 +654,7 @@ const AccessCode = () => {
 
             const finalPrice = Math.max(0, basePrice - discountAmount);
 
-            console.log("💰 حساب السعر في التعديل:", {
+            console.log(" حساب السعر في التعديل:", {
                 basePrice,
                 discountAmount,
                 finalPrice,
@@ -678,7 +673,7 @@ const AccessCode = () => {
             }));
 
         } catch (err) {
-            console.error("❌ فشل حساب السعر في التعديل:", err);
+            console.error(" فشل حساب السعر في التعديل:", err);
             showErrorToast("فشل حساب السعر");
 
             // الحساب المحلي كبديل
@@ -688,7 +683,7 @@ const AccessCode = () => {
         }
     };
 
-    // 🧮 دالة حساب السعر محلياً في التعديل
+    //  دالة حساب السعر محلياً في التعديل
     const calculatePriceLocallyEdit = (couponId, courseLevelId) => {
         const selectedLevelData = levels.find(level => level.id === parseInt(courseLevelId));
         const coupon = availableCouponsEdit.find(c => c.id === parseInt(couponId));
@@ -713,7 +708,7 @@ const AccessCode = () => {
 
         const finalPrice = Math.max(0, basePrice - discountAmount);
 
-        console.log("🧮 الحساب المحلي في التعديل:", {
+        console.log(" الحساب المحلي في التعديل:", {
             basePrice,
             discountAmount,
             finalPrice,
@@ -730,14 +725,14 @@ const AccessCode = () => {
         }));
     };
 
-    // 🗑️ دوال الإجراءات
+    //  دوال الإجراءات
     const handleDeleteCode = async (id) => {
         try {
             await deleteAccessCode(id);
             showSuccessToast("تم حذف الكود بنجاح");
             fetchAccessCodes();
         } catch (err) {
-            console.error("❌ فشل حذف الكود:", err);
+            console.error(" فشل حذف الكود:", err);
             showErrorToast(err?.response?.data?.message || "فشل حذف الكود");
         }
     };
@@ -748,7 +743,7 @@ const AccessCode = () => {
             showSuccessToast(`تم ${isActive ? 'تفعيل' : 'تعطيل'} الكود بنجاح`);
             fetchAccessCodes();
         } catch (err) {
-            console.error("❌ فشل تحديث حالة الكود:", err);
+            console.error(" فشل تحديث حالة الكود:", err);
             showErrorToast(err?.response?.data?.message || "فشل تحديث حالة الكود");
         }
     };
@@ -774,21 +769,21 @@ const AccessCode = () => {
             resetAllSelections();
             fetchAccessCodes();
         } catch (err) {
-            console.error("❌ فشل تعديل الكود:", err);
+            console.error(" فشل تعديل الكود:", err);
             showErrorToast(err?.response?.data?.message || "فشل تعديل الكود");
         }
     };
 
-    // 🛠️ دالة فتح نموذج التعديل الكامل
+    //  دالة فتح نموذج التعديل الكامل
     const openEditDialog = async (item) => {
         if (!item) {
-            console.error("❌ عنصر غير محدد لفتح التعديل");
+            console.error(" عنصر غير محدد لفتح التعديل");
             return;
         }
 
-        console.log("🔧 فتح نموذج التعديل للعنصر:", item);
+        console.log(" فتح نموذج التعديل للعنصر:", item);
 
-        // ✅ حفظ الكوبون الحالي قبل فتح الديالوج
+        //  حفظ الكوبون الحالي قبل فتح الديالوج
         const transaction = item.transaction?.[0];
         const currentCouponId = transaction?.coupon?.id?.toString() || "";
 
@@ -798,7 +793,7 @@ const AccessCode = () => {
             currentCouponId
         });
 
-        // 🔄 إعادة تعيين حالات التعديل أولاً
+        //  إعادة تعيين حالات التعديل أولاً
         resetAllSelectionsEdit();
 
         // استخراج البيانات الأساسية
@@ -827,15 +822,15 @@ const AccessCode = () => {
             userPhone: user?.phone || ""
         };
 
-        console.log("📝 بيانات النموذج المعبأة:", formData);
+        console.log(" بيانات النموذج المعبأة:", formData);
         setForm(formData);
 
-        // 🔄 محاولة العثور على الترميز الحالي للمستوى
+        //  محاولة العثور على الترميز الحالي للمستوى
         if (courseLevel?.id) {
             const currentLevel = codeLevels.find(level => level.id === courseLevel.id);
             if (currentLevel?.encode) {
                 setSelectedEncodeEdit(currentLevel.encode);
-                console.log("🎯 تم تعيين الترميز الحالي:", currentLevel.encode);
+                console.log(" تم تعيين الترميز الحالي:", currentLevel.encode);
             }
         }
 
@@ -845,54 +840,54 @@ const AccessCode = () => {
         const instructorId = courseLevel?.instructorId?.toString() || "";
         const levelId = courseLevel?.id?.toString() || "";
 
-        console.log("🎯 الاختيارات:", { specializationId, courseId, instructorId, levelId });
+        console.log(" الاختيارات:", { specializationId, courseId, instructorId, levelId });
 
         setTimeout(() => {
             if (formData.userId && formData.courseLevelId) {
-                console.log("🔄 تحقق تلقائي أولي من الكوبونات");
+                console.log(" تحقق تلقائي أولي من الكوبونات");
                 checkAvailableCouponsEdit();
             }
         }, 500);
 
         try {
-            // 🔄 التسلسل الهرمي باستخدام async/await
+            //  التسلسل الهرمي باستخدام async/await
             setSelectedSpecialization(specializationId);
 
             if (specializationId) {
-                console.log("🔄 جلب الكورسات للاختصاص:", specializationId);
+                console.log(" جلب الكورسات للاختصاص:", specializationId);
                 await fetchCourses(specializationId);
 
                 await new Promise(resolve => setTimeout(resolve, 100));
 
                 setSelectedCourse(courseId);
-                console.log("✅ تم تعيين الكورس:", courseId);
+                console.log(" تم تعيين الكورس:", courseId);
 
                 if (courseId) {
-                    console.log("🔄 جلب المدرسين للكورس:", courseId);
+                    console.log(" جلب المدرسين للكورس:", courseId);
                     await fetchInstructorsByCourse(courseId);
 
                     await new Promise(resolve => setTimeout(resolve, 100));
 
                     setSelectedInstructor(instructorId);
-                    console.log("✅ تم تعيين المدرس:", instructorId);
+                    console.log(" تم تعيين المدرس:", instructorId);
 
                     if (instructorId) {
-                        console.log("🔄 جلب المستويات للمدرس:", instructorId);
+                        console.log(" جلب المستويات للمدرس:", instructorId);
                         await fetchLevelsByInstructor(instructorId);
 
                         await new Promise(resolve => setTimeout(resolve, 100));
 
                         setSelectedLevel(levelId);
-                        console.log("✅ تم تعيين المستوى:", levelId);
+                        console.log(" تم تعيين المستوى:", levelId);
 
                         if (levelId) {
-                            console.log("🔄 جلب الكوبونات للمستوى:", levelId);
+                            console.log(" جلب الكوبونات للمستوى:", levelId);
                             await fetchActiveCoupons(levelId);
-                            console.log("✅ تم جلب الكوبونات");
+                            console.log(" تم جلب الكوبونات");
 
                             setTimeout(() => {
                                 if (currentCouponId) {
-                                    console.log("🎯 إعادة تعيين الكوبون الأصلي:", currentCouponId);
+                                    console.log(" إعادة تعيين الكوبون الأصلي:", currentCouponId);
                                     setForm(prev => ({ ...prev, couponId: currentCouponId }));
                                 }
                             }, 200);
@@ -901,39 +896,17 @@ const AccessCode = () => {
                 }
             }
 
-            console.log("✅ تم تحميل جميع البيانات بنجاح");
+            console.log(" تم تحميل جميع البيانات بنجاح");
 
         } catch (error) {
-            console.error("❌ خطأ في تحميل البيانات:", error);
+            console.error(" خطأ في تحميل البيانات:", error);
             showErrorToast("حدث خطأ في تحميل البيانات");
         }
     };
 
-    // ✏️ دوال النموذج
+    //  دوال النموذج
     const handleFormChange = (key, value) => {
         setForm(prev => ({ ...prev, [key]: value }));
-    };
-
-    const handleUseCouponChange = (useCoupon) => {
-        setForm(prev => ({
-            ...prev,
-            useCoupon,
-            couponId: useCoupon ? prev.couponId : ""
-        }));
-
-        if (!useCoupon) {
-            const selectedLevelData = levels.find(level => level.id === parseInt(selectedLevel));
-            if (selectedLevelData) {
-                const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                setForm(prev => ({
-                    ...prev,
-                    originalPrice: price.toString(),
-                    discountAmount: "0",
-                    finalPrice: price.toString(),
-                    amountPaid: price.toString()
-                }));
-            }
-        }
     };
 
     const onReceiptChange = (e) => {
@@ -954,7 +927,7 @@ const AccessCode = () => {
         }
     };
 
-    // 🔄 دالة جلب تفاصيل المستوى بواسطة الترميز للتعديل
+    //  دالة جلب تفاصيل المستوى بواسطة الترميز للتعديل
     const fetchLevelByEncodeEdit = async (encode) => {
         if (!encode) return;
 
@@ -964,7 +937,7 @@ const AccessCode = () => {
             const levelData = res.data?.data;
 
             if (levelData) {
-                console.log("🎯 بيانات المستوى المسترجعة للتعديل:", levelData);
+                console.log(" بيانات المستوى المسترجعة للتعديل:", levelData);
 
                 // الحصول على المستخدم المحدد إذا كان موجوداً
                 const selectedUser = users.find(user => user.id.toString() === form.userId);
@@ -972,14 +945,14 @@ const AccessCode = () => {
 
                 // تحديد العملة بناءً على رقم الهاتف
                 const currencyType = getCurrencyType(userPhone);
-                console.log("💰 نوع العملة المحدد للتعديل:", currencyType, "للمستخدم:", userPhone);
+                console.log(" نوع العملة المحدد للتعديل:", currencyType, "للمستخدم:", userPhone);
 
                 const course = levelData.course;
                 const instructor = levelData.instructor;
                 const specialization = course?.specialization;
 
                 if (specialization && course && instructor) {
-                    // 🔄 إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
+                    //  إعادة تعيين فقط الاختيارات الهيكلية (بدون الترميز)
                     setSelectedSpecialization("");
                     setSelectedCourse("");
                     setSelectedInstructor("");
@@ -1001,7 +974,6 @@ const AccessCode = () => {
                         couponId: "",
                         useCoupon: false
                     }));
-                    setCoupons([]);
                     setAvailableCouponsEdit([]);
 
                     // 1. تعيين الاختصاص وجلب الكورسات
@@ -1030,7 +1002,7 @@ const AccessCode = () => {
                         const selectedLevelData = levels.find(level => level.id === levelData.id);
                         if (selectedLevelData) {
                             const price = getPriceByCurrency(selectedLevelData, userPhone);
-                            console.log("💰 تعيين السعر التلقائي للتعديل:", {
+                            console.log(" تعيين السعر التلقائي للتعديل:", {
                                 price,
                                 currencyType,
                                 userPhone
@@ -1047,14 +1019,14 @@ const AccessCode = () => {
                 }
             }
         } catch (err) {
-            console.error("❌ فشل جلب بيانات الترميز للتعديل:", err);
+            console.error(" فشل جلب بيانات الترميز للتعديل:", err);
             showErrorToast("فشل تحميل بيانات الترميز");
         } finally {
             setEncodeLoadingEdit(false);
         }
     };
 
-    // 🔄 تحديث السعر تلقائياً عند تغيير المستخدم
+    //  تحديث السعر تلقائياً عند تغيير المستخدم
     useEffect(() => {
         if (form.userId && selectedLevel) {
             const selectedUser = users.find(user => user.id.toString() === form.userId);
@@ -1065,7 +1037,7 @@ const AccessCode = () => {
                 const currencyType = getCurrencyType(userPhone);
                 const price = getPriceByCurrency(selectedLevelData, userPhone);
 
-                console.log("🔄 تحديث السعر عند تغيير المستخدم:", {
+                console.log(" تحديث السعر عند تغيير المستخدم:", {
                     user: selectedUser.name,
                     phone: userPhone,
                     currencyType,
@@ -1089,7 +1061,7 @@ const AccessCode = () => {
         }
     }, [form.userId, users]);
 
-    // 🔄 إعادة تعيين جميع الاختيارات للتعديل
+    //  إعادة تعيين جميع الاختيارات للتعديل
     const resetAllSelectionsEdit = () => {
         setSelectedSpecialization("");
         setSelectedCourse("");
@@ -1112,11 +1084,10 @@ const AccessCode = () => {
             couponId: "",
             useCoupon: false
         }));
-        setCoupons([]);
         setAvailableCouponsEdit([]);
     };
 
-    // 🔄 إعادة تعيين جميع الاختيارات
+    //  إعادة تعيين جميع الاختيارات
     const resetAllSelections = () => {
         setSelectedSpecialization("");
         setSelectedCourse("");
@@ -1139,11 +1110,10 @@ const AccessCode = () => {
             couponId: "",
             useCoupon: false
         }));
-        setCoupons([]);
         setAvailableCoupons([]);
     };
 
-    // 📤 دالة توليد الكود
+    //  دالة توليد الكود
     const handleGenerateCode = async () => {
         if (!selectedLevel) return showErrorToast("يرجى اختيار مستوى المادة");
         if (!form.userId) return showErrorToast("يرجى اختيار المستخدم");
@@ -1183,12 +1153,12 @@ const AccessCode = () => {
             setIsDialogOpen(false);
             fetchAccessCodes();
         } catch (err) {
-            console.error("❌ فشل توليد الكود:", err);
+            console.error(" فشل توليد الكود:", err);
             showErrorToast(err?.response?.data?.message || "فشل توليد الكود");
         }
     };
 
-    // 📋 دوال مساعدة
+    //  دوال مساعدة
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code).then(() => {
             showSuccessToast("تم نسخ الكود إلى الحافظة");
@@ -1242,7 +1212,7 @@ const AccessCode = () => {
         return new Date(dateString).toLocaleDateString('en-US');
     };
 
-    // 🔍 دالة التحقق من نوع العملة بناءً على رقم الهاتف
+    //  دالة التحقق من نوع العملة بناءً على رقم الهاتف
     const getCurrencyType = (phone) => {
         if (!phone) return 'USD'; // افتراضي دولار إذا لم يكن هناك رقم
 
@@ -1258,7 +1228,7 @@ const AccessCode = () => {
         return 'USD';
     };
 
-    // 💰 دالة الحصول على السعر المناسب بناءً على العملة
+    //  دالة الحصول على السعر المناسب بناءً على العملة
     const getPriceByCurrency = (levelData, phone) => {
         if (!levelData) return "0";
 
@@ -1273,7 +1243,7 @@ const AccessCode = () => {
         return "0";
     };
 
-    // 🎯 دوال الحالة Status
+    //  دوال الحالة Status
     const getStatusText = (status) => {
         switch (status) {
             case 'NOT_USED':
@@ -1312,14 +1282,6 @@ const AccessCode = () => {
         return isActive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200';
     };
 
-    // 🔄 فلترة البيانات للاختيارات
-    const filteredSpecializations = useMemo(() => {
-        if (!specializationSearch) return specializations;
-        return specializations.filter(spec =>
-            spec.name?.toLowerCase().includes(specializationSearch.toLowerCase()) ||
-            spec.title?.toLowerCase().includes(specializationSearch.toLowerCase())
-        );
-    }, [specializations, specializationSearch]);
 
     const filteredCoursesForSelect = useMemo(() => {
         if (!courseSearch) return courses;
@@ -1342,7 +1304,7 @@ const AccessCode = () => {
         );
     }, [levels, levelSearch]);
 
-    // 🔄 فلترة الترميزات للبحث
+    //  فلترة الترميزات للبحث
     const filteredCodeLevels = useMemo(() => {
         if (!encodeSearch) return codeLevels;
         return codeLevels.filter(level =>
@@ -1351,7 +1313,7 @@ const AccessCode = () => {
         );
     }, [codeLevels, encodeSearch]);
 
-    // 🔄 دوال التصفية والترتيب
+    //  دوال التصفية والترتيب
     const filteredAndSortedCodes = useMemo(() => {
         let filtered = [...allCodes];
 
@@ -1443,7 +1405,7 @@ const AccessCode = () => {
         return filteredAndSortedCodes.slice(startIndex, endIndex);
     }, [filteredAndSortedCodes, currentPage, itemsPerPage]);
 
-    // 📊 حسابات الترقيم
+    //  حسابات الترقيم
     const totalItems = filteredAndSortedCodes.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -1500,7 +1462,7 @@ const AccessCode = () => {
         return level ? level.name : "غير محدد";
     };
 
-    // 💰 مكون عرض معلومات السعر
+    //  مكون عرض معلومات السعر
     const PriceDisplay = ({ item }) => {
         const amountPaid = getAmountPaid(item);
         const coupon = getCouponInfo(item);
@@ -1548,7 +1510,7 @@ const AccessCode = () => {
         );
     };
 
-    // 👁️ عرض التفاصيل
+    //  عرض التفاصيل
     const renderCodeDetails = (item) => {
         if (!item) return null;
 
@@ -1812,7 +1774,7 @@ const AccessCode = () => {
         );
     };
 
-    // 📱 مكون البطاقة للجوال
+    //  مكون البطاقة للجوال
     const CodeCard = ({ item }) => {
         return (
             <Card className="mb-4">
@@ -1919,7 +1881,7 @@ const AccessCode = () => {
         );
     };
 
-    // 🔍 مكون الفلترة
+    //  مكون الفلترة
     const FilterSection = () => {
         const hasActiveFilters = searchTerm || statusFilter !== "all" || userFilter !== "all" || courseFilter !== "all" || levelFilter !== "all";
         const [localSearch, setLocalSearch] = useState(searchTerm);
@@ -1927,7 +1889,7 @@ const AccessCode = () => {
         useEffect(() => {
             const timer = setTimeout(() => {
                 setSearchTerm(localSearch);
-            }, 1000); // تحديث بعد 300ms من توقف الكتابة
+            }, 1000); 
 
             return () => clearTimeout(timer);
         }, [localSearch]);
@@ -1949,40 +1911,15 @@ const AccessCode = () => {
                             <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                                 <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                             </div>
-                            {/* <Input
-                                ref={searchInputRef}
-                                defaultValue={searchTerm}
-                                placeholder="بحث ..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pr-10 transition-all duration-200 
-                                     border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
-                                     group-hover:border-gray-400 bg-white/80"
-                            /> */}
 
-                            {/* <Input
-                                placeholder="بحث في الأكواد والمستخدمين والمواد..."
+                            <Input
+                                placeholder="بحث ..."
                                 value={localSearch}
                                 onChange={(e) => setLocalSearch(e.target.value)}
-                                onBlur={() => setSearchTerm(localSearch)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        setSearchTerm(localSearch);
-                                    }
-                                }}
                                 className="pr-10 transition-all duration-200 
-                 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
-                 group-hover:border-gray-400 bg-white/80"
-                            /> */}
-
-                             <Input
-                placeholder="بحث في الأكواد والمستخدمين والمواد..."
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                className="pr-10 transition-all duration-200 
                      border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                      group-hover:border-gray-400 bg-white/80"
-            />
+                            />
 
                         </div>
 
@@ -2153,20 +2090,6 @@ const AccessCode = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        {/* زر الإجراءات */}
-                        {/* <div className="flex items-end">
-                            {hasActiveFilters && (
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-10 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-                                    onClick={resetFilters}
-                                >
-                                    <RefreshCw className="h-4 w-4 ml-2" />
-                                    إعادة تعيين الفلترة
-                                </Button>
-                            )}
-                        </div> */}
                     </div>
                 </div>
 
@@ -2234,12 +2157,12 @@ const AccessCode = () => {
         );
     };
 
-    // 🔄 useEffect للبيانات الأساسية
+    //  useEffect للبيانات الأساسية
     useEffect(() => {
         fetchAccessCodes();
         fetchUsers();
         fetchSpecializations();
-        fetchCodeLevels(); // جلب الترميزات
+        fetchCodeLevels(); 
     }, []);
 
     useEffect(() => {
@@ -2293,7 +2216,7 @@ const AccessCode = () => {
                 const price = getPriceByCurrency(selectedLevelData, userPhone);
                 const currencyType = getCurrencyType(userPhone);
 
-                console.log("💰 تحديث السعر عند اختيار المستوى:", {
+                console.log(" تحديث السعر عند اختيار المستوى:", {
                     price,
                     currencyType,
                     userPhone,
@@ -2308,7 +2231,6 @@ const AccessCode = () => {
                 }));
             }
         } else {
-            setCoupons([]);
             setAvailableCoupons([]);
             setForm(prev => ({
                 ...prev,
@@ -2331,7 +2253,7 @@ const AccessCode = () => {
 
             if (selectedUser && selectedLevelData) {
                 const currencyType = getCurrencyType(selectedUser.phone);
-                console.log("🎯 تطبيق الكوبون بالعملة:", currencyType, "للمستخدم:", selectedUser.name);
+                console.log(" تطبيق الكوبون بالعملة:", currencyType, "للمستخدم:", selectedUser.name);
 
                 calculatePriceWithCoupon(form.couponId, form.courseLevelId);
             }
@@ -2342,7 +2264,7 @@ const AccessCode = () => {
 
             if (selectedLevelData && selectedUser) {
                 const price = getPriceByCurrency(selectedLevelData, selectedUser.phone);
-                console.log("🔄 إعادة تعيين السعر بدون كوبون:", {
+                console.log(" إعادة تعيين السعر بدون كوبون:", {
                     price,
                     currency: getCurrencyType(selectedUser.phone),
                     user: selectedUser.name
@@ -2363,7 +2285,7 @@ const AccessCode = () => {
         setCurrentPage(1);
     }, [searchTerm, statusFilter, userFilter, courseFilter, levelFilter, itemsPerPage]);
 
-    // 🔄 حساب السعر تلقائياً عند تغيير الكوبون في التعديل
+    //  حساب السعر تلقائياً عند تغيير الكوبون في التعديل
     useEffect(() => {
         if (editDialog.isOpen && form.couponId && form.courseLevelId) {
             const selectedUser = users.find(user => user.id.toString() === form.userId);
@@ -2371,7 +2293,7 @@ const AccessCode = () => {
 
             if (selectedUser && selectedLevelData) {
                 const currencyType = getCurrencyType(selectedUser.phone);
-                console.log("🎯 حساب السعر تلقائياً في التعديل بالعملة:", currencyType);
+                console.log(" حساب السعر تلقائياً في التعديل بالعملة:", currencyType);
                 calculatePriceWithCouponEdit(form.couponId, form.courseLevelId);
             }
         } else if (editDialog.isOpen && !form.couponId && form.courseLevelId) {
@@ -2381,7 +2303,7 @@ const AccessCode = () => {
 
             if (selectedLevelData && selectedUser) {
                 const price = getPriceByCurrency(selectedLevelData, selectedUser.phone);
-                console.log("🔄 إعادة تعيين السعر بدون كوبون في التعديل:", {
+                console.log(" إعادة تعيين السعر بدون كوبون في التعديل:", {
                     price,
                     currency: getCurrencyType(selectedUser.phone)
                 });
@@ -2396,25 +2318,25 @@ const AccessCode = () => {
         }
     }, [form.couponId, form.courseLevelId, editDialog.isOpen]);
 
-    // 🔄 التحقق التلقائي من الكوبونات في التعديل
+    //  التحقق التلقائي من الكوبونات في التعديل
     useEffect(() => {
         if (editDialog.isOpen && form.userId && selectedLevel) {
-            console.log("🔄 تحقق تلقائي من الكوبونات في التعديل");
+            console.log(" تحقق تلقائي من الكوبونات في التعديل");
             checkAvailableCouponsEdit();
         }
     }, [form.userId, selectedLevel, editDialog.isOpen]);
 
-    // 🔄 حساب السعر تلقائياً عند تغيير الكوبون في التعديل
+    //  حساب السعر تلقائياً عند تغيير الكوبون في التعديل
     useEffect(() => {
         if (editDialog.isOpen && form.couponId && form.courseLevelId) {
-            console.log("🎯 حساب السعر تلقائياً في التعديل للكوبون:", form.couponId);
+            console.log(" حساب السعر تلقائياً في التعديل للكوبون:", form.couponId);
             calculatePriceWithCouponEdit(form.couponId, form.courseLevelId);
         } else if (editDialog.isOpen && !form.couponId && form.courseLevelId) {
             // إعادة تعيين السعر عند إلغاء الكوبون في التعديل
             const selectedLevelData = levels.find(level => level.id === parseInt(form.courseLevelId));
             if (selectedLevelData) {
                 const price = selectedLevelData.priceSAR || selectedLevelData.priceUSD || "0";
-                console.log("🔄 إعادة تعيين السعر بدون كوبون:", price);
+                console.log(" إعادة تعيين السعر بدون كوبون:", price);
                 setForm(prev => ({
                     ...prev,
                     originalPrice: price.toString(),
@@ -2426,10 +2348,10 @@ const AccessCode = () => {
         }
     }, [form.couponId, form.courseLevelId, editDialog.isOpen]);
 
-    // 🔄 التحقق التلقائي من الكوبونات عند اختيار المستوى والمستخدم (للنموذج الرئيسي)
+    //  التحقق التلقائي من الكوبونات عند اختيار المستوى والمستخدم (للنموذج الرئيسي)
     useEffect(() => {
         if (selectedLevel && form.userId && isDialogOpen) {
-            console.log("🔄 تحقق تلقائي من الكوبونات في النموذج الرئيسي:", form.userId, selectedLevel);
+            console.log(" تحقق تلقائي من الكوبونات في النموذج الرئيسي:", form.userId, selectedLevel);
             const timer = setTimeout(() => {
                 checkAvailableCoupons();
             }, 800); // زيادة الوقت قليلاً لضمان اكتمال التحديثات
@@ -2438,10 +2360,10 @@ const AccessCode = () => {
         }
     }, [selectedLevel, form.userId, isDialogOpen]);
 
-    // 🔄 التحقق التلقائي من الكوبونات في نموذج التعديل
+    //  التحقق التلقائي من الكوبونات في نموذج التعديل
     useEffect(() => {
         if (editDialog.isOpen && selectedLevel && form.userId) {
-            console.log("🔄 تحقق تلقائي من الكوبونات في التعديل:", form.userId, selectedLevel);
+            console.log(" تحقق تلقائي من الكوبونات في التعديل:", form.userId, selectedLevel);
             const timer = setTimeout(() => {
                 checkAvailableCouponsEdit();
             }, 800);
@@ -2454,7 +2376,7 @@ const AccessCode = () => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة أكواد الوصول</CardTitle>
+                    <CardTitle>إدارة أكواد الوصول ({allCodes.length})</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -2491,7 +2413,7 @@ const AccessCode = () => {
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
-                                {/* 🔄 قسم الترميز الجديد */}
+                                {/*  قسم الترميز الجديد */}
                                 <div className="space-y-3 p-4 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Scan className="w-5 h-5 text-purple-600" />
@@ -2516,14 +2438,6 @@ const AccessCode = () => {
                                                 } />
                                             </SelectTrigger>
                                             <SelectContent searchable>
-                                                {/* <div className="p-2">
-                                                    <Input
-                                                        placeholder="ابحث عن ترميز..."
-                                                        value={encodeSearch}
-                                                        onChange={(e) => setEncodeSearch(e.target.value)}
-                                                        className="mb-2"
-                                                    />
-                                                </div> */}
                                                 {filteredCodeLevels.map((level) => (
                                                     <SelectItem key={level.id} value={level.encode} disabled={!level.encode}>
                                                         <div className="flex flex-col">
@@ -2549,7 +2463,7 @@ const AccessCode = () => {
                                     )}
 
                                     <div className="text-xs text-purple-600 bg-purple-100 p-2 rounded">
-                                        💡 اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
+                                         اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
                                     </div>
                                 </div>
 
@@ -2574,14 +2488,6 @@ const AccessCode = () => {
                                                 <Badge variant="outline" className="bg-white">
                                                     {selectedLevel ? getLevelName(selectedLevel) : "---"}
                                                 </Badge>
-                                                {/* <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={resetAllSelections}
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                >
-                                                    إعادة تعيين الكل
-                                                </Button> */}
                                             </div>
                                         </div>
                                     </div>
@@ -2599,14 +2505,15 @@ const AccessCode = () => {
                                         <SelectContent searchable>
                                             {users.map((user) => (
                                                 <SelectItem key={user.id} value={user.id.toString()}>
-                                                    {user.name} - {user.phone}
+                                                   <span>{user.name}</span> - <span dir="ltr">{user.phone}</span>
+                                                       
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
 
-                                {/* الهيكلية الجديدة */}
+                                {/* الهيكلية  */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>الاختصاص</Label>
@@ -2615,14 +2522,6 @@ const AccessCode = () => {
                                                 <SelectValue placeholder="اختر الاختصاص" />
                                             </SelectTrigger>
                                             <SelectContent searchable>
-                                                {/* <div className="p-2">
-                                                    <Input
-                                                        placeholder="ابحث عن اختصاص..."
-                                                        value={specializationSearch}
-                                                        onChange={(e) => setSpecializationSearch(e.target.value)}
-                                                        className="mb-2"
-                                                    />
-                                                </div> */}
                                                 {specializations.map((spec) => (
                                                     <SelectItem key={spec.id} value={spec.id.toString()}>
                                                         {spec.name || spec.title}
@@ -2643,14 +2542,6 @@ const AccessCode = () => {
                                                 <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
                                             </SelectTrigger >
                                             <SelectContent searchable>
-                                                {/* <div className="p-2">
-                                                    <Input
-                                                        placeholder="ابحث عن المادة..."
-                                                        value={courseSearch}
-                                                        onChange={(e) => setCourseSearch(e.target.value)}
-                                                        className="mb-2"
-                                                    />
-                                                </div> */}
                                                 {courses.map((course) => (
                                                     <SelectItem key={course.id} value={course.id.toString()}>
                                                         {course.title}
@@ -2673,14 +2564,6 @@ const AccessCode = () => {
                                                 <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
                                             </SelectTrigger>
                                             <SelectContent searchable>
-                                                {/* <div className="p-2">
-                                                    <Input
-                                                        placeholder="ابحث عن مدرس..."
-                                                        value={instructorSearch}
-                                                        onChange={(e) => setInstructorSearch(e.target.value)}
-                                                        className="mb-2"
-                                                    />
-                                                </div> */}
                                                 {instructors.map((instructor) => (
                                                     <SelectItem key={instructor.id} value={instructor.id.toString()}>
                                                         {instructor.name}
@@ -2706,14 +2589,6 @@ const AccessCode = () => {
                                                 <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
                                             </SelectTrigger>
                                             <SelectContent searchable>
-                                                {/* <div className="p-2">
-                                                    <Input
-                                                        placeholder="ابحث عن مستوى..."
-                                                        value={levelSearch}
-                                                        onChange={(e) => setLevelSearch(e.target.value)}
-                                                        className="mb-2"
-                                                    />
-                                                </div> */}
                                                 {levels.map((level) => (
                                                     <SelectItem key={level.id} value={level.id.toString()}>
                                                         {level.name}
@@ -2729,44 +2604,11 @@ const AccessCode = () => {
                                 {/* قسم التحقق من الكوبونات */}
                                 {form.userId && selectedLevel && (
                                     <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                        {/* <div className="flex items-center justify-between">
-                                            <Label className="font-medium text-purple-800">التحقق من الكوبونات المتاحة</Label>
-                                            <div className="flex items-center gap-2">
-                                                <Switch
-                                                    checked={form.useCoupon}
-                                                    onCheckedChange={handleUseCouponChange}
-                                                    disabled={availableCoupons.length === 0 && !couponCheckLoading}
-                                                />
-                                                <span className="text-sm text-purple-700">استخدام كوبون</span>
-                                            </div>
-                                        </div> */}
-
-                                        {/* <div className="flex gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={checkAvailableCoupons}
-                                                disabled={couponCheckLoading || !form.userId || !selectedLevel}
-                                                className="flex-1"
-                                            >
-                                                {couponCheckLoading ? (
-                                                    <>
-                                                        <div className="animate-spin h-4 w-4 border-b-2 rounded-full border-purple-600 mr-2"></div>
-                                                        جاري التحقق...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle className="w-4 h-4 ml-1" />
-                                                        تحقق من الكوبونات
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div> */}
-
+                                    
                                         {availableCoupons.length > 0 && (
                                             <div className="mt-2">
                                                 <Label className="text-sm font-medium text-green-700">
-                                                    ✅ تم العثور على {availableCoupons.length} كوبون متاح
+                                                     تم العثور على {availableCoupons.length} كوبون متاح
                                                 </Label>
                                             </div>
                                         )}
@@ -2999,7 +2841,7 @@ const AccessCode = () => {
 
                                 <Button
                                     onClick={handleGenerateCode}
-                                    disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid }
+                                    disabled={priceLoading || !selectedLevel || !form.userId || !receiptFile || !form.amountPaid}
                                 >
                                     {priceLoading ? "جاري حساب السعر..." : "توليد الكود"}
                                 </Button>
@@ -3052,28 +2894,6 @@ const AccessCode = () => {
                                                 <div className="text-xs text-muted-foreground font-normal">(اختصاص - مادة - مدرس - مستوى)</div>
                                             </div>
                                         </TableHead>
-                                        {/* <TableHead
-                                            className="table-header cursor-pointer hover:bg-gray-100"
-                                            onClick={() => handleSort("course")}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                المادة
-                                                {sortBy === "course" && (
-                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                                                )}
-                                            </div>
-                                        </TableHead>
-                                        <TableHead
-                                            className="table-header cursor-pointer hover:bg-gray-100"
-                                            onClick={() => handleSort("level")}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                المستوى
-                                                {sortBy === "level" && (
-                                                    <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-                                                )}
-                                            </div>
-                                        </TableHead> */}
                                         <TableHead className="table-header">المدة</TableHead>
                                         <TableHead className="table-header">
                                             <div className="space-y-1">
@@ -3134,12 +2954,6 @@ const AccessCode = () => {
                                                         {item.user?.name || "غير محدد"}
                                                     </div>
                                                 </TableCell>
-                                                {/* <TableCell className="table-cell">
-                                                    {item.courseLevel?.course?.title || "غير محدد"}
-                                                </TableCell>
-                                                <TableCell className="table-cell">
-                                                    {item.courseLevel?.name || "غير محدد"}
-                                                </TableCell> */}
                                                 <TableCell className="table-cell">
                                                     <div className="space-y-1">
                                                         <div className="font-medium">
@@ -3360,7 +3174,7 @@ const AccessCode = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* 🛠️ ديالوج التعديل الكامل */}
+            {/*  ديالوج التعديل الكامل */}
             <Dialog open={editDialog.isOpen} onOpenChange={(open) => {
                 setEditDialog({ ...editDialog, isOpen: open });
                 if (!open) {
@@ -3392,7 +3206,7 @@ const AccessCode = () => {
                     )}
 
                     <div className="space-y-4 mt-2">
-                        {/* 🔄 قسم الترميز للتعديل */}
+                        {/*  قسم الترميز للتعديل */}
                         <div className="space-y-3 p-4 bg-gradient-to-l from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -3465,11 +3279,11 @@ const AccessCode = () => {
                             )}
 
                             <div className="text-xs text-purple-600 bg-purple-100 p-2 rounded">
-                                💡 اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
+                                 اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
                             </div>
                         </div>
 
-                        {/* ✅ مسار الاختيار */}
+                        {/*  مسار الاختيار */}
                         {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
                             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
@@ -3503,7 +3317,7 @@ const AccessCode = () => {
                             </div>
                         )}
 
-                        {/* ✅ الهيكلية الجديدة: اختصاص ← كورس ← مدرس ← مستوى */}
+                        {/*  الهيكلية الجديدة: اختصاص ← كورس ← مدرس ← مستوى */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* اختيار الاختصاص */}
                             <div className="space-y-2">
@@ -3671,7 +3485,7 @@ const AccessCode = () => {
                                 {availableCouponsEdit.length > 0 && (
                                     <div className="mt-2">
                                         <Label className="text-sm font-medium text-green-700">
-                                            ✅ تم العثور على {availableCouponsEdit.length} كوبون متاح
+                                             تم العثور على {availableCouponsEdit.length} كوبون متاح
                                         </Label>
                                     </div>
                                 )}
@@ -3710,11 +3524,11 @@ const AccessCode = () => {
 
                                 {availableCouponsEdit.length === 0 && !couponCheckLoadingEdit && form.userId && selectedLevel && (
                                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                                        ⚠️ لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
+                                         لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
                                     </div>
                                 )}
 
-                                {/* ✅ عرض معلومات الكوبون الحالي */}
+                                {/*  عرض معلومات الكوبون الحالي */}
                                 {form.couponId && (
                                     <div className="p-2 bg-green-50 border border-green-200 rounded text-sm">
                                         <div className="flex items-center gap-2 text-green-700">
@@ -3799,7 +3613,7 @@ const AccessCode = () => {
                         </div>
 
                         {/* الكوبونات والمبلغ */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                             {/* المبلغ المدفوع */}
                             <div className="space-y-2">
                                 <Label>المبلغ المدفوع *</Label>
@@ -3815,45 +3629,6 @@ const AccessCode = () => {
                             </div>
                         </div>
 
-                        {/* الحالة والملاحظات */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* الحالة */}
-                            <div className="space-y-2">
-                                <Label>حالة الكود</Label>
-                                <Select
-                                    value={form.isActive}
-                                    onValueChange={(value) => handleFormChange("isActive", value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="اختر الحالة" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="true">نشط</SelectItem>
-                                        <SelectItem value="false">غير نشط</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* حالة الاستخدام */}
-                            <div className="space-y-2">
-                                <Label>حالة الاستخدام</Label>
-                                <Select
-                                    value={form.status || "NOT_USED"}
-                                    onValueChange={(value) => handleFormChange("status", value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="اختر حالة الاستخدام" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="NOT_USED">غير مستخدم</SelectItem>
-                                        <SelectItem value="USED">مستخدم</SelectItem>
-                                        <SelectItem value="CANCELLED">ملغى</SelectItem>
-                                        <SelectItem value="EXPIRED">منتهي الصلاحية</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
                         {/* الملاحظات */}
                         <div className="space-y-2">
                             <Label>ملاحظات</Label>
@@ -3866,7 +3641,7 @@ const AccessCode = () => {
                         </div>
 
                         {/* معلومات السعر */}
-                        {/* 💰 معلومات السعر في التعديل */}
+                        {/*  معلومات السعر في التعديل */}
                         {(form.originalPrice || form.couponId) && (
                             <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <Label className="font-bold text-base text-blue-800">معلومات السعر</Label>

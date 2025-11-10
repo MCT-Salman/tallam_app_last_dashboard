@@ -1,27 +1,23 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+     AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import {
-    Plus, Edit, Trash2, Play, Filter, UserCheck, Users, UserX, List, RefreshCw, BarChart3, Download,
-    X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Mail, Phone, Calendar, MapPin, Shield, Clock,
+    Plus, Edit, Trash2, Play, Filter, UserCheck, UserX, List,  BarChart3, 
+    X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Phone, Calendar, MapPin, Shield, Clock,
     Globe, Coins, LogOut
 } from "lucide-react"
-import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession } from "@/api/api"
+import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession,BASE_URL } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
-import { BASE_URL } from "@/api/api"
-import { imageConfig } from "@/utils/corsConfig";
 
 const Account = () => {
-    const [users, setUsers] = useState([])
     const [allUsers, setAllUsers] = useState([])
     const [currentPageData, setCurrentPageData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -82,10 +78,10 @@ const Account = () => {
                 isActive: undefined
             }
 
-            console.log("📤 Fetching ALL users data...")
+            console.log(" Fetching ALL users data...")
 
             const res = await getAllUsers(params)
-            console.log("📊 ALL Users API response:", res)
+            console.log(" ALL Users API response:", res)
 
             let allData = []
             let total = 0
@@ -101,7 +97,7 @@ const Account = () => {
                 total = res.data.length
             }
 
-            console.log(`✅ Loaded ${allData.length} total users`)
+            console.log(` Loaded ${allData.length} total users`)
 
             // حفظ جميع البيانات
             setAllUsers(allData || [])
@@ -115,10 +111,10 @@ const Account = () => {
                 .sort()
 
             setAllCountries(countries)
-            console.log("🌍 Extracted countries:", countries)
+            console.log(" Extracted countries:", countries)
 
         } catch (err) {
-            console.error("❌ Error fetching all users:", err)
+            console.error(" Error fetching all users:", err)
             showErrorToast("فشل تحميل بيانات المستخدمين")
             setAllUsers([])
             setAllCountries([])
@@ -205,7 +201,7 @@ const Account = () => {
         const totalFiltered = filteredAndSortedUsers.length
         setTotalUsers(totalFiltered)
 
-        console.log(`📊 Pagination: Showing ${startIndex + 1}-${Math.min(endIndex, totalFiltered)} of ${totalFiltered} users`)
+        console.log(` Pagination: Showing ${startIndex + 1}-${Math.min(endIndex, totalFiltered)} of ${totalFiltered} users`)
     }, [filteredAndSortedUsers, currentPage, itemsPerPage])
 
     // إعادة تعيين الصفحة عند تغيير الفلتر
@@ -215,8 +211,7 @@ const Account = () => {
 
     useEffect(() => {
         fetchAllUsersData()
-    }, []) // فارغ يعني مرة واحدة عند التحميل
-
+    }, []) 
     // Pagination calculations - استخدام طول البيانات المفلترة
     const totalPages = Math.ceil(filteredAndSortedUsers.length / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
@@ -273,7 +268,7 @@ const Account = () => {
                 expiresAt: form.expiresAt || null
             }
 
-            console.log("📤 Sending user data:", userData)
+            console.log(" Sending user data:", userData)
 
             if (editItem) {
                 await updateUser(editItem.id, userData)
@@ -298,7 +293,7 @@ const Account = () => {
             setIsDialogOpen(false)
             fetchAllUsersData() // إعادة تحميل البيانات
         } catch (err) {
-            console.error("❌ Save error:", err.response?.data || err)
+            console.error(" Save error:", err.response?.data || err)
             showErrorToast(err?.response?.data?.message || "فشل العملية")
         }
     }
@@ -332,7 +327,7 @@ const Account = () => {
             showSuccessToast("تم حذف جلسة المستخدم بنجاح")
             setSessionDeleteDialog({ isOpen: false, userId: null, userName: "" })
         } catch (err) {
-            console.error("❌ Delete session error:", err.response?.data || err)
+            console.error(" Delete session error:", err.response?.data || err)
             showErrorToast(err?.response?.data?.message || "فشل حذف الجلسة")
         }
     }
@@ -498,7 +493,7 @@ const Account = () => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة الطلاب</CardTitle>
+                    <CardTitle>إدارة الطلاب ({allUsers.length})</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -694,18 +689,6 @@ const Account = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            {/* زر الإجراءات السريعة */}
-                            {/* <div className="flex items-end">
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-                                    onClick={resetFilters}
-                                >
-                                    <RefreshCw className="h-4 w-4 ml-2" />
-                                    إعادة تعيين
-                                </Button>
-                            </div> */}
                         </div>
                     </div>
 

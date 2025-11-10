@@ -118,72 +118,72 @@ const Lesson = () => {
     }
 
     const resetFormData = () => {
-  const nextOrder = getNextLessonOrder();
-  
-  setForm({
-    title: "",
-    description: "",
-    youtubeUrl: "",
-    youtubeId: "",
-    googleDriveUrl: "",
-    durationSec: "",
-    orderIndex: nextOrder.toString(), // ✅ تعبئة تلقائية
-    isFreePreview: false
-  })
-  setEditItem(null)
-  // ✅ إعادة تعيين حالة فحص الروابط
-  setLinkValidation({
-    youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
-    googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
-  })
-}
+        const nextOrder = getNextLessonOrder();
 
-    // ✅ دالة للحصول على الترتيب التالي للدروس تلقائياً
-const getNextLessonOrder = () => {
-  if (allLessons.length === 0) return 1;
-  
-  // الحصول على أعلى ترتيب موجود
-  const maxOrder = Math.max(...allLessons.map(lesson => parseInt(lesson.orderIndex) || 0));
-  return maxOrder + 1;
-};
+        setForm({
+            title: "",
+            description: "",
+            youtubeUrl: "",
+            youtubeId: "",
+            googleDriveUrl: "", // سيتم إعادة تعيينه كسلسلة نصية فارغة
+            durationSec: "",
+            orderIndex: nextOrder.toString(),
+            isFreePreview: false
+        })
+        setEditItem(null)
+        // إعادة تعيين حالة فحص الروابط
+        setLinkValidation({
+            youtubeUrl: { isValid: false, message: "", checking: false, exists: false },
+            googleDriveUrl: { isValid: false, message: "", checking: false, exists: false }
+        })
+    }
 
-// ✅ تحديث ترتيب الدرس تلقائياً عند تغيير الدروس أو فتح الديالوج
-useEffect(() => {
-  if (!editItem && isDialogOpen && selectedLevel) {
-    const nextOrder = getNextLessonOrder();
-    setForm(prev => ({
-      ...prev,
-      orderIndex: nextOrder.toString()
-    }));
-  }
-}, [allLessons, isDialogOpen, editItem, selectedLevel]);
+    //  دالة للحصول على الترتيب التالي للدروس تلقائياً
+    const getNextLessonOrder = () => {
+        if (allLessons.length === 0) return 1;
 
-   const resetQuestionForm = () => {
-  const nextOrder = getNextQuestionOrder();
-  
-  setQuestionForm({
-    text: "",
-    order: nextOrder.toString(), // ✅ تعبئة تلقائية
-    options: [
-      { text: "", isCorrect: false },
-      { text: "", isCorrect: false },
-      { text: "", isCorrect: false },
-      { text: "", isCorrect: false }
-    ]
-  });
-  setEditQuestionId(null);
-};
+        // الحصول على أعلى ترتيب موجود
+        const maxOrder = Math.max(...allLessons.map(lesson => parseInt(lesson.orderIndex) || 0));
+        return maxOrder + 1;
+    };
 
-// ✅ تحديث ترتيب السؤال تلقائياً عند تغيير الأسئلة أو فتح الديالوج
-useEffect(() => {
-  if (!editQuestionId && isQuestionDialogOpen && selectedLevel) {
-    const nextOrder = getNextQuestionOrder();
-    setQuestionForm(prev => ({
-      ...prev,
-      order: nextOrder.toString()
-    }));
-  }
-}, [questions, isQuestionDialogOpen, editQuestionId, selectedLevel]);
+    //  تحديث ترتيب الدرس تلقائياً عند تغيير الدروس أو فتح الديالوج
+    useEffect(() => {
+        if (!editItem && isDialogOpen && selectedLevel) {
+            const nextOrder = getNextLessonOrder();
+            setForm(prev => ({
+                ...prev,
+                orderIndex: nextOrder.toString()
+            }));
+        }
+    }, [allLessons, isDialogOpen, editItem, selectedLevel]);
+
+    const resetQuestionForm = () => {
+        const nextOrder = getNextQuestionOrder();
+
+        setQuestionForm({
+            text: "",
+            order: nextOrder.toString(),
+            options: [
+                { text: "", isCorrect: false },
+                { text: "", isCorrect: false },
+                { text: "", isCorrect: false },
+                { text: "", isCorrect: false }
+            ]
+        });
+        setEditQuestionId(null);
+    };
+
+    // ✅ تحديث ترتيب السؤال تلقائياً عند تغيير الأسئلة أو فتح الديالوج
+    useEffect(() => {
+        if (!editQuestionId && isQuestionDialogOpen && selectedLevel) {
+            const nextOrder = getNextQuestionOrder();
+            setQuestionForm(prev => ({
+                ...prev,
+                order: nextOrder.toString()
+            }));
+        }
+    }, [questions, isQuestionDialogOpen, editQuestionId, selectedLevel]);
 
     // ✅ دالة للحصول على الترتيب التالي تلقائياً
     const getNextQuestionOrder = () => {
@@ -784,6 +784,48 @@ useEffect(() => {
         return match ? match[1] : ""
     }
 
+const buildGoogleDriveDownloadUrl = (url) => {
+    if (!url) return "";
+    
+    try {
+        let fileId = "";
+        
+        // جميع الأنماط المدعومة لروابط Google Drive
+        const patterns = [
+            /\/file\/d\/([a-zA-Z0-9_-]+)/,           // https://drive.google.com/file/d/FILE_ID/view
+            /id=([a-zA-Z0-9_-]+)/,                   // https://drive.google.com/open?id=FILE_ID
+            /\/d\/([a-zA-Z0-9_-]+)\//,               // https://drive.google.com/d/FILE_ID/
+            /\/open\?id=([a-zA-Z0-9_-]+)/,           // https://drive.google.com/open?id=FILE_ID
+            /download\?id=([a-zA-Z0-9_-]+)/,         // https://drive.usercontent.google.com/download?id=FILE_ID
+            /uc\?id=([a-zA-Z0-9_-]+)/,               // https://drive.google.com/uc?id=FILE_ID
+            /\/([a-zA-Z0-9_-]{25,})/                 // أي نمط يحتوي على معرف بطول 25 حرف أو أكثر
+        ];
+        
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                fileId = match[1];
+                break;
+            }
+        }
+        
+        // إذا كان الرابط يحتوي فقط على الـ ID (بدون رابط كامل)
+        if (!fileId && url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
+            fileId = url;
+        }
+        
+        // إذا تم استخراج الـ ID بنجاح، قم ببناء الرابط المطلوب
+        if (fileId) {
+            return `https://drive.google.com/uc?id=${fileId}&export=download`;
+        }
+        
+        return "";
+    } catch (error) {
+        console.error("Error building Google Drive URL:", error);
+        return "";
+    }
+};
+
     const handleYoutubeUrlChange = async (url) => {
         handleFormChange("youtubeUrl", url);
 
@@ -832,30 +874,30 @@ useEffect(() => {
         }
     };
 
-    const LinkStatus = ({ validation }) => {
-        if (!validation.message) return null;
-        let icon;
-        let color;
-        if (validation.checking) {
-            icon = <Clock className="w-3 h-3 animate-spin" />;
-            color = "text-blue-600";
-        } else if (validation.isValid && validation.exists) {
-            icon = <CheckCircle className="w-3 h-3" />;
-            color = "text-green-600";
-        } else if (validation.isValid && !validation.exists) {
-            icon = <Clock className="w-3 h-3" />;
-            color = "text-yellow-600";
-        } else {
-            icon = <XCircle className="w-3 h-3" />;
-            color = "text-red-600";
-        }
-        return (
-            <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
-                {icon}
-                <span>{validation.message}</span>
-            </div>
-        );
-    };
+ const LinkStatus = ({ validation }) => {
+    if (!validation.message) return null;
+    let icon;
+    let color;
+    if (validation.checking) {
+        icon = <Clock className="w-3 h-3 animate-spin" />;
+        color = "text-blue-600";
+    } else if (validation.isValid && validation.exists) {
+        icon = <CheckCircle className="w-3 h-3" />;
+        color = "text-green-600";
+    } else if (validation.isValid && !validation.exists) {
+        icon = <Clock className="w-3 h-3" />;
+        color = "text-yellow-600";
+    } else {
+        icon = <XCircle className="w-3 h-3" />;
+        color = "text-red-600";
+    }
+    return (
+        <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
+            {icon}
+            <span>{validation.message}</span>
+        </div>
+    );
+};
 
     const handleSave = async () => {
         if (!form.title.trim() || !form.orderIndex || !form.youtubeUrl) {
@@ -871,16 +913,29 @@ useEffect(() => {
 
         setIsSubmitting(true);
         try {
+            // ✅ بناء رابط التحميل من Google Drive إذا كان الرابط موجوداً
+            let googleDriveUrl = "";
+            if (form.googleDriveUrl) {
+                googleDriveUrl = buildGoogleDriveDownloadUrl(form.googleDriveUrl);
+                if (!googleDriveUrl) {
+                    showErrorToast("رابط Google Drive غير صحيح. يرجى التأكد من الرابط");
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
             const lessonData = {
                 title: form.title,
                 description: form.description || '',
                 youtubeUrl: form.youtubeUrl,
                 youtubeId: form.youtubeId || '',
-                googleDriveUrl: form.googleDriveUrl || '',
+                googleDriveUrl: googleDriveUrl,
                 durationSec: parseInt(form.durationSec) || 0,
                 orderIndex: parseInt(form.orderIndex),
                 isFreePreview: Boolean(form.isFreePreview)
             }
+
+            console.log("📤 Sending lesson data:", lessonData);
 
             if (editItem) {
                 await updateLesson(editItem.id, lessonData)
@@ -2258,6 +2313,17 @@ useEffect(() => {
                                                     onChange={(e) => handleFormChange("googleDriveUrl", e.target.value)}
                                                     placeholder="https://drive.google.com/..."
                                                 />
+                                                <LinkStatus validation={linkValidation.googleDriveUrl} />
+
+                                                {/* عرض الرابط النهائي للمستخدم */}
+                                                {linkValidation.googleDriveUrl.isValid && linkValidation.googleDriveUrl.downloadUrl && (
+                                                    <div className="text-xs text-green-600 bg-green-50 p-2 rounded border border-green-200">
+                                                        <div className="font-medium">رابط التحميل النهائي:</div>
+                                                        <div className="truncate mt-1" dir="ltr">
+                                                            {linkValidation.googleDriveUrl.downloadUrl}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex items-center space-x-2 space-x-reverse">

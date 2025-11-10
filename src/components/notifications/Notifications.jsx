@@ -9,19 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BarChart3, Phone, ChevronLeft, ChevronRight, Eye, Trash2,
-   Plus, Bell, Users, User, Send, Calendar, MessageCircle, Filter,
-    Tag,  Globe, List,RefreshCw, X } from "lucide-react";
-import { getNotifications, createNotification, createBroadcastNotification, createNotificationForUsers, deleteNotification } from "@/api/api";
-import { getAllUsers } from "@/api/api";
+import {
+  Search, BarChart3, Phone, ChevronLeft, ChevronRight, Eye, Trash2,
+  Bell, Users, User, Send, Calendar, MessageCircle, Filter,
+  Tag, Globe, List, X
+} from "lucide-react";
+import {
+  getNotifications, createNotification, createBroadcastNotification,
+  createNotificationForUsers, deleteNotification, getAllUsers, BASE_URL
+} from "@/api/api";
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages";
-import { BASE_URL } from "@/api/api";
 import { imageConfig } from "@/utils/corsConfig";
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([]);
   const [allNotifications, setAllNotifications] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,6 @@ const Notifications = () => {
   });
 
   // حالة لصورة الإشعار
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
   // Pagination & Filtering states
@@ -114,10 +114,10 @@ const Notifications = () => {
         total = data.length;
       }
 
-      console.log(`✅ Loaded ${data.length} notifications`);
+      console.log(` Loaded ${data.length} notifications`);
       setAllNotifications(data || []);
     } catch (err) {
-      console.error("❌ Error fetching notifications:", err);
+      console.error(" Error fetching notifications:", err);
       showErrorToast("فشل تحميل الإشعارات");
       setAllNotifications([]);
     } finally {
@@ -134,29 +134,14 @@ const Notifications = () => {
   }, []);
 
 
-
-  // استخراج المستخدمين الفريدين من الإشعارات
-  const uniqueUsersFromNotifications = useMemo(() => {
-    const notificationUsers = allNotifications
-      .map(notification => notification.user)
-      .filter(user => user && user.id)
-      .filter((user, index, self) =>
-        self.findIndex(u => u.id === user.id) === index
-      )
-      .sort((a, b) => a.name?.localeCompare(b.name));
-    return notificationUsers;
-  }, [allNotifications]);
-
   // التعامل مع تغيير الصورة
   const onImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
       // لا نضع imageUrl في النموذج، سنرسل الملف مباشرة
       setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
     } else {
-      setImageFile(null);
       setImagePreview(null);
       setNotificationForm(prev => ({ ...prev, imageUrl: "" }));
     }
@@ -252,7 +237,7 @@ const Notifications = () => {
         baseData.link = notificationForm.link.trim();
       }
 
-      console.log("📤 Preparing notification data:", baseData);
+      console.log(" Preparing notification data:", baseData);
 
       if (createDialog.type === "single") {
         if (!notificationForm.userId) return showErrorToast("يرجى اختيار مستخدم");
@@ -262,24 +247,24 @@ const Notifications = () => {
           ...baseData
         };
 
-        console.log("📤 Sending single notification:", requestData);
+        console.log(" Sending single notification:", requestData);
         response = await createNotification(requestData);
 
       } else if (createDialog.type === "multiple") {
         if (!notificationForm.userIds.length) return showErrorToast("يرجى اختيار مستخدمين على الأقل");
 
-        // إرسال كمصفوفة أرقام - هذا هو المهم!
+        // إرسال كمصفوفة أرقام 
         requestData = {
           userIds: notificationForm.userIds.map(id => parseInt(id)), // مصفوفة أرقام
           ...baseData
         };
 
-        console.log("📤 Sending multiple notifications:", requestData);
+        console.log(" Sending multiple notifications:", requestData);
         response = await createNotificationForUsers(requestData);
 
       } else if (createDialog.type === "broadcast") {
         requestData = baseData;
-        console.log("📤 Sending broadcast notification:", requestData);
+        console.log(" Sending broadcast notification:", requestData);
         response = await createBroadcastNotification(requestData);
       }
 
@@ -296,33 +281,15 @@ const Notifications = () => {
         userId: "",
         userIds: []
       });
-      setImageFile(null);
       setImagePreview(null);
       setCreateDialog({ isOpen: false, type: "single" });
       fetchNotifications();
     } catch (err) {
-      console.error("❌ Error sending notification:", err.response?.data || err);
+      console.error(" Error sending notification:", err.response?.data || err);
       showErrorToast(err?.response?.data?.message || "فشل إرسال الإشعار");
     }
   };
 
-  // دالة مساعدة لرفع الصورة
-  const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await api.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  };
 
   // حذف الإشعار
   const handleDelete = async (id) => {
@@ -421,125 +388,6 @@ const Notifications = () => {
     return `منذ ${Math.floor(diffDays / 365)} سنوات`;
   };
 
-  // دالة لتحسين تنسيق التاريخ
-  // const formatDate = (dateString) => {
-  //   if (!dateString) return "غير محدد";
-  //   return new Date(dateString).toLocaleDateString('en-US', {
-  //     year: 'numeric',
-  //     month: 'long',
-  //     day: 'numeric',
-  //     hour: '2-digit',
-  //     minute: '2-digit'
-  //   });
-  // };
-
-  // عرض التفاصيل الكاملة للإشعار
-  const renderNotificationDetails = (notification) => {
-    if (!notification) return null;
-
-    return (
-      <div className="space-y-6 text-right">
-        {/* المعلومات الأساسية */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <Label className="font-bold text-base">عنوان الإشعار:</Label>
-              <p className="mt-1 text-lg font-semibold">{notification.title}</p>
-            </div>
-
-            <div>
-              <Label className="font-bold text-base">محتوى الإشعار:</Label>
-              <div className="mt-2 p-4 bg-gray-50 rounded-lg border">
-                <p className="text-lg leading-relaxed">{notification.body}</p>
-              </div>
-            </div>
-
-            <div>
-              <Label className="font-bold text-base">المستخدم:</Label>
-              {notification.user ? (
-                <div className="flex items-center gap-3 mt-2 p-3 bg-gray-50 rounded-lg">
-                  <User className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-semibold">{notification.user.name}</p>
-                    <p className="text-sm text-muted-foreground" dir="ltr">{notification.user.phone}</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="mt-2 text-muted-foreground">إشعار عام</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label className="font-bold text-base">نوع الإشعار:</Label>
-              <div className="mt-2">
-                <Badge variant={getTypeBadgeVariant(notification.type)}>
-                  {getTypeText(notification.type)}
-                </Badge>
-              </div>
-            </div>
-
-            <div>
-              <Label className="font-bold text-base">تاريخ الإرسال:</Label>
-              <div className="flex items-center gap-3 mt-2 p-3 bg-gray-50 rounded-lg">
-                <Calendar className="w-5 h-5 text-primary" />
-                <p className="font-semibold">{formatDate(notification.createdAt)}</p>
-              </div>
-            </div>
-            {/* 
-            {notification.link && (
-              <div>
-                <Label className="font-bold text-base">الرابط:</Label>
-                <a
-                  href={notification.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 text-blue-600 hover:underline break-all"
-                >
-                  {notification.link}
-                </a>
-              </div>
-            )} */}
-
-            {notification.imageUrl && (
-              <div>
-                <Label className="font-bold text-base">صورة الإشعار:</Label>
-                <div className="mt-2">
-                  <img
-                    src={getImageUrl(notification.imageUrl)}
-                    alt="صورة الإشعار"
-                    className="max-w-full h-auto max-h-48 rounded-md border"
-                    {...imageConfig}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/tallaam_logo2.png";
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* <div>
-              <Label className="font-bold text-base">معرف الإشعار:</Label>
-              <p className="mt-1 font-mono bg-gray-100 p-2 rounded">{notification.id}</p>
-            </div> */}
-          </div>
-        </div>
-
-        {/* معلومات إضافية */}
-        {/* {notification.data && (
-          <div className="border-t pt-4">
-            <h3 className="font-bold text-lg mb-3">البيانات الإضافية</h3>
-            <pre className="bg-gray-50 p-4 rounded-lg overflow-auto text-sm">
-              {JSON.stringify(notification.data, null, 2)}
-            </pre>
-          </div>
-        )} */}
-      </div>
-    );
-  };
-
   // مكون البطاقة للعنصر الواحد
   const NotificationCard = ({ notification }) => (
     <Card className="mb-4 hover:shadow-md transition-shadow">
@@ -635,7 +483,7 @@ const Notifications = () => {
     <Card>
       <CardHeader className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <CardTitle>إدارة الإشعارات</CardTitle>
+          <CardTitle>إدارة الإشعارات ({allNotifications.length})</CardTitle>
           <Dialog open={createDialog.isOpen} onOpenChange={(isOpen) => setCreateDialog({ ...createDialog, isOpen })}>
             <DialogTrigger asChild>
               <Button
@@ -652,7 +500,6 @@ const Notifications = () => {
                     userId: "",
                     userIds: []
                   });
-                  setImageFile(null);
                   setImagePreview(null);
                 }}
               >
@@ -833,19 +680,6 @@ const Notifications = () => {
                   )}
                 </div>
 
-                {/* <div className="space-y-2">
-                  <Label>بيانات إضافية (JSON - اختياري)</Label>
-                  <Textarea
-                    value={notificationForm.data}
-                    onChange={(e) => handleFormChange("data", e.target.value)}
-                    rows={3}
-                    placeholder='{"key": "value"}'
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    أدخل بيانات JSON صالحة لإضافة معلومات إضافية للإشعار
-                  </p>
-                </div> */}
-
                 <Button onClick={handleSendNotification} className="w-full">
                   <Send className="w-4 h-4 ml-1" />
                   إرسال الإشعار
@@ -856,195 +690,182 @@ const Notifications = () => {
         </div>
 
         {/* Filters Section */}
-<div className="space-y-6">
-  {/* شريط الفلاتر الرئيسي */}
-  <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
-    {/* عنوان القسم */}
-    <div className="flex items-center gap-2 mb-6">
-      <Filter className="h-5 w-5 text-primary" />
-      <h3 className="text-lg font-semibold text-gray-800">فلاتر الإشعارات</h3>
-    </div>
+        <div className="space-y-6">
+          {/* شريط الفلاتر الرئيسي */}
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
+            {/* عنوان القسم */}
+            <div className="flex items-center gap-2 mb-6">
+              <Filter className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold text-gray-800">فلاتر الإشعارات</h3>
+            </div>
 
-    {/* شبكة الفلاتر */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Search - مع تأثيرات تفاعلية */}
-      <div className="relative group">
-        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-        </div>
-        <Input
-          placeholder="بحث ..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pr-10 transition-all duration-200 
+            {/* شبكة الفلاتر */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search - مع تأثيرات تفاعلية */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                </div>
+                <Input
+                  placeholder="بحث ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 transition-all duration-200 
                    border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                    group-hover:border-gray-400 bg-white/80"
-        />
-      </div>
+                />
+              </div>
 
-      {/* Type Filter - مع أيقونة */}
-      <div className="relative group">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="transition-all duration-200
+              {/* Type Filter - مع أيقونة */}
+              <div className="relative group">
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="transition-all duration-200
                                 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                                 group-hover:border-gray-400 bg-white/80">
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="فلترة بالنوع" />
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg">
-            <SelectItem value="all" className="flex items-center gap-2">
-              جميع الأنواع
-            </SelectItem>
-            {notificationTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value} className="flex items-center gap-2">
-                {/* <Bell className="h-4 w-4 text-blue-500" /> */}
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="فلترة بالنوع" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                    <SelectItem value="all" className="flex items-center gap-2">
+                      جميع الأنواع
+                    </SelectItem>
+                    {notificationTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value} className="flex items-center gap-2">
+                        {/* <Bell className="h-4 w-4 text-blue-500" /> */}
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* User Filter - مع أيقونة */}
-      <div className="relative group">
-        <Select value={userFilter} onValueChange={setUserFilter}>
-          <SelectTrigger className="transition-all duration-200
+              {/* User Filter - مع أيقونة */}
+              <div className="relative group">
+                <Select value={userFilter} onValueChange={setUserFilter}>
+                  <SelectTrigger className="transition-all duration-200
                                 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                                 group-hover:border-gray-400 bg-white/80">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="فلترة بالمستخدم" />
-            </div>
-          </SelectTrigger>
-          <SelectContent searchable className="bg-white border border-gray-200 shadow-lg max-h-60">
-            <SelectItem value="all" className="flex items-center gap-2">
-              جميع المستخدمين
-            </SelectItem>
-            <SelectItem value="null" className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-green-500" />
-              إشعارات عامة
-            </SelectItem>
-            {users
-              .filter(user => user && user.id && user.name)
-              .sort((a, b) => a.name?.localeCompare(b.name))
-              .map(user => (
-                <SelectItem key={user.id} value={user.id.toString()} className="flex items-center gap-2">
-                  {/* <User className="h-4 w-4 text-gray-500" /> */}
-                  {user.name}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
-      </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="فلترة بالمستخدم" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent searchable className="bg-white border border-gray-200 shadow-lg max-h-60">
+                    <SelectItem value="all" className="flex items-center gap-2">
+                      جميع المستخدمين
+                    </SelectItem>
+                    <SelectItem value="null" className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-green-500" />
+                      إشعارات عامة
+                    </SelectItem>
+                    {users
+                      .filter(user => user && user.id && user.name)
+                      .sort((a, b) => a.name?.localeCompare(b.name))
+                      .map(user => (
+                        <SelectItem key={user.id} value={user.id.toString()} className="flex items-center gap-2">
+                          {user.name}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Items Per Page - مع أيقونة */}
-      <div className="relative group">
-        <Select
-          value={itemsPerPage.toString()}
-          onValueChange={(value) => setItemsPerPage(Number(value))}
-        >
-          <SelectTrigger className="transition-all duration-200
+              {/* Items Per Page - مع أيقونة */}
+              <div className="relative group">
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => setItemsPerPage(Number(value))}
+                >
+                  <SelectTrigger className="transition-all duration-200
                                 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20
                                 group-hover:border-gray-400 bg-white/80 w-full">
-            <div className="flex items-center gap-2">
-              <List className="h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="عدد العناصر" />
+                    <div className="flex items-center gap-2">
+                      <List className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="عدد العناصر" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                    <SelectItem value="5" className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                      5 عناصر
+                    </SelectItem>
+                    <SelectItem value="10" className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      10 عناصر
+                    </SelectItem>
+                    <SelectItem value="20" className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      20 عنصر
+                    </SelectItem>
+                    <SelectItem value="50" className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                      50 عنصر
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg">
-            <SelectItem value="5" className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-              5 عناصر
-            </SelectItem>
-            <SelectItem value="10" className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              10 عناصر
-            </SelectItem>
-            <SelectItem value="20" className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              20 عنصر
-            </SelectItem>
-            <SelectItem value="50" className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-              50 عنصر
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          </div>
 
-      {/* زر الإجراءات السريعة */}
-      {/* <div className="flex items-end md:col-span-4">
-        <Button
-          variant="outline"
-          className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-          onClick={resetFilters}
-        >
-          <RefreshCw className="h-4 w-4 ml-2" />
-          إعادة تعيين الكل
-        </Button>
-      </div> */}
-    </div>
-  </div>
+          {/* شريط النتائج والإحصائيات */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200/50">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              {/* عرض النتائج - مع تصميم جذاب */}
+              <div className="flex items-center gap-3">
+                <div className="bg-white rounded-lg p-2 shadow-sm border">
+                  <Bell className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-700">
+                    عرض <span className="font-bold text-purple-600">{startItem} إلى {endItem}</span> من
+                    <span className="font-bold text-gray-900"> {totalItems} </span>
+                    إشعار
+                  </p>
+                  {(searchTerm || typeFilter !== "all" || userFilter !== "all") && (
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      <span className="text-xs text-green-600 font-medium">نتائج مفلترة</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-  {/* شريط النتائج والإحصائيات */}
-  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200/50">
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-      {/* عرض النتائج - مع تصميم جذاب */}
-      <div className="flex items-center gap-3">
-        <div className="bg-white rounded-lg p-2 shadow-sm border">
-          <Bell className="h-5 w-5 text-purple-600" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-700">
-            عرض <span className="font-bold text-purple-600">{startItem} إلى {endItem}</span> من 
-            <span className="font-bold text-gray-900"> {totalItems} </span>
-            إشعار
-          </p>
-          {(searchTerm || typeFilter !== "all" || userFilter !== "all") && (
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span className="text-xs text-green-600 font-medium">نتائج مفلترة</span>
+              {/* أزرار الإجراءات */}
+              <div className="flex items-center gap-3">
+                {(searchTerm || typeFilter !== "all" || userFilter !== "all") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                  >
+                    <X className="h-4 w-4" />
+                    مسح الفلاتر
+                  </Button>
+                )}
+
+              </div>
             </div>
-          )}
+
+            {/* شريط التقدم للإظهار المرئي */}
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-purple-900 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(totalItems / Math.max(totalItems, 1)) * 100}%`
+                  }}
+                ></div>
+              </div>
+              <span className="text-xs text-gray-500 font-medium">
+                {Math.round((endItem / Math.max(totalItems, 1)) * 100)}%
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* أزرار الإجراءات */}
-      <div className="flex items-center gap-3">
-        {(searchTerm || typeFilter !== "all" || userFilter !== "all") && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetFilters}
-            className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-          >
-            <X className="h-4 w-4" />
-            مسح الفلاتر
-          </Button>
-        )}
-        
-      </div>
-    </div>
-
-    {/* شريط التقدم للإظهار المرئي */}
-    <div className="mt-3 flex items-center gap-2">
-      <div className="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-amber-500 to-purple-900 rounded-full transition-all duration-500"
-          style={{
-            width: `${(totalItems / Math.max(totalItems, 1)) * 100}%`
-          }}
-        ></div>
-      </div>
-      <span className="text-xs text-gray-500 font-medium">
-        {Math.round((endItem / Math.max(totalItems, 1)) * 100)}%
-      </span>
-    </div>
-  </div>
-</div>
       </CardHeader>
 
       <CardContent>
@@ -1395,23 +1216,6 @@ const Notifications = () => {
                         {detailDialog.notification.body}
                       </p>
                     </div>
-
-                    {/* {detailDialog.notification.link && (
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Send className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">الرابط المصاحب</span>
-                  </div>
-                  <a
-                    href={detailDialog.notification.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 break-all text-sm font-medium"
-                  >
-                    {detailDialog.notification.link}
-                  </a>
-                </div>
-              )} */}
                   </CardContent>
                 </Card>
 
@@ -1432,9 +1236,6 @@ const Notifications = () => {
                         </div>
                         <div className="text-right">
                           <span className="font-medium text-gray-900 block">{formatDate(detailDialog.notification.createdAt)}</span>
-                          {/* <span className="text-xs text-gray-500">
-                      {new Date(detailDialog.notification.createdAt).toLocaleTimeString('ar-SA')}
-                    </span> */}
                         </div>
                       </div>
 
@@ -1457,16 +1258,6 @@ const Notifications = () => {
                           {getTypeText(detailDialog.notification.type)}
                         </Badge>
                       </div>
-
-                      {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">معرف الإشعار</span>
-                  </div>
-                  <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-gray-800">
-                    {detailDialog.notification.id}
-                  </span>
-                </div> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -1524,7 +1315,6 @@ const Notifications = () => {
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="text-2xl font-bold text-blue-600">📱</div>
                       <div className="text-sm font-medium text-gray-700 mt-1">النوع</div>
                       <div className="text-lg font-bold text-gray-900">
                         {getTypeText(detailDialog.notification.type)}
@@ -1533,7 +1323,6 @@ const Notifications = () => {
 
                     <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
                       <div className="text-2xl font-bold text-green-600">
-                        {detailDialog.notification.user ? "👤" : "👥"}
                       </div>
                       <div className="text-sm font-medium text-gray-700 mt-1">المستلم</div>
                       <div className="text-lg font-bold text-gray-900">
@@ -1542,7 +1331,6 @@ const Notifications = () => {
                     </div>
 
                     <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                      <div className="text-2xl font-bold text-purple-600">🕒</div>
                       <div className="text-sm font-medium text-gray-700 mt-1">المدة</div>
                       <div className="text-lg font-bold text-gray-900">
                         {calculateTimeAgo(detailDialog.notification.createdAt)}
@@ -1551,7 +1339,6 @@ const Notifications = () => {
 
                     <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
                       <div className="text-2xl font-bold text-orange-600">
-                        {detailDialog.notification.link ? "🔗" : "📄"}
                       </div>
                       <div className="text-sm font-medium text-gray-700 mt-1">المحتوى</div>
                       <div className="text-lg font-bold text-gray-900">
@@ -1561,38 +1348,6 @@ const Notifications = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* أزرار الإجراءات */}
-              {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // إعادة إرسال الإشعار أو نسخ المحتوى
-                    navigator.clipboard.writeText(detailDialog.notification.body);
-                    showSuccessToast("تم نسخ محتوى الإشعار");
-                  }}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  نسخ المحتوى
-                </Button>
-
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setDeleteDialog({
-                      isOpen: true,
-                      itemId: detailDialog.notification.id,
-                      itemName: detailDialog.notification.title
-                    });
-                    setDetailDialog({ isOpen: false, notification: null });
-                  }}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  حذف الإشعار
-                </Button>
-              </div> */}
             </div>
           )}
         </DialogContent>

@@ -1,5 +1,4 @@
 // src\App.jsx
-import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -20,15 +19,10 @@ import "./styles/sonner.css"
 import Account from "@/components/account/Account"
 import Courses from "@/components/courses_managments/Courses"
 import Coupons from "@/components/coupons/Coupons"
-// import Quizzes from "@/components/quizzes/Quizzes"
-// import Files from "@/components/files/Files"
 import Transactions from "@/components/transactions/Transactions"
 import LevelSubscribersReport from "@/components/financial/LevelSubscribersReport"
-// import Ads from "@/components/ads/Ads"
 import Stories from "@/components/stories/Stories"
 import Notifications from "@/components/notifications/Notifications"
-// import Suggestions from "@/components/suggestions/Suggestions"
-// import Profile from "@/components/profile/Profile"
 import SettingsComp from "@/components/settings/Settings"
 import Accesscode from "@/components/accesscode/Accesscode"
 import Review from "@/components/review/Review"
@@ -95,20 +89,6 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              {/* <Route path="/quizzes" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Quizzes />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } /> */}
-              {/* <Route path="/files" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Files />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } /> */}
               <Route path="/transactions" element={
                 <ProtectedRoute>
                   <DashboardLayout>
@@ -123,13 +103,6 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              {/* <Route path="/ads" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Ads />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } /> */}
               <Route path="/stories" element={
                 <ProtectedRoute>
                   <DashboardLayout>
@@ -158,20 +131,6 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } />
-              {/* <Route path="/suggestions" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Suggestions />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } /> */}
-              {/* <Route path="/profile" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Profile />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } /> */}
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <DashboardLayout>

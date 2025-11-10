@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, UserCheck, GraduationCap, BookOpen, Image as ImageIcon, TrendingUp, DollarSign, MapPin, Code, Globe, BadgeAlert } from "lucide-react"
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { Users, UserCheck, GraduationCap, BookOpen, Image as ImageIcon, TrendingUp,
+   DollarSign, MapPin, Code, Globe, BadgeAlert } from "lucide-react"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+   ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import {
   getAllUsers,
   getInstructors,
@@ -107,7 +109,6 @@ const Home = () => {
   const [usersByCountry, setUsersByCountry] = useState([])
   const [selectedCountry, setSelectedCountry] = useState('all')
   const [countryUsersCount, setCountryUsersCount] = useState(0)
-  const [usersByLevel, setUsersByLevel] = useState([])
 
   // الحالات الجديدة للدكاترة
   const [instructorsStudents, setInstructorsStudents] = useState([])
@@ -247,7 +248,6 @@ const Home = () => {
       // بيانات الأكواد النشطة من التقرير المحلي
       const activeCodesCount = accessCodesReport.activeCodesCount || 0
       const totalUsersWithAnyActiveCode = accessCodesReport.totalUsersWithAnyActiveCode || 0
-      const usersByLevelData = accessCodesReport.usersByLevel || []
 
       // عدد المدرسين
       const instructorsData = Array.isArray(instructorsRes.data?.data?.data)
@@ -315,13 +315,12 @@ const Home = () => {
         totalUsersWithAnyActiveCode
       })
 
-      setUsersByLevel(usersByLevelData)
 
       // إنشاء بيانات المخططات من البيانات الحقيقية
       await generateChartData(allStudents, transactionsRes.data?.data?.transactions || [], allCourses)
 
     } catch (err) {
-      console.error("❌ Error fetching dashboard stats:", err)
+      console.error(" Error fetching dashboard stats:", err)
       showErrorToast("فشل تحميل إحصائيات لوحة التحكم")
       // استخدام بيانات افتراضية في حالة الخطأ
       setSubscribersChart(generateFallbackChartData())

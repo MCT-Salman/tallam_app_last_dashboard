@@ -8,11 +8,11 @@ import { refreshToken } from '@/api/api';
  */
 export const refreshUserToken = async (refreshTokenValue) => {
   try {
-    console.log('🔄 Attempting to refresh token...');
+    console.log(' Attempting to refresh token...');
     
     const response = await refreshToken(refreshTokenValue);
     
-    console.log('✅ Token refresh successful:', response.data);
+    console.log(' Token refresh successful:', response.data);
     
     return {
       success: true,
@@ -21,7 +21,7 @@ export const refreshUserToken = async (refreshTokenValue) => {
     };
     
   } catch (error) {
-    console.error('❌ Token refresh failed:', error.response?.data || error.message);
+    console.error(' Token refresh failed:', error.response?.data || error.message);
     
     return {
       success: false,

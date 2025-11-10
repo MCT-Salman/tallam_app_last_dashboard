@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -7,12 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import {
     Plus, Edit, Trash2, Filter, BadgeCheck, CheckCircle, XCircle, Tag,
-    BookOpen, Megaphone, List, RefreshCw, FileText, X, Play, Pause, Search,
+    BookOpen, Megaphone, List, FileText, X, Play, Pause, Search,
     ChevronLeft, ChevronRight, Eye, Calendar, Image, ListOrdered
 } from "lucide-react"
 import { getStories, createStory, updateStory, deleteStory, BASE_URL } from "@/api/api"
@@ -20,7 +19,6 @@ import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 import { imageConfig } from "@/utils/corsConfig"
 
 const Stories = () => {
-    const [stories, setStories] = useState([])
     const [allStories, setAllStories] = useState([])
     const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({
@@ -46,18 +44,9 @@ const Stories = () => {
     const [typeFilter, setTypeFilter] = useState("all")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState("desc")
-    const [totalStories, setTotalStories] = useState(0)
 
-    // ✅ دالة للحصول على الترتيب التالي تلقائياً
-    const getNextOrderIndex = () => {
-        if (allStories.length === 0) return 1;
 
-        // الحصول على أعلى ترتيب موجود
-        const maxOrder = Math.max(...allStories.map(story => parseInt(story.orderIndex) || 0));
-        return maxOrder + 1;
-    };
-
-    // ✅ دالة للحصول على الترتيب التالي حسب النوع (قصة/إعلان)
+    //  دالة للحصول على الترتيب التالي حسب النوع (قصة/إعلان)
     const getNextOrderIndexByType = (isStoryType) => {
         if (allStories.length === 0) return 1;
 
@@ -83,39 +72,6 @@ const Stories = () => {
         }
     };
 
-    // ✅ إعادة تعيين النموذج مع دعم النوع
-    const resetForm = (isStory = true) => {
-        const nextOrder = getNextOrderIndexByType(isStory);
-
-        setForm({
-            title: "",
-            startedAt: "",
-            endedAt: "",
-            orderIndex: nextOrder.toString(), // ✅ تعبئة تلقائية حسب النوع
-            isActive: true,
-            isStory: isStory
-        });
-        setImageFile(null);
-        setImagePreview(null);
-        setEditItem(null);
-    };
-
-    // ✅ دالة للتعامل مع تغيير نوع المحتوى
-    const handleStoryTypeChange = (isStory) => {
-        // إذا كان في وضع الإضافة (ليس تعديل)
-        if (!editItem) {
-            const nextOrder = getNextOrderIndexByType(isStory);
-
-            setForm(prev => ({
-                ...prev,
-                isStory: isStory,
-                orderIndex: nextOrder.toString() // ✅ تحديث الترتيب تلقائياً
-            }));
-        } else {
-            // في وضع التعديل، فقط تغيير النوع دون تغيير الترتيب
-            handleFormChange("isStory", isStory);
-        }
-    };
 
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
@@ -125,84 +81,39 @@ const Stories = () => {
         return `${cleanBaseUrl}/${cleanImageUrl}`
     }
 
-    // جلب جميع القصص
-    // const fetchStories = async () => {
-    //     setLoading(true)
-    //     try {
-    //         const params = {
-    //             page: currentPage,
-    //             limit: itemsPerPage,
-    //             q: searchTerm || undefined
-    //         }
-
-    //         console.log("📤 Fetching stories with params:", params)
-
-    //         const res = await getStories(params)
-    //         console.log("📊 Stories API response:", res)
-
-    //         let data = []
-    //         let total = 0
-
-    //         if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-    //             data = res.data.data.data
-    //             total = res.data.data.pagination?.total || data.length
-    //         } else if (Array.isArray(res.data?.data)) {
-    //             data = res.data.data
-    //             total = data.length
-    //         } else if (Array.isArray(res.data)) {
-    //             data = res.data
-    //             total = data.length
-    //         }
-
-    //         setAllStories(data || [])
-    //         setStories(data || [])
-    //         setTotalStories(total || 0)
-    //     } catch (err) {
-    //         console.error("❌ Error fetching stories:", err)
-    //         const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
-    //         showErrorToast(errorMessage)
-    //         setAllStories([])
-    //         setStories([])
-    //         setTotalStories(0)
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }
     const fetchStories = async () => {
-    setLoading(true)
-    try {
-        // إزالة المعاملات من API call لأن الفلترة تتم على العميل
-        const res = await getStories()
-        console.log("📊 Stories API response:", res)
+        setLoading(true)
+        try {
+            // إزالة المعاملات من API call لأن الفلترة تتم على العميل
+            const res = await getStories()
+            console.log(" Stories API response:", res)
 
-        let data = []
-        let total = 0
+            let data = []
+            let total = 0
 
-        if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-            data = res.data.data.data
-            total = res.data.data.pagination?.total || data.length
-        } else if (Array.isArray(res.data?.data)) {
-            data = res.data.data
-            total = data.length
-        } else if (Array.isArray(res.data)) {
-            data = res.data
-            total = data.length
+            if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+                data = res.data.data.data
+                total = res.data.data.pagination?.total || data.length
+            } else if (Array.isArray(res.data?.data)) {
+                data = res.data.data
+                total = data.length
+            } else if (Array.isArray(res.data)) {
+                data = res.data
+                total = data.length
+            }
+
+            setAllStories(data || [])
+        } catch (err) {
+            console.error(" Error fetching stories:", err)
+            const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
+            showErrorToast(errorMessage)
+            setAllStories([])
+        } finally {
+            setLoading(false)
         }
-
-        setAllStories(data || [])
-        setTotalStories(total || 0)
-    } catch (err) {
-        console.error("❌ Error fetching stories:", err)
-        const errorMessage = err.response?.data?.message || "فشل تحميل القصص"
-        showErrorToast(errorMessage)
-        setAllStories([])
-        setTotalStories(0)
-    } finally {
-        setLoading(false)
     }
-}
 
-    // ✅ تحديث ترتيب العرض تلقائياً عند تغيير القصص أو فتح الديالوج
+    //  تحديث ترتيب العرض تلقائياً عند تغيير القصص أو فتح الديالوج
     useEffect(() => {
         if (!editItem && isDialogOpen) {
             const nextOrder = getNextOrderIndexByType(form.isStory);
@@ -218,151 +129,84 @@ const Stories = () => {
     }, [])
 
     // فلترة وترتيب البيانات
-    // const filteredAndSortedStories = useMemo(() => {
-    //     let filtered = [...allStories]
+    const filteredAndSortedStories = useMemo(() => {
+        console.log(" Filtering stories...", {
+            searchTerm,
+            statusFilter,
+            typeFilter,
+            sortBy,
+            sortOrder,
+            totalStories: allStories.length
+        })
 
-    //     // البحث بالعنوان
-    //     if (searchTerm.trim()) {
-    //         filtered = filtered.filter(story =>
-    //             story.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    //         )
-    //     }
+        let filtered = [...allStories]
 
-    //     // فلترة بالحالة
-    //     if (statusFilter !== "all") {
-    //         filtered = filtered.filter(story =>
-    //             statusFilter === "active" ? story.isActive : !story.isActive
-    //         )
-    //     }
-
-    //     // فلترة بالنوع
-    //     if (typeFilter !== "all") {
-    //         filtered = filtered.filter(story =>
-    //             typeFilter === "story" ? story.isStory : !story.isStory
-    //         )
-    //     }
-
-    //     // الترتيب
-    //     filtered.sort((a, b) => {
-    //         let aValue, bValue
-
-    //         switch (sortBy) {
-    //             case "title":
-    //                 aValue = a.title?.toLowerCase() || ""
-    //                 bValue = b.title?.toLowerCase() || ""
-    //                 break
-    //             case "orderIndex":
-    //                 aValue = parseInt(a.orderIndex) || 0
-    //                 bValue = parseInt(b.orderIndex) || 0
-    //                 break
-    //             case "startedAt":
-    //                 aValue = new Date(a.startedAt) || new Date(0)
-    //                 bValue = new Date(b.startedAt) || new Date(0)
-    //                 break
-    //             case "isActive":
-    //                 aValue = a.isActive
-    //                 bValue = b.isActive
-    //                 break
-    //             case "isStory":
-    //                 aValue = a.isStory
-    //                 bValue = b.isStory
-    //                 break
-    //             case "createdAt":
-    //                 aValue = new Date(a.createdAt) || new Date(0)
-    //                 bValue = new Date(b.createdAt) || new Date(0)
-    //                 break
-    //             default:
-    //                 aValue = new Date(a.createdAt) || new Date(0)
-    //                 bValue = new Date(b.createdAt) || new Date(0)
-    //         }
-
-    //         if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-    //         if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-    //         return 0
-    //     })
-
-    //     return filtered
-    // }, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
-
-    // فلترة وترتيب البيانات
-const filteredAndSortedStories = useMemo(() => {
-    console.log("🔄 Filtering stories...", {
-        searchTerm,
-        statusFilter,
-        typeFilter,
-        sortBy,
-        sortOrder,
-        totalStories: allStories.length
-    })
-
-    let filtered = [...allStories]
-
-    // البحث بالعنوان
-    if (searchTerm.trim()) {
-        filtered = filtered.filter(story =>
-            story.title?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        console.log(`🔍 After search (${searchTerm}):`, filtered.length)
-    }
-
-    // فلترة بالحالة
-    if (statusFilter !== "all") {
-        filtered = filtered.filter(story =>
-            statusFilter === "active" ? story.isActive : !story.isActive
-        )
-        console.log(`🎯 After status filter (${statusFilter}):`, filtered.length)
-    }
-
-    // فلترة بالنوع
-    if (typeFilter !== "all") {
-        filtered = filtered.filter(story =>
-            typeFilter === "story" ? story.isStory : !story.isStory
-        )
-        console.log(`📝 After type filter (${typeFilter}):`, filtered.length)
-    }
-
-    // الترتيب
-    filtered.sort((a, b) => {
-        let aValue, bValue
-
-        switch (sortBy) {
-            case "title":
-                aValue = a.title?.toLowerCase() || ""
-                bValue = b.title?.toLowerCase() || ""
-                break
-            case "orderIndex":
-                aValue = parseInt(a.orderIndex) || 0
-                bValue = parseInt(b.orderIndex) || 0
-                break
-            case "startedAt":
-                aValue = new Date(a.startedAt) || new Date(0)
-                bValue = new Date(b.startedAt) || new Date(0)
-                break
-            case "isActive":
-                aValue = a.isActive
-                bValue = b.isActive
-                break
-            case "isStory":
-                aValue = a.isStory
-                bValue = b.isStory
-                break
-            case "createdAt":
-                aValue = new Date(a.createdAt) || new Date(0)
-                bValue = new Date(b.createdAt) || new Date(0)
-                break
-            default:
-                aValue = new Date(a.createdAt) || new Date(0)
-                bValue = new Date(b.createdAt) || new Date(0)
+        // البحث بالعنوان
+        if (searchTerm.trim()) {
+            filtered = filtered.filter(story =>
+                story.title?.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            console.log(` After search (${searchTerm}):`, filtered.length)
         }
 
-        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-        return 0
-    })
+        // فلترة بالحالة
+        if (statusFilter !== "all") {
+            filtered = filtered.filter(story =>
+                statusFilter === "active" ? story.isActive : !story.isActive
+            )
+            console.log(` After status filter (${statusFilter}):`, filtered.length)
+        }
 
-    console.log("✅ Final filtered stories:", filtered.length)
-    return filtered
-}, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
+        // فلترة بالنوع
+        if (typeFilter !== "all") {
+            filtered = filtered.filter(story =>
+                typeFilter === "story" ? story.isStory : !story.isStory
+            )
+            console.log(` After type filter (${typeFilter}):`, filtered.length)
+        }
+
+        // الترتيب
+        filtered.sort((a, b) => {
+            let aValue, bValue
+
+            switch (sortBy) {
+                case "title":
+                    aValue = a.title?.toLowerCase() || ""
+                    bValue = b.title?.toLowerCase() || ""
+                    break
+                case "orderIndex":
+                    aValue = parseInt(a.orderIndex) || 0
+                    bValue = parseInt(b.orderIndex) || 0
+                    break
+                case "startedAt":
+                    aValue = new Date(a.startedAt) || new Date(0)
+                    bValue = new Date(b.startedAt) || new Date(0)
+                    break
+                case "isActive":
+                    aValue = a.isActive
+                    bValue = b.isActive
+                    break
+                case "isStory":
+                    aValue = a.isStory
+                    bValue = b.isStory
+                    break
+                case "createdAt":
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+                    break
+                default:
+                    aValue = new Date(a.createdAt) || new Date(0)
+                    bValue = new Date(b.createdAt) || new Date(0)
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+            return 0
+        })
+
+        console.log(" Final filtered stories:", filtered.length)
+        return filtered
+    }, [allStories, searchTerm, statusFilter, typeFilter, sortBy, sortOrder])
 
     // إعادة تعيين الصفحة عند تغيير الفلتر
     useEffect(() => {
@@ -407,7 +251,7 @@ const filteredAndSortedStories = useMemo(() => {
                 storyData.append('imageUrl', imageFile)
             }
 
-            console.log("📤 Sending story data:", {
+            console.log(" Sending story data:", {
                 title: form.title,
                 orderIndex: form.orderIndex,
                 isActive: form.isActive,
@@ -419,15 +263,15 @@ const filteredAndSortedStories = useMemo(() => {
             })
 
             if (editItem) {
-                console.log(`🔄 Updating story ID: ${editItem.id}`)
+                console.log(` Updating story ID: ${editItem.id}`)
                 const response = await updateStory(editItem.id, storyData)
-                console.log("✅ Update response:", response)
+                console.log(" Update response:", response)
                 showSuccessToast("تم التعديل بنجاح")
                 setEditItem(null)
             } else {
-                console.log("🆕 Creating new story")
+                console.log(" Creating new story")
                 const response = await createStory(storyData)
-                console.log("✅ Create response:", response)
+                console.log(" Create response:", response)
                 showSuccessToast("تم الإضافة بنجاح")
             }
 
@@ -450,8 +294,8 @@ const filteredAndSortedStories = useMemo(() => {
             }, 1000)
 
         } catch (err) {
-            console.error("❌ Save error:", err)
-            console.error("❌ Error response:", err.response?.data)
+            console.error(" Save error:", err)
+            console.error(" Error response:", err.response?.data)
             showErrorToast(err?.response?.data?.message || "فشل العملية")
         }
     }
@@ -538,31 +382,18 @@ const filteredAndSortedStories = useMemo(() => {
         return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
     }
 
-    // Pagination calculations
-    // const totalItems = allStories.length // ✅ غير هذا من filteredAndSortedStories إلى allStories
-    // const totalPages = Math.ceil(totalItems / itemsPerPage)
-    // const startItem = (currentPage - 1) * itemsPerPage + 1
-    // const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+    //  البيانات المعروضة حالياً (من filteredAndSortedStories)
+    const currentPageStories = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        return filteredAndSortedStories.slice(startIndex, endIndex) 
+    }, [filteredAndSortedStories, currentPage, itemsPerPage])
 
-    // // ✅ البيانات المعروضة حالياً (من allStories)
-    // const currentPageStories = useMemo(() => {
-    //     const startIndex = (currentPage - 1) * itemsPerPage
-    //     const endIndex = startIndex + itemsPerPage
-    //     return allStories.slice(startIndex, endIndex) // ✅ استخدم allStories هنا
-    // }, [allStories, currentPage, itemsPerPage])
-
-    // ✅ البيانات المعروضة حالياً (من filteredAndSortedStories)
-const currentPageStories = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredAndSortedStories.slice(startIndex, endIndex) // ✅ استخدم filteredAndSortedStories هنا
-}, [filteredAndSortedStories, currentPage, itemsPerPage])
-
-// Pagination calculations - تحديث الحسابات
-const totalItems = filteredAndSortedStories.length // ✅ استخدم البيانات المفلترة
-const totalPages = Math.ceil(totalItems / itemsPerPage)
-const startItem = (currentPage - 1) * itemsPerPage + 1
-const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+    // Pagination calculations - تحديث الحسابات
+    const totalItems = filteredAndSortedStories.length 
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startItem = (currentPage - 1) * itemsPerPage + 1
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
     // Handle page change
     const handlePageChange = (page) => {
@@ -589,89 +420,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
         setSortBy("createdAt")
         setSortOrder("desc")
         setCurrentPage(1)
-    }
-
-    // عرض التفاصيل الكاملة للقصة
-    const renderStoryDetails = (story) => {
-        if (!story) return null
-
-        const isActiveNow = isCurrentlyActive(story)
-
-        return (
-            <div className="space-y-6 text-right">
-                {/* الصورة */}
-                <div className="flex justify-center">
-                    <img
-                        src={getImageUrl(story.imageUrl)}
-                        alt={story.title}
-                        className="w-64 h-48 object-cover rounded-lg shadow-md"
-                        {...imageConfig}
-                        onError={(e) => {
-                            e.target.onerror = null
-                            e.target.src = "/default-story.png"
-                        }}
-                    />
-                </div>
-
-                {/* المعلومات الأساسية */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="font-bold">العنوان:</Label>
-                        <p className="mt-1 text-lg">{story.title}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">النوع:</Label>
-                        <p className="mt-1">
-                            <Badge variant={story.isStory ? "default" : "secondary"}>
-                                {story.isStory ? "قصة" : "إعلان"}
-                            </Badge>
-                        </p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">ترتيب العرض:</Label>
-                        <p className="mt-1">
-                            <Badge variant="secondary">{story.orderIndex || 0}</Badge>
-                        </p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">الحالة:</Label>
-                        <div className="mt-1">
-                            <Badge variant={story.isActive ? "default" : "secondary"}>
-                                {story.isActive ? "نشط" : "معطل"}
-                            </Badge>
-                            {isActiveNow && story.isActive && (
-                                <Badge variant="default" className="mr-2 bg-green-600">
-                                    نشط حالياً
-                                </Badge>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <Label className="font-bold">تاريخ البدء:</Label>
-                        <p className="mt-1">{formatDate(story.startedAt)}</p>
-                    </div>
-                    <div>
-                        <Label className="font-bold">تاريخ الانتهاء:</Label>
-                        <p className="mt-1">{formatDate(story.endedAt)}</p>
-                    </div>
-                </div>
-
-                {/* معلومات إضافية */}
-                <div className="border-t pt-4">
-                    <h3 className="font-bold mb-2">معلومات إضافية:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label className="font-medium">تاريخ الإنشاء:</Label>
-                            <p>{formatDate(story.createdAt)}</p>
-                        </div>
-                        {/* <div>
-                            <Label className="font-medium">آخر تحديث:</Label>
-                            <p>{formatDate(story.updatedAt)}</p>
-                        </div> */}
-                    </div>
-                </div>
-            </div>
-        )
     }
 
     // مكون بطاقة القصة للعرض على الجوال
@@ -793,7 +541,7 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة القصص والإعلانات</CardTitle>
+                    <CardTitle>إدارة القصص والإعلانات ({allStories.length })</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -931,7 +679,7 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                     </Dialog>
                 </div>
 
-                {/* 🔍 قسم الفلترة والعرض */}
+                {/*  قسم الفلترة والعرض */}
                 <div className="space-y-6">
                     {/* شريط الفلاتر الرئيسي */}
                     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
@@ -1046,18 +794,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            {/* زر الإجراءات السريعة */}
-                            {/* <div className="flex items-end md:col-span-4">
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-                                    onClick={resetFilters}
-                                >
-                                    <RefreshCw className="h-4 w-4 ml-2" />
-                                    إعادة تعيين الكل
-                                </Button>
-                            </div> */}
                         </div>
                     </div>
 
@@ -1436,12 +1172,12 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
                                             <Badge variant={detailDialog.story.isStory ? "default" : "secondary"}
                                                 className={detailDialog.story.isStory ? "bg-purple-600 hover:bg-purple-700" : "bg-orange-600 hover:bg-orange-700"}>
-                                                {detailDialog.story.isStory ? "📖 قصة" : "📢 إعلان"}
+                                                {detailDialog.story.isStory ? " قصة" : " إعلان"}
                                             </Badge>
 
                                             {isCurrentlyActive(detailDialog.story) && detailDialog.story.isActive && (
                                                 <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-                                                    🎯 نشط حالياً
+                                                     نشط حالياً
                                                 </Badge>
                                             )}
 
@@ -1532,9 +1268,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                     <CardContent className="pt-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                                <div className="text-2xl font-bold text-blue-600">
-                                                    {detailDialog.story.isActive ? "✅" : "❌"}
-                                                </div>
                                                 <div className="text-sm font-medium text-gray-700 mt-1">الحالة</div>
                                                 <div className="text-lg font-bold text-gray-900">
                                                     {detailDialog.story.isActive ? "نشط" : "معطل"}
@@ -1542,9 +1275,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                             </div>
 
                                             <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                                                <div className="text-2xl font-bold text-purple-600">
-                                                    {detailDialog.story.isStory ? "📖" : "📢"}
-                                                </div>
                                                 <div className="text-sm font-medium text-gray-700 mt-1">النوع</div>
                                                 <div className="text-lg font-bold text-gray-900">
                                                     {detailDialog.story.isStory ? "قصة" : "إعلان"}
@@ -1552,7 +1282,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                             </div>
 
                                             <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
-                                                <div className="text-2xl font-bold text-orange-600">🎯</div>
                                                 <div className="text-sm font-medium text-gray-700 mt-1">الحالة الحالية</div>
                                                 <div className="text-lg font-bold text-gray-900">
                                                     {isCurrentlyActive(detailDialog.story) ? "نشط الآن" : "غير نشط"}
@@ -1560,7 +1289,6 @@ const endItem = Math.min(currentPage * itemsPerPage, totalItems)
                                             </div>
 
                                             <div className="text-center p-3 bg-red-50 rounded-lg border border-red-100">
-                                                <div className="text-2xl font-bold text-red-600">🔢</div>
                                                 <div className="text-sm font-medium text-gray-700 mt-1">الترتيب</div>
                                                 <div className="text-lg font-bold text-gray-900">
                                                     {detailDialog.story.orderIndex || 0}

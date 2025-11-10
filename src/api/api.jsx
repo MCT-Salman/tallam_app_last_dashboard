@@ -12,7 +12,6 @@ const api = axios.create({
     },
 });
 
-// const api = axiosInstance;
 
 // Interceptor لإضافة توكن JWT إلى كل طلب مصادق عليه
 api.interceptors.request.use(
@@ -163,18 +162,6 @@ export const createSpecialization = (name, imageUrl) => {
 export const getSpecializations = (params) =>
     api.get('/catalog/admin/specializations', { params });
 
-// تحديث اختصاص
-// export const updateSpecialization = (id, data) => {
-//     const formData = new FormData();
-//     formData.append('name', data.name);
-//     if (data.imageUrl) {
-//         formData.append('imageUrl', data.imageUrl);
-//     }
-//     return api.put(`/catalog/admin/specializations/${id}`, formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//     });
-// };
-
 export const updateSpecialization = (id, data) => {
     const formData = new FormData();
     formData.append('name', data.name);
@@ -189,20 +176,6 @@ export const updateSpecialization = (id, data) => {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 };
-
-// export const updateSpecialization = (id, data) => {
-//     const formData = new FormData();
-//     formData.append('name', data.name);
-
-//     if (data.imageUrl) {
-//         // data.imageUrl يجب أن يكون File أو Blob
-//         formData.append('imageUrl', data.imageUrl);
-//     }
-
-//     // لا تحدد Content-Type يدويًا، Axios يضبطه تلقائيًا
-//     return api.put(`/catalog/admin/specializations/${id}`, formData);
-// };
-
 
 // تفعيل/تعطيل اختصاص
 export const toggleSpecializationStatus = (id, isActive) =>
@@ -298,59 +271,6 @@ export const deleteCourse = (id) =>
     api.delete(`/catalog/admin/courses/${id}`);
 
 // --- إدارة مستويات الدورات ---
-// إنشاء مستوى جديد
-// export const createCourseLevel = (courseId, data) => {
-//     const formData = new FormData();
-//     formData.append('title', data.title);
-//     formData.append('description', data.description || ''); 
-//     formData.append('order', data.order);
-//     formData.append('priceUSD', data.priceUSD);
-//     formData.append('priceSAR', data.priceSAR);
-//     formData.append('isFree', data.isFree || false);
-//     formData.append('imageUrl', data.imageUrl);
-//     formData.append('previewUrl', data.previewUrl);
-//     formData.append('downloadUrl', data.downloadUrl || '');
-//     formData.append('instructorId', data.instructorId);
-
-//     return api.post(`/lessons/admin/courses/${courseId}/levels`, formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//     });
-// };
-
-// // عرض مستويات دورة
-// export const getCourseLevels = (courseId) =>
-//     api.get(`/lessons/admin/courses/${courseId}/levels`);
-
-// // تحديث مستوى
-// export const updateCourseLevel = (id, data) => {
-//     const formData = new FormData();
-//     formData.append('title', data.title);
-//     formData.append('description', data.description || ''); 
-//     formData.append('order', data.order);
-//     formData.append('priceUSD', data.priceUSD);
-//     formData.append('priceSAR', data.priceSAR);
-//     formData.append('isFree', data.isFree || false);
-//     if (data.imageUrl) {
-//         formData.append('imageUrl', data.imageUrl);
-//     }
-//     formData.append('previewUrl', data.previewUrl);
-//     formData.append('downloadUrl', data.downloadUrl || '');
-//     formData.append('instructorId', data.instructorId);
-
-//     return api.put(`/lessons/admin/levels/${id}`, formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//     });
-// };
-
-// // تفعيل/إلغاء تفعيل مستوى
-// export const toggleCourseLevelStatus = (id, isActive) =>
-//     api.put(`/lessons/admin/levels/${id}/active`, { isActive });
-
-// // حذف مستوى
-// export const deleteCourseLevel = (id) =>
-//     api.delete(`/lessons/admin/levels/${id}`);
-
-// --- إدارة مستويات الدورات ---
 
 export const createCourseLevel = (courseId, data) => {
     const formData = new FormData();
@@ -377,13 +297,13 @@ export const updateCourseLevel = (id, data) => {
     formData.append('order', data.order);
     formData.append('priceUSD', data.priceUSD);
     formData.append('priceSAR', data.priceSAR);
-    formData.append('isFree', data.isFree.toString()); // ⬅️ تحويل إلى string
+    formData.append('isFree', data.isFree.toString()); 
     formData.append('previewUrl', data.previewUrl);
     formData.append('downloadUrl', data.downloadUrl || '');
     formData.append('instructorId', data.instructorId);
     
     if (data.imageUrl) {
-        formData.append('imageUrl', data.imageUrl); // ⬅️ إضافة الصورة إذا موجودة
+        formData.append('imageUrl', data.imageUrl); 
     }
 
     return api.put(`/lessons/admin/levels/${id}`, formData, {
@@ -398,59 +318,6 @@ export const toggleCourseLevelStatus = (id, isActive) =>
 
 export const deleteCourseLevel = (id) =>
     api.delete(`/lessons/admin/levels/${id}`);
-
-// // --- إدارة الدروس ---
-// // إنشاء درس للدورة مباشرة
-// export const createLesson = (courseId, data) =>
-//     api.post(`/lessons/admin/courses/${courseId}/lessons`, data);
-
-// // إنشاء درس لمستوى محدد
-// export const createLessonForLevel = (courseLevelId, data) => {
-//     const formData = new FormData();
-//     formData.append('title', data.title);
-//     formData.append('description', data.description || '');
-//     formData.append('youtubeUrl', data.youtubeUrl);
-//     formData.append('youtubeId', data.youtubeId || '');
-//     formData.append('durationSec', data.durationSec || 0);
-//     formData.append('orderIndex', data.orderIndex || 1);
-//     formData.append('isFreePreview', data.isFreePreview || false);
-
-//     return api.post(`/lessons/admin/levels/${courseLevelId}/lessons`, formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//     });
-// };
-
-// // عرض دروس دورة
-// export const getCourseLessons = (courseId) =>
-//     api.get(`/lessons/admin/courses/${courseId}/lessons`);
-
-// // عرض دروس مستوى
-// export const getLevelLessons = (courseLevelId) =>
-//     api.get(`/lessons/admin/levels/${courseLevelId}/lessons`);
-
-// // تحديث درس
-// export const updateLesson = (id, data) => {
-//     const formData = new FormData();
-//     formData.append('title', data.title);
-//     formData.append('description', data.description || '');
-//     formData.append('youtubeUrl', data.youtubeUrl);
-//     formData.append('youtubeId', data.youtubeId || '');
-//     formData.append('durationSec', data.durationSec || 0);
-//     formData.append('orderIndex', data.orderIndex || 1);
-//     formData.append('isFreePreview', data.isFreePreview || false);
-
-//     return api.put(`/lessons/admin/lessons/${id}`, formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//     });
-// };
-
-// // تفعيل/إلغاء تفعيل درس
-// export const toggleLessonStatus = (id, isActive) =>
-//     api.put(`/lessons/admin/lessons/${id}/active`, { isActive });
-
-// // حذف درس
-// export const deleteLesson = (id) =>
-//     api.delete(`/lessons/admin/lessons/${id}`);
 
 // --- إدارة الدروس ---
 // إنشاء درس للدورة مباشرة
@@ -497,30 +364,6 @@ export const toggleUserActive = (id) => api.put(`/users/${id}/toggle-active`);
 export const deleteUserSession = (userId) =>
     api.delete(`/admin/delete-session`, { data: { userId } });
 
-// --- إدارة المعاملات ---
-// export const getTransactions = (params) => api.get('/admin/transactions', { params });
-// export const getTransactionById = (id) => api.get(`/admin/transactions/${id}`);
-// export const getTransactionStats = (params) => api.get('/admin/transactions/stats/overview', { params });
-// export const getTransactionsByDate = (params) => api.get('/admin/transactions/analytics/date', { params });
-
-// --- إدارة التقدم ---
-// export const markLessonComplete = (lessonId) => api.post(`/progress/lessons/${lessonId}/complete`);
-// export const getCourseProgress = (courseId) => api.get(`/progress/courses/${courseId}`);
-
-// --- إدارة التقييمات ---
-// export const getReviewsForCourseLevel = (courseLevelId, params) =>
-//     api.get(`/reviews/courselevels/${courseLevelId}`, { params });
-// export const getReviewStats = (courseLevelId) =>
-//     api.get(`/reviews/courselevels/${courseLevelId}/stats`);
-// export const createReview = (courseLevelId, data) =>
-//     api.post(`/reviews/courselevels/${courseLevelId}`, data);
-// export const getMyReview = (courseLevelId) =>
-//     api.get(`/reviews/courselevels/${courseLevelId}/mine`);
-// export const updateReview = (reviewId, data) =>
-//     api.put(`/reviews/${reviewId}`, data);
-// export const deleteReview = (reviewId) =>
-//     api.delete(`/reviews/${reviewId}`);
-
 // --- إدارة الاختبارات ---
 export const getQuizByCourseLevel = (courseLevelId) =>
     api.get(`/admin/courselevels/${courseLevelId}/questions`);
@@ -544,43 +387,6 @@ export const updateCoupon = (id, data) => api.put(`/coupons/admin/${id}`, data);
 export const deleteCoupon = (id) => api.delete(`/coupons/admin/${id}`);
 export const toggleCouponActive = (id, isActive) =>
     api.put(`/coupons/admin/${id}`, { isActive });
-
-// // --- إدارة الملفات ---
-
-// // GET - جلب قائمة الملفات (يحتاج تأكيد الـ endpoint الصحيح)
-// export const getFiles = (params) => api.get('/files/admin/files', { params });
-
-// // POST - رفع ملف جديد
-// export const uploadFile = (data) => api.post('/files/admin/files', data, {
-//     headers: { 'Content-Type': 'multipart/form-data' },
-// });
-
-// // PUT - تعديل ملف
-// export const updateFile = (id, data) => api.put(`/files/admin/files/${id}`, data, {
-//     headers: { 'Content-Type': 'multipart/form-data' },
-// });
-
-// // DELETE - حذف ملف
-// export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
-
-// // GET - جلب تفاصيل ملف معين
-// export const getFileDetails = (id) => api.get(`/files/admin/files/${id}`);
-
-// // --- إذا لم يعمل GET أعلاه، جرب هذه الـ endpoints البديلة ---
-
-// // البديل 1: استخدام POST لجلب الملفات
-// export const getFilesPost = (data) => api.post('/files/admin/files/list', data, {
-//     headers: { 'Content-Type': 'application/json' },
-// });
-
-// // البديل 2: endpoint مختلف
-// export const getFilesAlt = (params) => api.get('/files/admin', { params });
-
-// // البديل 3: endpoint مختلف آخر
-// export const getFilesAlt2 = (params) => api.get('/files/admin/list', { params });
-
-
-
 
 // --- إدارة الملفات ---
 
@@ -609,8 +415,6 @@ export const updateFile = (id, data) => {
 // DELETE - حذف ملف (إذا كان مدعوماً)
 export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
 
-// --- الدوال السابقة (للتوافق مع الكود الحالي) ---
-
 // GET - جلب قائمة الملفات (دالة مساعدة)
 export const getFiles = (params) => {
   // إذا كان هناك levelId في params، استخدم endpoint المستوى
@@ -635,58 +439,6 @@ export const getFilesPost = (data) => {
   return Promise.reject(new Error('يجب تحديد courseLevelId'));
 };
 
-
-
-
-
-
-// --- إدارة الإعلانات ---
-
-// export const getAdvertisements = (params) => api.get('/ads/admin', { params });
-// export const createAdvertisement = (data) => api.post('/ads/admin', data, {
-//     headers: { 'Content-Type': 'multipart/form-data' },
-// });
-// export const updateAdvertisement = (id, data) => api.put(`/ads/admin/${id}`, data, {
-//     headers: { 'Content-Type': 'multipart/form-data' },
-// });
-// export const deleteAdvertisement = (id) => api.delete(`/ads/admin/${id}`);
-// export const toggleAdvertisementActive = (id, isActive) =>
-//     api.put(`/ads/admin/${id}`, { isActive });
-
-// --- إعدادات التطبيق ---
-// export const getAppSettings = () => api.get('/settings');
-// export const updateAppSettings = (data) => api.put('/settings', data);
-
-// --- إدارة المجالات والمواد ---
-// export const getDomains = () => api.get('/catalog/admin/domains');
-// export const createDomain = (name) => api.post('/catalog/admin/domains', { name });
-// export const updateDomain = (id, data) => api.put(`/catalog/admin/domains/${id}`, data);
-// export const toggleDomainActive = (id, isActive) =>
-//     api.put(`/catalog/admin/domains/${id}/active`, { isActive });
-// export const deleteDomain = (id) => api.delete(`/catalog/admin/domains/${id}`);
-
-// export const getSubjects = (params) => api.get('/catalog/admin/subjects', { params });
-// export const createSubject = (data) => api.post('/catalog/admin/subjects', data);
-// export const updateSubject = (id, data) => api.put(`/catalog/admin/subjects/${id}`, data);
-// export const toggleSubjectActive = (id, isActive) =>
-//     api.put(`/catalog/admin/subjects/${id}/active`, { isActive });
-// export const deleteSubject = (id) => api.delete(`/catalog/admin/subjects/${id}`);
-
-// --- إدارة مستويات الدورات ---
-// getCourseLevels موجودة بالفعل أعلاه
-
-// --- إدارة الدروس ---
-// getLessons, createLesson, updateLesson, deleteLesson موجودة بالفعل أعلاه
-
-// إصلاح مسارات الدروس والمستويات
-// getLevelLessons موجودة بالفعل أعلاه
-
-// --- إدارة قصص النجاح ---
-// export const getStories = (params) => api.get('/stories', { params });
-// export const createStory = (data) => api.post('/stories', data);
-// export const updateStory = (id, data) => api.put(`/stories/${id}`, data);
-// export const deleteStory = (id) => api.delete(`/stories/${id}`);
-
 // --- إدارة القصص ---
 export const getStories = (params) => 
     api.get('/story/admin/stories', { params });
@@ -707,60 +459,7 @@ export const updateStory = (id, data) =>
 export const deleteStory = (id) => 
     api.delete(`/story/admin/stories/${id}`);
 
-// --- إدارة الإشعارات ---
-// export const getNotifications = (params) => api.get('/notifications', { params });
-// export const createNotification = (data) => api.post('/notifications', data);
-// export const markNotificationAsRead = (id) => api.put(`/notifications/${id}/read`);
-
-// --- إدارة المقترحات ---
-// export const getSuggestions = (params) => api.get('/suggestions', { params });
-// export const updateSuggestion = (id, data) => api.put(`/suggestions/${id}`, data);
-// export const deleteSuggestion = (id) => api.delete(`/suggestions/${id}`);
-
-// --- إدارة رسائل الدعم ---
-// export const getSupportMessages = (params) => api.get('/support', { params });
-// export const replyToSupport = (id, data) => api.post(`/support/${id}/reply`, data);
-
-// --- إدارة المديرين الفرعيين ---
-// export const getSubAdmins = (params) => api.get('/admin/sub-admins', { params });
-// export const createSubAdmin = (data) => api.post('/admin/sub-admins', data);
-// export const updateSubAdmin = (id, data) => api.put(`/admin/sub-admins/${id}`, data);
-// export const deleteSubAdmin = (id) => api.delete(`/admin/sub-admins/${id}`);
-
-
-
-// --- Access Codes API ---
-
-// توليد كود جديد
-// export const generateAccessCode = async (formData) => {
-//   const response = await api.post('/access-codes/admin/generate', formData, {
-//     headers: {
-//       'Content-Type': 'multipart/form-data',
-//     },
-//   });
-//   return response;
-// };
-
-// // جلب جميع الأكواد
-// export const getAllAccessCodes = async () => {
-//   const response = await api.get('/access-codes/admin/all');
-//   return response;
-// };
-
-// // جلب أكواد مستخدم معين
-// export const getAccessCodesByUserId = async (userId) => {
-//   const response = await api.get(`/access-codes/admin/user/${userId}`);
-//   return response;
-// };
-
-// // جلب أكواد كورس معين
-// export const getAccessCodesByCourse = async (courseId) => {
-//   const response = await api.get(`/access-codes/admin/course/${courseId}`);
-//   return response;
-// };
-
-
-
+// --- إدارة أكواد الوصول ---
 // توليد كود جديد
 export const generateAccessCode = async (formData) => {
   const response = await api.post('/access-codes/admin/generate', formData, {
@@ -826,13 +525,6 @@ export const calculateFinalPrice = async (couponId, courseLevelId) => {
 };
 
 
-
-// حذف كود 
-// export const deleteAccessCode = async (codeId) => {
-//   const response = await api.delete(`/access-codes/admin/${codeId}`);
-//   return response;
-// };
-
 // --- Suggestions API ---
 
 // جلب جميع الاقتراحات
@@ -840,10 +532,6 @@ export const getSuggestions = async (params = {}) => {
   const response = await api.get('/suggestions/admin', { params });
   return response;
 };
-
-// --- Notifications API ---
-
-
 
 // --- إدارة الإشعارات ---
 
@@ -862,7 +550,6 @@ export const createBroadcastNotification = (data) => {
 // DELETE - حذف إشعار
 export const deleteNotification = (id) => api.delete(`/notifications/admin/${id}`);
 
-// --- الدوال السابقة (للتوافق مع الكود الحالي) ---
 
 // POST - إنشاء إشعار لمستخدم واحد (للتوافق مع الكود الحالي)
 export const createNotification = (data) => {
@@ -873,182 +560,6 @@ export const createNotification = (data) => {
   });
 };
 
-
-
-
-
-// في ملف api.js - أضف هذه الدوال
-
-// الإشعارات
-// export const getNotifications = async (params = {}) => {
-//     try {
-//         const response = await api.get('/notifications/admin', { params });
-//         return response;
-//     } catch (error) {
-//         console.error('Error fetching notifications:', error);
-//         throw error;
-//     }
-// };
-
-// export const createNotification = async (notificationData) => {
-//     try {
-//         // تأكد من أن البيانات تتوافق مع المتطلبات
-//         const data = {
-//             userId: notificationData.userId,
-//             title: notificationData.title,
-//             body: notificationData.body,
-//             type: notificationData.type || 'GENERAL',
-//             link: notificationData.link || undefined,
-//             imageUrl: notificationData.imageUrl || undefined,
-//             data: notificationData.data || undefined
-//         };
-        
-//         const response = await api.post('/notifications/admin', data);
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating notification:', error);
-//         throw error;
-//     }
-// };
-
-// export const createNotification = async (notificationData) => {
-//     try {
-//         // تنظيف البيانات - إزالة الحقول undefined
-//         const cleanData = Object.fromEntries(
-//             Object.entries(notificationData).filter(([_, value]) => value !== undefined && value !== null)
-//         );
-        
-//         const response = await api.post('/notifications/admin', cleanData);
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating notification:', error);
-//         throw error;
-//     }
-// };
-
-// export const createBroadcastNotification = async (notificationData) => {
-//     try {
-//         // تأكد من أن البيانات تتوافق مع المتطلبات
-//         const data = {
-//             title: notificationData.title,
-//             body: notificationData.body,
-//             type: notificationData.type || 'GENERAL',
-//             link: notificationData.link || undefined,
-//             imageUrl: notificationData.imageUrl || undefined,
-//             data: notificationData.data || undefined
-//         };
-        
-//         const response = await api.post('/notifications/admin/broadcast', data);
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating broadcast notification:', error);
-//         throw error;
-//     }
-// };
-
-// export const createNotificationForUsers = async (notificationData) => {
-//     try {
-//         // تأكد من أن البيانات تتوافق مع المتطلبات
-//         const data = {
-//             userIds: notificationData.userIds,
-//             title: notificationData.title,
-//             body: notificationData.body,
-//             type: notificationData.type || 'GENERAL',
-//             link: notificationData.link || undefined,
-//             imageUrl: notificationData.imageUrl || undefined,
-//             data: notificationData.data || undefined
-//         };
-        
-//         const response = await api.post('/notifications/admin/users', data);
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating notification for users:', error);
-//         throw error;
-//     }
-// };
-
-// الإشعارات
-// export const createNotification = async (formData) => {
-//     try {
-//         const response = await api.post('/notifications/admin', formData, {
-//             headers: {
-//                 'Content-Type': 'multipart/form-data'
-//             }
-//         });
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating notification:', error);
-//         throw error;
-//     }
-// };
-
-// export const createBroadcastNotification = async (formData) => {
-//     try {
-//         const response = await api.post('/notifications/admin/broadcast', formData, {
-//             headers: {
-//                 'Content-Type': 'multipart/form-data'
-//             }
-//         });
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating broadcast notification:', error);
-//         throw error;
-//     }
-// };
-
-// export const createNotificationForUsers = async (formData) => {
-//     try {
-//         const response = await api.post('/notifications/admin/users', formData, {
-//             headers: {
-//                 'Content-Type': 'multipart/form-data'
-//             }
-//         });
-//         return response;
-//     } catch (error) {
-//         console.error('Error creating notification for users:', error);
-//         throw error;
-//     }
-// };
-
-// export const deleteNotification = async (notificationId) => {
-//     try {
-//         const response = await api.delete(`/notifications/admin/${notificationId}`);
-//         return response;
-//     } catch (error) {
-//         console.error('Error deleting notification:', error);
-//         throw error;
-//     }
-// };
-
-// جلب جميع الإشعارات
-// export const getNotifications = async (params = {}) => {
-//   const response = await api.get('/notifications/admin', { params });
-//   return response;
-// };
-
-// // إنشاء إشعار لمستخدم معين
-// export const createNotification = async (notificationData) => {
-//   const response = await api.post('/notifications/admin', notificationData);
-//   return response;
-// };
-
-// // إنشاء إشعار عام لجميع المستخدمين
-// export const createBroadcastNotification = async (notificationData) => {
-//   const response = await api.post('/notifications/admin/broadcast', notificationData);
-//   return response;
-// };
-
-// // إنشاء إشعار لمستخدمين محددين
-// export const createNotificationForUsers = async (notificationData) => {
-//   const response = await api.post('/notifications/admin/users', notificationData);
-//   return response;
-// };
-
-// // حذف إشعار
-// export const deleteNotification = async (notificationId) => {
-//   const response = await api.delete(`/notifications/admin/${notificationId}`);
-//   return response;
-// };
 
 // --- إدارة التحويلات المالية والفواتير ---
 
@@ -1067,27 +578,6 @@ export const getTransactionStats = (params) =>
 // جلب تحليلات المعاملات حسب التاريخ
 export const getTransactionsByDate = (params) => 
     api.get('/transactions/admin/analytics/date', { params });
-
-// //   للإعدادات
-// // 1. جلب إعدادات التواصل
-// export const getContactSettings = () =>
-//     api.get('/settings/contact');
-
-// // 2. جلب جميع الإعدادات
-// export const getAllSettings = () =>
-//     api.get('/settings/');
-
-// // 3. تعديل إعداد محدد
-// export const updateSetting = (key, value) =>
-//     api.put('/settings/allowRating', { key, value });
-
-// // 4. إضافة إعداد جديد
-// export const addSetting = (data) =>
-//     api.post('/settings', data);
-
-// // 5. تعديل جميع الإعدادات
-// export const updateAllSettings = (data) =>
-//     api.put('/settings/', data);
 
 
 //   للإعدادات
@@ -1124,10 +614,12 @@ export const deleteAdmin = (adminId) =>
     api.delete(`/admin/${adminId}`);
 
 
-
 //   لإدارة التقييمات
 export const getReviews = (courseLevelId) =>
     api.get(`/reviews/all?courseLevelId=${courseLevelId}`);
+
+export const deleteReview = (Id) =>
+    api.delete(`/reviews/admin/${Id}`);
 
 // // --- تقارير المدرسين ---
 
@@ -1140,16 +632,6 @@ export const getInstructorReport = (instructorId, startDate, endDate) => {
         }
     });
 };
-
-// // --- تقارير الأكواد النشطة ---
-// export const getAccessCodesReport = () => {
-//     return api.get('/access-codes/admin/report');
-// };
-
-// // --- تقارير المستخدمين حسب البلد ---
-// export const getUsersReport = () => {
-//     return api.get('/users/report');
-// };
 
 
 // --- تقارير لوحة التحكم ---
@@ -1189,12 +671,12 @@ export const getDashboardStats = () => {
 
 export const getCouponsByLevelOrUser = (data) => api.post('/coupons/admin/listcoupons', data);
 
-// 🔄 جلب قائمة أكواد المستويات
+//  جلب قائمة أكواد المستويات
 export const getCodeLevels = () => {
     return api.get('/lessons/admin/codelevels');
 };
 
-// 🔄 جلب تفاصيل المستوى بواسطة الترميز
+//  جلب تفاصيل المستوى بواسطة الترميز
 export const getCodeLevelByEncode = (encode) => {
     return api.get(`/lessons/admin/CodeLevel/${encode}`);
 };

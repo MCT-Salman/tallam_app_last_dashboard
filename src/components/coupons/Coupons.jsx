@@ -1,18 +1,29 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Plus, Edit, Copy, BadgeCheck, CheckCircle, ArrowDown, LayoutGrid, List, ArrowUp, X, XCircle, DollarSign, RefreshCw, Ticket, Book, Tag, Maximize, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users, BookOpen, Loader2, Filter, User, Star, Info } from "lucide-react"
-import { getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive, getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse, getAllUsersHavePoints } from "@/api/api"
+import {
+  Plus, Edit, Copy, BadgeCheck, CheckCircle,
+  List, X, XCircle, DollarSign,
+  Ticket, Tag, Maximize, Trash2, Play, Pause, Search,
+  ChevronLeft, ChevronRight, Eye, Calendar, Percent, Hash, Users,
+  BookOpen, Loader2, Filter, User, Star, Info, Globe
+} from "lucide-react"
+import {
+  getCoupons, createCoupon, updateCoupon, deleteCoupon, toggleCouponActive,
+  getCourseLevels, getCourses, getSpecializations, getInstructorsByCourse,
+  getAllUsersHavePoints, getAllUsers
+} from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Coupons = () => {
@@ -24,14 +35,10 @@ const Coupons = () => {
   const [instructors, setInstructors] = useState([])
   const [courseLevels, setCourseLevels] = useState([])
   const [usersWithPoints, setUsersWithPoints] = useState([])
+  const [allUsers, setAllUsers] = useState([])
+  const [allUsersLoading, setAllUsersLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [usersLoading, setUsersLoading] = useState(false)
-
-  // حالات التحديد الهرمي
-  const [selectedSpecialization, setSelectedSpecialization] = useState("")
-  const [selectedCourse, setSelectedCourse] = useState("")
-  const [selectedInstructor, setSelectedInstructor] = useState("")
-  const [selectedLevel, setSelectedLevel] = useState("")
 
   // حالات البحث في التحديدات
   const [specializationSearch, setSpecializationSearch] = useState("")
@@ -76,10 +83,8 @@ const Coupons = () => {
   const [userFilter, setUserFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortOrder, setSortOrder] = useState("desc")
-  const [totalCoupons, setTotalCoupons] = useState(0)
-  const [viewMode, setViewMode] = useState('grid');
 
-  // 🔄 جلب البيانات الأساسية
+  //  جلب البيانات الأساسية
   const fetchSpecializations = async () => {
     try {
       const res = await getSpecializations()
@@ -108,7 +113,7 @@ const Coupons = () => {
 
       setCourses(allCourses)
     } catch (err) {
-      console.error("❌ Error fetching courses:", err)
+      console.error(" Error fetching courses:", err)
       showErrorToast("فشل تحميل المواد")
     }
   }
@@ -116,12 +121,11 @@ const Coupons = () => {
   const fetchInstructorsByCourse = async (courseId) => {
     if (!courseId) {
       setInstructors([]);
-      setSelectedInstructor("");
       return;
     }
 
     try {
-      console.log("🔄 Fetching instructors for course:", courseId);
+      console.log(" Fetching instructors for course:", courseId);
       const res = await getInstructorsByCourse(courseId);
       console.log("📊 Instructors API full response:", res);
 
@@ -136,10 +140,10 @@ const Coupons = () => {
         data = res.data;
       }
 
-      console.log("✅ Extracted instructors for course:", data);
+      console.log(" Extracted instructors for course:", data);
       setInstructors(data || []);
     } catch (err) {
-      console.error("❌ Error fetching instructors:", err);
+      console.error(" Error fetching instructors:", err);
       showErrorToast("فشل تحميل المدرسين");
       setInstructors([]);
     }
@@ -168,7 +172,7 @@ const Coupons = () => {
         data = res.data.data.data;
       }
 
-      // ✅ فلترة المستويات حسب المدرس المحدد
+      //  فلترة المستويات حسب المدرس المحدد
       let filteredLevels = data || [];
       if (instructorId) {
         const selectedInstructorData = instructors.find(inst => inst.id === parseInt(instructorId));
@@ -194,12 +198,12 @@ const Coupons = () => {
     }
   }
 
-  // 🔄 جلب المستخدمين الذين لديهم نقاط
+  //  جلب المستخدمين الذين لديهم نقاط
   const fetchUsersWithPoints = async () => {
     setUsersLoading(true);
     try {
       const res = await getAllUsersHavePoints();
-      console.log("📊 Users with points response:", res);
+      console.log(" Users with points response:", res);
 
       let data = [];
       if (res.data?.success && Array.isArray(res.data.data)) {
@@ -212,16 +216,41 @@ const Coupons = () => {
 
       setUsersWithPoints(data || []);
     } catch (err) {
-      console.error("❌ Error fetching users with points:", err);
+      console.error(" Error fetching users with points:", err);
       showErrorToast("فشل تحميل بيانات المستخدمين");
       setUsersWithPoints([]);
     } finally {
       setUsersLoading(false);
     }
   };
-  
 
-  // 🔄 جلب الكوبونات
+  const fetchAllUsers = async () => {
+    setAllUsersLoading(true);
+    try {
+      const res = await getAllUsers();
+      console.log(" All users response:", res);
+
+      let data = [];
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res.data?.data?.items)) {
+        data = res.data.data.items;
+      } else if (Array.isArray(res.data?.data)) {
+        data = res.data.data;
+      }
+
+      setAllUsers(data || []);
+    } catch (err) {
+      console.error(" Error fetching all users:", err);
+      showErrorToast("فشل تحميل بيانات المستخدمين");
+      setAllUsers([]);
+    } finally {
+      setAllUsersLoading(false);
+    }
+  };
+
+
+  //  جلب الكوبونات
   const fetchCoupons = async () => {
     setLoading(true)
     try {
@@ -232,10 +261,10 @@ const Coupons = () => {
         isActive: statusFilter !== "all" ? (statusFilter === "active") : undefined
       }
 
-      console.log("📤 Fetching coupons with params:", params)
+      console.log(" Fetching coupons with params:", params)
 
       const res = await getCoupons(params)
-      console.log("📊 Coupons API response:", res)
+      console.log(" Coupons API response:", res)
 
       // معالجة الـ response
       let data = []
@@ -254,31 +283,30 @@ const Coupons = () => {
 
       setAllCoupons(data || [])
       setCoupons(data || [])
-      setTotalCoupons(total || 0)
     } catch (err) {
-      console.error("❌ Error fetching coupons:", err)
+      console.error(" Error fetching coupons:", err)
       showErrorToast("فشل تحميل الكوبونات")
       setAllCoupons([])
       setCoupons([])
-      setTotalCoupons(0)
     } finally {
       setLoading(false)
     }
   }
 
-  // 🔄 useEffect للبيانات الأساسية
+  //  useEffect للبيانات الأساسية
   useEffect(() => {
     fetchSpecializations()
     fetchCourses()
     fetchCoupons()
+    fetchAllUsers()
   }, [])
 
-  // 🔄 useEffect للفلترة
+  //  useEffect للفلترة
   useEffect(() => {
     fetchCoupons()
   }, [currentPage, itemsPerPage, searchTerm, statusFilter])
 
-  // 🔄 عند تغيير الاختصاص في الفلتر
+  //  عند تغيير الاختصاص في الفلتر
   useEffect(() => {
     if (specializationFilter && specializationFilter !== "all") {
       fetchCourses(specializationFilter)
@@ -293,7 +321,7 @@ const Coupons = () => {
     }
   }, [specializationFilter])
 
-  // 🔄 عند تغيير الكورس في الفلتر
+  //  عند تغيير الكورس في الفلتر
   useEffect(() => {
     if (courseFilter && courseFilter !== "all") {
       fetchInstructorsByCourse(parseInt(courseFilter))
@@ -306,7 +334,7 @@ const Coupons = () => {
     }
   }, [courseFilter])
 
-  // 🔄 عند تغيير المدرس في الفلتر
+  //  عند تغيير المدرس في الفلتر
   useEffect(() => {
     if (instructorFilter && instructorFilter !== "all") {
       fetchCourseLevels(parseInt(courseFilter), parseInt(instructorFilter))
@@ -317,7 +345,7 @@ const Coupons = () => {
     }
   }, [instructorFilter, courseFilter])
 
-  // 🔄 عند تغيير الاختصاص في النموذج
+  //  عند تغيير الاختصاص في النموذج
   useEffect(() => {
     if (form.specializationId) {
       fetchCourses(form.specializationId)
@@ -328,7 +356,7 @@ const Coupons = () => {
     }
   }, [form.specializationId])
 
-  // 🔄 عند تغيير الكورس في النموذج
+  //  عند تغيير الكورس في النموذج
   useEffect(() => {
     if (form.courseId) {
       fetchInstructorsByCourse(parseInt(form.courseId))
@@ -339,7 +367,7 @@ const Coupons = () => {
     }
   }, [form.courseId, allCoupons])
 
-  // 🔄 عند تغيير المدرس في النموذج
+  //  عند تغيير المدرس في النموذج
   useEffect(() => {
     if (form.instructorId) {
       fetchCourseLevels(parseInt(form.courseId), parseInt(form.instructorId))
@@ -350,7 +378,7 @@ const Coupons = () => {
     }
   }, [form.instructorId, form.courseId])
 
-  // 🔄 عند فتح dialog التعديل - تعبئة البيانات التلقائية
+  //  عند فتح dialog التعديل - تعبئة البيانات التلقائية
   useEffect(() => {
     if (editItem && isDialogOpen) {
       const coupon = allCoupons.find(c => c.id === editItem.id);
@@ -394,7 +422,7 @@ const Coupons = () => {
     }
   }, [editItem, isDialogOpen, allCoupons]);
 
-  // 🎯 دالة التعديل
+  //  دالة التعديل
   const handleEdit = (coupon) => {
     setEditItem(coupon);
     const newForm = {
@@ -422,7 +450,7 @@ const Coupons = () => {
     }
   };
 
-  // 🔄 فلترة البيانات للبحث في التحديدات
+  //  فلترة البيانات للبحث في التحديدات
   const filteredSpecializationsForSelect = useMemo(() => {
     if (!specializationSearch) return specializations;
     return specializations.filter(spec =>
@@ -460,7 +488,16 @@ const Coupons = () => {
     );
   }, [usersWithPoints, userSearch]);
 
-  // 🔄 فلترة وترتيب الكوبونات
+  const filteredAllUsersForSelect = useMemo(() => {
+    if (!userSearch) return allUsers;
+    return allUsers.filter(user =>
+      user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      user.id?.toString().includes(userSearch) ||
+      user.phone?.includes(userSearch)
+    );
+  }, [allUsers, userSearch]);
+
+  //  فلترة وترتيب الكوبونات
   const filteredAndSortedCoupons = useMemo(() => {
     let filtered = [...allCoupons]
 
@@ -546,19 +583,19 @@ const Coupons = () => {
     return filtered
   }, [allCoupons, searchTerm, statusFilter, typeFilter, specializationFilter, courseFilter, userFilter, sortBy, sortOrder])
 
-  // 🔄 حساب البيانات المعروضة في الصفحة الحالية
+  //  حساب البيانات المعروضة في الصفحة الحالية
   const paginatedCoupons = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     return filteredAndSortedCoupons.slice(startIndex, endIndex)
   }, [filteredAndSortedCoupons, currentPage, itemsPerPage])
 
-  // 🔄 إعادة تعيين الصفحة عند تغيير الفلتر
+  //  إعادة تعيين الصفحة عند تغيير الفلتر
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, statusFilter, typeFilter, specializationFilter, courseFilter, instructorFilter, levelFilter, userFilter, itemsPerPage])
 
-  // 🎯 دوال التعامل مع النموذج
+  //  دوال التعامل مع النموذج
   const handleFormChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }))
 
@@ -566,10 +603,32 @@ const Coupons = () => {
     if (key === "couponType") {
       if (value === "courseLevel") {
         setForm(prev => ({ ...prev, userId: "" }))
+      } else if (value === "userWithPoints") {
+        setForm(prev => ({
+          ...prev,
+          specializationId: "",
+          courseId: "",
+          instructorId: "",
+          courseLevelId: "",
+          userId: "" // سيتم اختيار المستخدم من القائمة
+        }))
       } else if (value === "user") {
-        setForm(prev => ({ ...prev, specializationId: "", courseId: "", instructorId: "", courseLevelId: "" }))
+        setForm(prev => ({
+          ...prev,
+          specializationId: "",
+          courseId: "",
+          instructorId: "",
+          courseLevelId: ""
+        }))
       } else if (value === "none") {
-        setForm(prev => ({ ...prev, specializationId: "", courseId: "", instructorId: "", courseLevelId: "", userId: "" }))
+        setForm(prev => ({
+          ...prev,
+          specializationId: "",
+          courseId: "",
+          instructorId: "",
+          courseLevelId: "",
+          userId: ""
+        }))
       }
     }
   }
@@ -593,7 +652,7 @@ const Coupons = () => {
     setEditItem(null)
   }
 
-  // 💾 حفظ الكوبون
+  //  حفظ الكوبون
   const handleSave = async () => {
     if (!form.code.trim()) return showErrorToast("يرجى إدخال كود الخصم")
     if (!form.discount || parseFloat(form.discount) <= 0) return showErrorToast("يرجى إدخال قيمة الخصم صحيحة")
@@ -603,6 +662,9 @@ const Coupons = () => {
       return showErrorToast("يرجى اختيار المستوى الدراسي")
     }
     if (form.couponType === "user" && !form.userId) {
+      return showErrorToast("يرجى اختيار المستخدم")
+    }
+    if (form.couponType === "userWithPoints" && !form.userId) {
       return showErrorToast("يرجى اختيار المستخدم")
     }
     if (form.couponType === "both" && (!form.courseLevelId || !form.userId)) {
@@ -624,11 +686,11 @@ const Coupons = () => {
       if (form.couponType === "courseLevel" || form.couponType === "both") {
         couponData.courseLevelId = parseInt(form.courseLevelId)
       }
-      if (form.couponType === "user" || form.couponType === "both") {
+      if (form.couponType === "user" || form.couponType === "both" || form.couponType === "userWithPoints") {
         couponData.userId = parseInt(form.userId)
       }
 
-      console.log("📤 Sending coupon data:", couponData)
+      console.log(" Sending coupon data:", couponData)
 
       if (editItem) {
         await updateCoupon(editItem.id, couponData)
@@ -642,12 +704,12 @@ const Coupons = () => {
       setIsDialogOpen(false)
       fetchCoupons()
     } catch (err) {
-      console.error("❌ Save error:", err.response?.data || err)
+      console.error(" Save error:", err.response?.data || err)
       showErrorToast(err?.response?.data?.message || "فشل العملية")
     }
   }
 
-  // 🔄 تبديل حالة الكوبون
+  //  تبديل حالة الكوبون
   const handleToggleActive = async (id, isActive) => {
     try {
       await toggleCouponActive(id, !isActive)
@@ -658,7 +720,7 @@ const Coupons = () => {
     }
   }
 
-  // 🗑️ حذف الكوبون
+  //  حذف الكوبون
   const handleDelete = async (id) => {
     try {
       await deleteCoupon(id)
@@ -669,20 +731,20 @@ const Coupons = () => {
     }
   }
 
-  // 📅 تنسيق التاريخ
+  //  تنسيق التاريخ
   const formatDate = (dateString) => {
     if (!dateString) return "غير محدد"
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US')
   }
 
-  // 🔍 التحقق من انتهاء الصلاحية
+  //  التحقق من انتهاء الصلاحية
   const isExpired = (expiryDate) => {
     if (!expiryDate) return false
     return new Date(expiryDate) < new Date()
   }
 
-  // 🎯 الحصول على حالة الكوبون
+  //  الحصول على حالة الكوبون
   const getStatusBadgeVariant = (coupon) => {
     if (!coupon.isActive) return 'secondary'
     if (isExpired(coupon.expiry)) return 'destructive'
@@ -697,7 +759,7 @@ const Coupons = () => {
     return "نشط"
   }
 
-  // 📚 الحصول على معلومات الكورس والمستوى
+  //  الحصول على معلومات الكورس والمستوى
   const getCourseLevelInfo = (coupon) => {
     if (!coupon.courseLevel) return "غير محدد"
 
@@ -707,66 +769,46 @@ const Coupons = () => {
     return `${courseName} - ${levelName}`
   }
 
-  // 👤 الحصول على اسم المستخدم
+  //  الحصول على اسم المستخدم
   const getUserInfo = (coupon) => {
     if (!coupon.userId) return "لجميع المستخدمين"
 
-    const user = usersWithPoints.find(u => u.id === coupon.userId)
-    return user ? `${user.name} (${user.points} نقطة)` : `المستخدم ${coupon.userId}`
-  }
+    // البحث في المستخدمين الذين لديهم نقاط أولاً
+    const userWithPoints = usersWithPoints.find(u => u.id === coupon.userId)
+    if (userWithPoints) {
+      return `${userWithPoints.name} (${userWithPoints.points} نقطة)`
+    }
 
-  // 🎯 دوال مساعدة للحصول على الأسماء
-  const getSpecializationName = (specializationId) => {
-    const specialization = specializations.find(spec => spec.id === parseInt(specializationId))
-    return specialization ? (specialization.name || specialization.title) : "غير محدد"
-  }
-
-  const getCourseName = (courseId) => {
-    const course = courses.find(crs => crs.id === parseInt(courseId))
-    return course ? course.title : "غير محدد"
-  }
-
-  const getInstructorName = (instructorId) => {
-    const instructor = instructors.find(inst => inst.id === parseInt(instructorId));
-    return instructor ? instructor.name : "غير محدد";
-  };
-
-  const getLevelName = (levelId) => {
-    const level = courseLevels.find(lvl => lvl.id === parseInt(levelId))
-    return level ? level.name : "غير محدد"
+    // إذا لم يوجد في المستخدمين الذين لديهم نقاط، ابحث في جميع المستخدمين
+    const allUser = allUsers.find(u => u.id === coupon.userId)
+    return allUser ? allUser.name : `المستخدم ${coupon.userId}`
   }
 
   const getUserName = (userId) => {
-    const user = usersWithPoints.find(u => u.id === parseInt(userId))
-    return user ? user.name : "غير محدد"
+    // البحث في المستخدمين الذين لديهم نقاط أولاً
+    const userWithPoints = usersWithPoints.find(u => u.id === parseInt(userId))
+    if (userWithPoints) return userWithPoints.name
+
+    // إذا لم يوجد، ابحث في جميع المستخدمين
+    const allUser = allUsers.find(u => u.id === parseInt(userId))
+    return allUser ? allUser.name : "غير محدد"
   }
 
-  // 🔄 إعادة تعيين جميع التحديدات
-  const resetAllSelections = () => {
-    setSelectedSpecialization("")
-    setSelectedCourse("")
-    setSelectedInstructor("")
-    setSelectedLevel("")
-    setSpecializationSearch("")
-    setCourseSearch("")
-    setInstructorSearch("")
-    setLevelSearch("")
-  }
 
-  // 📊 حسابات الترقيم
+  //  حسابات الترقيم
   const totalItems = filteredAndSortedCoupons.length
   const totalPages = Math.ceil(totalItems / itemsPerPage)
   const startItem = (currentPage - 1) * itemsPerPage + 1
   const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
-  // 🔄 تغيير الصفحة
+  //  تغيير الصفحة
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
     }
   }
 
-  // 🔄 الترتيب
+  //  الترتيب
   const handleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc")
@@ -776,7 +818,7 @@ const Coupons = () => {
     }
   }
 
-  // 🔄 إعادة تعيين الفلاتر
+  //  إعادة تعيين الفلاتر
   const resetFilters = () => {
     setSearchTerm("")
     setStatusFilter("all")
@@ -790,69 +832,6 @@ const Coupons = () => {
     setSortOrder("desc")
     setCurrentPage(1)
   }
-
-  // 👁️ عرض التفاصيل الكاملة للكوبون
-  // const renderCouponDetails = (coupon) => {
-  //   if (!coupon) return null
-
-  //   return (
-  //     <div className="space-y-6 text-right">
-  //       {/* المعلومات الأساسية */}
-  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  //         <div>
-  //           <Label className="font-bold">كود الخصم:</Label>
-  //           <p className="mt-1 text-lg font-mono">{coupon.code}</p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">قيمة الخصم:</Label>
-  //           <p className="mt-1 text-lg">
-  //             {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
-  //           </p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">نوع الخصم:</Label>
-  //           <p className="mt-1">{coupon.isPercent ? 'نسبة مئوية' : 'قيمة ثابتة'}</p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">الحالة:</Label>
-  //           <div className="mt-1">
-  //             <Badge variant={getStatusBadgeVariant(coupon)}>
-  //               {getStatusText(coupon)}
-  //             </Badge>
-  //           </div>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">تاريخ الانتهاء:</Label>
-  //           <p className="mt-1">{formatDate(coupon.expiry)}</p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">الحد الأقصى للاستخدام:</Label>
-  //           <p className="mt-1">{coupon.maxUsage || 'غير محدد'}</p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">مرات الاستخدام:</Label>
-  //           <p className="mt-1">{coupon.usedCount || 0}</p>
-  //         </div>
-  //         <div>
-  //           <Label className="font-bold">المستخدم:</Label>
-  //           <p className="mt-1">{getUserInfo(coupon)}</p>
-  //         </div>
-  //         {coupon.courseLevel && (
-  //           <div>
-  //             <Label className="font-bold">المستوى الدراسي:</Label>
-  //             <p className="mt-1">{getCourseLevelInfo(coupon)}</p>
-  //           </div>
-  //         )}
-  //         {coupon.reason && (
-  //           <div className="md:col-span-2">
-  //             <Label className="font-bold">السبب:</Label>
-  //             <p className="mt-1">{coupon.reason}</p>
-  //           </div>
-  //         )}
-  //       </div>
-  //     </div>
-  //   )
-  // }
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -911,9 +890,9 @@ const Coupons = () => {
                 <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                   <Label className="font-semibold text-gray-700 mb-2 block">قيمة الخصم</Label>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    {/* <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                       <Percent className="w-4 h-4 text-white" />
-                    </div>
+                    </div> */}
                     <span className="text-xl font-bold text-gray-800">
                       {coupon.discount} {coupon.isPercent ? '%' : 'ل.س'}
                     </span>
@@ -1052,7 +1031,7 @@ const Coupons = () => {
     );
   };
 
-  // 📱 مكون بطاقة الكوبون للعرض على الجوال
+  //  مكون بطاقة الكوبون للعرض على الجوال
   const CouponCard = ({ coupon }) => (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -1148,44 +1127,272 @@ const Coupons = () => {
     </Card>
   )
 
-  // 🎯 عرض حقل اختيار نوع الكوبون
+  //  عرض حقل اختيار نوع الكوبون
   const renderCouponTypeSelector = () => (
-    <div className="space-y-3">
-      <Label>نوع الكوبون *</Label>
+    <div className="space-y-4">
+      <Label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <Tag className="w-5 h-5 text-primary" />
+        نوع الكوبون *
+      </Label>
+
       <RadioGroup
         value={form.couponType}
         onValueChange={(value) => handleFormChange("couponType", value)}
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
       >
-        <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
-          <RadioGroupItem value="courseLevel" id="courseLevel" />
-          <Label htmlFor="courseLevel" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">لمادة دراسية</div>
-            {/* <div className="text-sm text-muted-foreground">للكورس والمستوى المحدد</div> */}
+        {/* خيار لمادة دراسية */}
+        <div className={`
+      relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 group
+      ${form.couponType === "courseLevel"
+            ? "border-primary bg-primary/5 shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          }
+    `}>
+          <RadioGroupItem value="courseLevel" id="courseLevel" className="sr-only" />
+          <Label
+            htmlFor="courseLevel"
+            className="cursor-pointer flex items-start gap-3 w-full"
+          >
+            <div className={`
+          flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-300
+          ${form.couponType === "courseLevel"
+                ? "border-primary bg-primary"
+                : "border-gray-300 bg-white group-hover:border-gray-400"
+              }
+        `}>
+              {form.couponType === "courseLevel" && (
+                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className={`
+              w-4 h-4 transition-colors duration-300
+              ${form.couponType === "courseLevel" ? "text-primary" : "text-gray-500"}
+            `} />
+                <span className={`
+              font-semibold transition-colors duration-300
+              ${form.couponType === "courseLevel" ? "text-primary" : "text-gray-800"}
+            `}>
+                  لمادة دراسية
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                كوبون مخصص لمادة ومستوى دراسي محدد
+              </p>
+            </div>
           </Label>
         </div>
-        <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
-          <RadioGroupItem value="user" id="user" />
-          <Label htmlFor="user" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">لمستخدم محدد</div>
-            {/* <div className="text-sm text-muted-foreground">للمستخدم المحدد فقط</div> */}
+
+        {/* خيار 5 نقاط */}
+        <div className={`
+      relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 group
+      ${form.couponType === "userWithPoints"
+            ? "border-amber-500 bg-amber-50 shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          }
+    `}>
+          <RadioGroupItem value="userWithPoints" id="userWithPoints" className="sr-only" />
+          <Label
+            htmlFor="userWithPoints"
+            className="cursor-pointer flex items-start gap-3 w-full"
+          >
+            <div className={`
+          flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-300
+          ${form.couponType === "userWithPoints"
+                ? "border-amber-500 bg-amber-500"
+                : "border-gray-300 bg-white group-hover:border-gray-400"
+              }
+        `}>
+              {form.couponType === "userWithPoints" && (
+                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Star className={`
+              w-4 h-4 transition-colors duration-300
+              ${form.couponType === "userWithPoints" ? "text-amber-500" : "text-gray-500"}
+            `} />
+                <span className={`
+              font-semibold transition-colors duration-300
+              ${form.couponType === "userWithPoints" ? "text-amber-600" : "text-gray-800"}
+            `}>
+                  5 نقاط
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                مكافأة للمستخدمين الحاصلين على 5 نقاط
+              </p>
+            </div>
           </Label>
         </div>
-        <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
-          <RadioGroupItem value="both" id="both" />
-          <Label htmlFor="both" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">لمستخدم ومادة</div>
-            {/* <div className="text-sm text-muted-foreground">مخصص للمستخدم والمستوى</div> */}
+
+        {/* خيار لمستخدم محدد */}
+        <div className={`
+      relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 group
+      ${form.couponType === "user"
+            ? "border-blue-500 bg-blue-50 shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          }
+    `}>
+          <RadioGroupItem value="user" id="user" className="sr-only" />
+          <Label
+            htmlFor="user"
+            className="cursor-pointer flex items-start gap-3 w-full"
+          >
+            <div className={`
+          flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-300
+          ${form.couponType === "user"
+                ? "border-blue-500 bg-blue-500"
+                : "border-gray-300 bg-white group-hover:border-gray-400"
+              }
+        `}>
+              {form.couponType === "user" && (
+                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <User className={`
+              w-4 h-4 transition-colors duration-300
+              ${form.couponType === "user" ? "text-blue-500" : "text-gray-500"}
+            `} />
+                <span className={`
+              font-semibold transition-colors duration-300
+              ${form.couponType === "user" ? "text-blue-600" : "text-gray-800"}
+            `}>
+                  لمستخدم محدد
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                كوبون خاص لمستخدم معين فقط
+              </p>
+            </div>
           </Label>
         </div>
-        <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
-          <RadioGroupItem value="none" id="none" />
-          <Label htmlFor="none" className="cursor-pointer mr-4 flex-1">
-            <div className="font-medium">عام</div>
-            {/* <div className="text-sm text-muted-foreground">لجميع المستخدمين والمستويات</div> */}
+
+        {/* خيار لمستخدم ومادة */}
+        <div className={`
+      relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 group
+      ${form.couponType === "both"
+            ? "border-purple-500 bg-purple-50 shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          }
+    `}>
+          <RadioGroupItem value="both" id="both" className="sr-only" />
+          <Label
+            htmlFor="both"
+            className="cursor-pointer flex items-start gap-3 w-full"
+          >
+            <div className={`
+          flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-300
+          ${form.couponType === "both"
+                ? "border-purple-500 bg-purple-500"
+                : "border-gray-300 bg-white group-hover:border-gray-400"
+              }
+        `}>
+              {form.couponType === "both" && (
+                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className={`
+              w-4 h-4 transition-colors duration-300
+              ${form.couponType === "both" ? "text-purple-500" : "text-gray-500"}
+            `} />
+                <span className={`
+              font-semibold transition-colors duration-300
+              ${form.couponType === "both" ? "text-purple-600" : "text-gray-800"}
+            `}>
+                  لمستخدم ومادة
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                مخصص لمستخدم معين ومادة محددة
+              </p>
+            </div>
+          </Label>
+        </div>
+
+        {/* خيار عام */}
+        <div className={`
+      relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 group
+      ${form.couponType === "none"
+            ? "border-green-500 bg-green-50 shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          }
+    `}>
+          <RadioGroupItem value="none" id="none" className="sr-only" />
+          <Label
+            htmlFor="none"
+            className="cursor-pointer flex items-start gap-3 w-full"
+          >
+            <div className={`
+          flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-300
+          ${form.couponType === "none"
+                ? "border-green-500 bg-green-500"
+                : "border-gray-300 bg-white group-hover:border-gray-400"
+              }
+        `}>
+              {form.couponType === "none" && (
+                <div className="w-full h-full rounded-full bg-white scale-50"></div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Globe className={`
+              w-4 h-4 transition-colors duration-300
+              ${form.couponType === "none" ? "text-green-500" : "text-gray-500"}
+            `} />
+                <span className={`
+              font-semibold transition-colors duration-300
+              ${form.couponType === "none" ? "text-green-600" : "text-gray-800"}
+            `}>
+                  عام
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                كوبون عام لجميع المستخدمين والمواد
+              </p>
+            </div>
           </Label>
         </div>
       </RadioGroup>
+
+      {/* مؤشر مرئي للنوع المحدد */}
+      {form.couponType && (
+        <div className={`
+      p-3 rounded-lg border-l-4 transition-all duration-300
+      ${form.couponType === "courseLevel" ? "bg-primary/5 border-primary" :
+            form.couponType === "userWithPoints" ? "bg-amber-50 border-amber-500" :
+              form.couponType === "user" ? "bg-blue-50 border-blue-500" :
+                form.couponType === "both" ? "bg-purple-50 border-purple-500" :
+                  "bg-green-50 border-green-500"
+          }
+    `}>
+          <div className="flex items-center gap-2">
+            <div className={`
+          w-2 h-2 rounded-full
+          ${form.couponType === "courseLevel" ? "bg-primary" :
+                form.couponType === "userWithPoints" ? "bg-amber-500" :
+                  form.couponType === "user" ? "bg-blue-500" :
+                    form.couponType === "both" ? "bg-purple-500" :
+                      "bg-green-500"
+              }
+        `}></div>
+            <span className="text-sm font-medium text-gray-700">
+              النوع المحدد: <span className="font-bold">
+                {form.couponType === "courseLevel" ? "لمادة دراسية" :
+                  form.couponType === "userWithPoints" ? "5 نقاط" :
+                    form.couponType === "user" ? "لمستخدم محدد" :
+                      form.couponType === "both" ? "لمستخدم ومادة" : "عام"}
+              </span>
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 
@@ -1193,11 +1400,14 @@ const Coupons = () => {
     <Card>
       <CardHeader className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <CardTitle>إدارة كوبونات الخصم</CardTitle>
+          <CardTitle>إدارة كوبونات الخصم ({coupons.length})</CardTitle>
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open)
             if (!open) resetForm()
-            if (open) fetchUsersWithPoints()
+            if (open) {
+              fetchUsersWithPoints()
+              fetchAllUsers()
+            }
           }}>
             <DialogTrigger asChild>
               <Button size="sm">
@@ -1407,52 +1617,105 @@ const Coupons = () => {
                 )}
 
                 {/* اختيار المستخدم (لأنواع user و both) */}
-                {(form.couponType === "user" || form.couponType === "both") && (
+                {(form.couponType === "user" || form.couponType === "both" || form.couponType === "userWithPoints") && (
                   <div className="space-y-3 border rounded-lg p-4 bg-blue-50">
                     <Label className="text-lg font-medium">اختيار المستخدم *</Label>
 
-                    {usersLoading ? (
-                      <div className="flex justify-center py-4">
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      </div>
+                    {form.couponType === "userWithPoints" ? (
+                      // عرض المستخدمين الذين لديهم نقاط فقط
+                      usersLoading ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        </div>
+                      ) : (
+                        <Select
+                          value={form.userId}
+                          onValueChange={(value) => handleFormChange("userId", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر المستخدم (لديه نقاط)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <div className="p-2">
+                              <Input
+                                placeholder="ابحث عن مستخدم..."
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                                className="mb-2"
+                              />
+                            </div>
+                            {filteredUsersForSelect.map((user) => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span className='mx-1.5'>{user.name}</span>
+                                  <Badge variant="secondary" className="ml-2">
+                                    <Star className="w-3 h-3 ml-1" />
+                                    {user.points} نقطة
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )
                     ) : (
-                      <Select
-                        value={form.userId}
-                        onValueChange={(value) => handleFormChange("userId", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر المستخدم" />
-                        </SelectTrigger>
-                        <SelectContent searchable>
-                          
-                          {filteredUsersForSelect.map((user) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              <div className="flex items-center justify-between w-full">
-                                <span>{user.name}</span>
-                                <Badge variant="secondary" className="ml-2">
-                                  <Star className="w-3 h-3 ml-1" />
-                                  {user.points} نقطة
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      // عرض جميع المستخدمين
+                      allUsersLoading ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        </div>
+                      ) : (
+                        <Select
+                          value={form.userId}
+                          onValueChange={(value) => handleFormChange("userId", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر المستخدم" />
+                          </SelectTrigger>
+                          <SelectContent >
+                            <div className="p-2">
+                              <Input
+                                placeholder="ابحث عن مستخدم..."
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                                className="mb-2"
+                              />
+                            </div>
+                            {filteredAllUsersForSelect.map((user) => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span className='mx-1.5'>{user.name}</span>
+                                  <Badge dir="ltr">
+                                    {user.phone}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )
                     )}
 
                     {form.userId && (
                       <div className="p-3 bg-white rounded-lg border">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">المستخدم المحدد:</span>
-                          <span>{getUserName(form.userId)}</span>
+                          <span>
+                            {form.couponType === "userWithPoints"
+                              ? getUserName(form.userId)
+                              : allUsers.find(u => u.id === parseInt(form.userId))?.name || "غير محدد"
+                            }
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm text-muted-foreground">النقاط:</span>
-                          <Badge variant="outline">
-                            <Star className="w-3 h-3 ml-1" />
-                            {usersWithPoints.find(u => u.id === parseInt(form.userId))?.points || 0} نقطة
-                          </Badge>
-                        </div>
+                        {form.couponType === "userWithPoints" && (
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-sm text-muted-foreground">النقاط:</span>
+                            <Badge variant="outline">
+                              <Star className="w-3 h-3 ml-1" />
+                              {usersWithPoints.find(u => u.id === parseInt(form.userId))?.points || 0} نقطة
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1466,7 +1729,7 @@ const Coupons = () => {
           </Dialog>
         </div>
 
-        {/* 🔍 قسم الفلترة والعرض */}
+        {/*  قسم الفلترة والعرض */}
         <div className="space-y-6">
           {/* شريط الفلاتر الرئيسي */}
           <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
@@ -1632,18 +1895,6 @@ const Coupons = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* زر الإجراءات السريعة */}
-              {/* <div className="flex items-end md:col-span-1">
-                <Button
-                  variant="outline"
-                  className="w-full h-10 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-                  onClick={resetFilters}
-                >
-                  <RefreshCw className="h-4 w-4 ml-2" />
-                  إعادة تعيين الكل
-                </Button>
-              </div> */}
             </div>
           </div>
 
@@ -1714,7 +1965,7 @@ const Coupons = () => {
           </div>
         ) : (
           <>
-            {/* 📊 عرض الجدول للشاشات المتوسطة والكبيرة */}
+            {/*  عرض الجدول للشاشات المتوسطة والكبيرة */}
             <div className="hidden md:block">
               <div className="rounded-md border overflow-x-auto">
                 <Table className="min-w-full">
@@ -1872,7 +2123,7 @@ const Coupons = () => {
               </div>
             </div>
 
-            {/* 📱 عرض البطاقات للشاشات الصغيرة */}
+            {/*  عرض البطاقات للشاشات الصغيرة */}
             <div className="block md:hidden">
               {paginatedCoupons.length > 0 ? (
                 paginatedCoupons.map(coupon => (
@@ -1885,7 +2136,7 @@ const Coupons = () => {
               )}
             </div>
 
-            {/* 🔢 الترقيم */}
+            {/*  الترقيم */}
             {paginatedCoupons.length > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                 <div className="text-sm text-muted-foreground">
@@ -1944,7 +2195,7 @@ const Coupons = () => {
         )}
       </CardContent>
 
-      {/* 🗑️ ديالوج تأكيد الحذف */}
+      {/*  ديالوج تأكيد الحذف */}
       <AlertDialog
         open={deleteDialog.isOpen}
         onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, isOpen }))}
