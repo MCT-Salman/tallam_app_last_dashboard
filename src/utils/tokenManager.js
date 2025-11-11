@@ -83,7 +83,17 @@ export const ensureValidToken = async () => {
 
   if (!tokenStatus.isValid) {
     console.log(' التوكن غير صالح');
-    return false;
+    // حاول تحديث التوكن إذا كان هناك refreshToken
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return false;
+    }
+    try {
+      await refreshAuthToken();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   if (tokenStatus.needsRefresh) {

@@ -36,6 +36,17 @@ const RETRY_CONFIG = {
 };
 
 let lastTokenRefreshTimestamp = 0;
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+}
 
 // Interceptor لمعالجة أخطاء المصادقة وتحديث التوكن
 api.interceptors.response.use(
@@ -44,10 +55,17 @@ api.interceptors.response.use(
         const originalRequest = error.config;
         const currentTime = Date.now();
 
+        // إذا فشل استدعاء /auth/refresh نفسه، قم بتسجيل الخروج مباشرة لتجنب الحلقة اللانهائية
+        if (originalRequest?.url?.includes('/auth/refresh')) {
+            console.error('❌ فشل طلب تحديث التوكن نفسه، سيتم تسجيل الخروج');
+            clearAllAuthData();
+            window.location.href = '/login';
+            return Promise.reject(error);
+        }
+
         // التحقق من حالة الخطأ وعدد المحاولات
-        if ((error.response?.status === 401 || error.response?.status === 400) &&
-            !originalRequest._retry &&
-            originalRequest._retryCount < RETRY_CONFIG.MAX_RETRY_ATTEMPTS) {
+        if ((error.response?.status === 401) &&
+            ((originalRequest._retryCount || 0) < RETRY_CONFIG.MAX_RETRY_ATTEMPTS)) {
 
             // التحقق من وقت التبريد بين محاولات تحديث التوكن
             if (currentTime - lastTokenRefreshTimestamp < RETRY_CONFIG.TOKEN_REFRESH_COOLDOWN) {
@@ -55,17 +73,30 @@ api.interceptors.response.use(
                 await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.TOKEN_REFRESH_COOLDOWN));
             }
 
-            originalRequest._retry = true;
             originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
 
             const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
                 try {
+                    if (isRefreshing) {
+                        // انتظر حتى يكتمل التحديث الجاري ثم أعد المحاولة
+                        return new Promise((resolve, reject) => {
+                            subscribeTokenRefresh((newToken) => {
+                                if (!newToken) {
+                                    reject(error);
+                                    return;
+                                }
+                                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                                resolve(api(originalRequest));
+                            });
+                        });
+                    }
+
                     console.log(`🔄 Attempting to refresh token (attempt ${originalRequest._retryCount}/${RETRY_CONFIG.MAX_RETRY_ATTEMPTS})...`);
-
+                    isRefreshing = true;
                     lastTokenRefreshTimestamp = currentTime;
-                    const response = await api.post('/auth/refresh', { refreshToken });
 
+                    const response = await api.post('/auth/refresh', { refreshToken });
                     const { data } = response.data;
                     if (!data?.accessToken || !data?.refreshToken) {
                         throw new Error('لم يتم العثور على التوكن الجديد في الاستجابة');
@@ -75,26 +106,23 @@ api.interceptors.response.use(
                     localStorage.setItem('refreshToken', data.refreshToken);
                     console.log('✅ تم تحديث التوكن بنجاح');
 
-                    originalRequest.headers['Authorization'] = `Bearer ${data.accessToken}`;
+                    isRefreshing = false;
+                    onRefreshed(data.accessToken);
 
-                    // إضافة تأخير قبل إعادة المحاولة
+                    originalRequest.headers['Authorization'] = `Bearer ${data.accessToken}`;
                     await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.RETRY_DELAY));
                     console.log('🔄 إعادة محاولة الطلب الأصلي مع التوكن الجديد...');
                     return api(originalRequest);
 
                 } catch (refreshError) {
+                    isRefreshing = false;
+                    onRefreshed(null);
                     console.error('❌ فشل تحديث التوكن:', refreshError.response?.data?.message || refreshError.message);
 
-                    if (originalRequest._retryCount >= RETRY_CONFIG.MAX_RETRY_ATTEMPTS) {
-                        console.error('❌ تم استنفاد جميع محاولات تحديث التوكن');
-                        clearAllAuthData();
-                        window.location.href = '/login';
-                        return Promise.reject(refreshError);
-                    }
-
-                    // إضافة تأخير قبل المحاولة التالية
-                    await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.RETRY_DELAY));
-                    return api(originalRequest);
+                    console.error('❌ تم استنفاد محاولات تحديث التوكن أو فشل التحديث');
+                    clearAllAuthData();
+                    window.location.href = '/login';
+                    return Promise.reject(refreshError);
                 }
             } else {
                 console.error('❌ لا يوجد توكن تحديث متاح');
