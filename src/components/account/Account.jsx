@@ -46,7 +46,6 @@ const Account = () => {
     const [countryFilter, setCountryFilter] = useState("all")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState("desc")
-    const [totalUsers, setTotalUsers] = useState(0)
     const [allCountries, setAllCountries] = useState([])
 
     // دالة لتنظيف وتكوين مسار الصورة
@@ -101,7 +100,6 @@ const Account = () => {
 
             // حفظ جميع البيانات
             setAllUsers(allData || [])
-            setTotalUsers(total || 0)
 
             // استخراج جميع البلدان الفريدة
             const countries = allData
@@ -118,7 +116,6 @@ const Account = () => {
             showErrorToast("فشل تحميل بيانات المستخدمين")
             setAllUsers([])
             setAllCountries([])
-            setTotalUsers(0)
         } finally {
             setLoading(false)
         }
@@ -199,7 +196,6 @@ const Account = () => {
 
         // تحديث إحصائيات الباجينيشن
         const totalFiltered = filteredAndSortedUsers.length
-        setTotalUsers(totalFiltered)
 
         console.log(` Pagination: Showing ${startIndex + 1}-${Math.min(endIndex, totalFiltered)} of ${totalFiltered} users`)
     }, [filteredAndSortedUsers, currentPage, itemsPerPage])
