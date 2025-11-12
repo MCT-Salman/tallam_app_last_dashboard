@@ -30,6 +30,7 @@ import Admins_Accounts from "@/components/account/Admins_Accounts"
 import TeacherReports from "./components/financial/TeacherReports"
 import LocationsManagement from "@/components/locations/LocationsManagement"
 import PaymentMethods from "./components/payments/PaymentMethods"
+import MobileVersions from "./components/mobileversions/MobileVersions"
 
 const App = () => {
   return (
@@ -172,6 +173,13 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <PaymentMethods />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/mobile-versions" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <MobileVersions />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

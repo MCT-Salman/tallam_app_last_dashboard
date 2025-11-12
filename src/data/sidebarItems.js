@@ -124,6 +124,11 @@ export const sidebarGroups = [
         icon: CreditCardIcon
       },
       {
+        title: "إصدارات التطبيق",
+        href: "/mobile-versions",
+        icon: FileText
+      },
+      {
         title: "الإعدادات",
         href: "/settings",
         icon: Settings

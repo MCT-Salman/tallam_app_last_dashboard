@@ -739,4 +739,16 @@ export const updatePaymentMethod = (id, data) => api.put(`/paymentmethods/admin/
 export const deletePaymentMethod = (id) => api.delete(`/paymentmethods/admin/${id}`);
 export const togglePaymentMethodActive = (id, isActive) => api.put(`/paymentmethods/admin/${id}/active`, { isActive });
 
+// --- إدارة إصدارات التطبيق ---
+// قائمة الإصدارات مع فلاتر اختيارية
+export const getMobileVersions = (params) => api.get('/mobileversions/admin', { params });
+// جلب إصدار محدد بالتفاصيل
+export const getMobileVersionById = (id) => api.get(`/mobileversions/admin/${id}`);
+// إنشاء إصدار جديد
+export const createMobileVersion = (data) => api.post('/mobileversions/admin', data);
+// تحديث إصدار موجود
+export const updateMobileVersion = (id, data) => api.put(`/mobileversions/admin/${id}`, data);
+// حذف إصدار
+export const deleteMobileVersion = (id) => api.delete(`/mobileversions/admin/${id}`);
+
 export { api, BASE_URL };
