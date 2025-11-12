@@ -31,6 +31,45 @@ const MobileVersions = () => {
   const emptyForm = { platform: "android", versionCode: "", versionName: "", isMandatory: false, releaseNotes: "", downloadUrl: "" }
   const [form, setForm] = useState(emptyForm)
 
+  // دالة لتوليد الرقم التالي تلقائياً
+  const getNextVersionCode = () => {
+    if (versions.length === 0) return "1"
+
+    const codes = versions
+      .filter(v => v.platform === form.platform)
+      .map(v => {
+        const code = parseInt(v.versionCode)
+        return isNaN(code) ? 0 : code
+      })
+
+    if (codes.length === 0) return "1"
+
+    const maxCode = Math.max(...codes)
+    return String(maxCode + 1)
+  }
+
+  // دالة لتنسيق رقم الإصدار تلقائياً
+const formatVersionName = (value) => {
+  // السماح فقط بالأرقام والنقاط
+  let cleaned = value.replace(/[^\d.]/g, '')
+  
+  // منع أكثر من نقطتين متتاليتين
+  cleaned = cleaned.replace(/\.{2,}/g, '.')
+  
+  // منع النقطة في البداية
+  if (cleaned.startsWith('.')) {
+    cleaned = cleaned.substring(1)
+  }
+  
+  // منع أكثر من 3 أجزاء (مثل 1.2.3.4)
+  const parts = cleaned.split('.')
+  if (parts.length > 3) {
+    cleaned = parts.slice(0, 3).join('.')
+  }
+  
+  return cleaned
+}
+
   const fetchAll = async () => {
     setLoading(true)
     try {
@@ -203,6 +242,18 @@ const MobileVersions = () => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page)
   }
 
+  useEffect(() => {
+    if (addDialogOpen) {
+      // عند فتح dialog الإضافة، توليد الرقم التالي تلقائياً
+      const nextCode = getNextVersionCode()
+      setForm(prev => ({
+        ...prev,
+        versionCode: nextCode,
+        versionName: "" // مسح رقم الإصدار ليتم تعبئته يدوياً
+      }))
+    }
+  }, [addDialogOpen, versions, form.platform])
+
   return (
     <div className="space-y-6">
       <Card>
@@ -241,12 +292,20 @@ const MobileVersions = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm">رقم الإصدار</label>
+                    <label className="text-sm">ترتيب الإصدار</label>
                     <Input value={form.versionCode} onChange={(e) => setForm(prev => ({ ...prev, versionCode: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm">رقم الإصدار مفصلا</label>
-                    <Input value={form.versionName} onChange={(e) => setForm(prev => ({ ...prev, versionName: e.target.value }))} />
+                    <label className="text-sm">رقم الإصدار </label>
+                    <Input
+                      value={form.versionName}
+                      onChange={(e) => setForm(prev => ({
+                        ...prev,
+                        versionName: formatVersionName(e.target.value)
+                      }))}
+                      placeholder="مثال: 1.0.0"
+                      dir="ltr"
+                    />
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch checked={!!form.isMandatory} onCheckedChange={(v) => setForm(prev => ({ ...prev, isMandatory: v }))} />
@@ -325,8 +384,8 @@ const MobileVersions = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>المنصة</TableHead>
-                      <TableHead>رقم الإصدار</TableHead>
-                      <TableHead>رقم الإصدار مفصلا</TableHead>
+                      <TableHead>ترتيب الإصدار</TableHead>
+                      <TableHead>رقم الإصدار </TableHead>
                       <TableHead>إجباري</TableHead>
                       <TableHead>تاريخ الإنشاء</TableHead>
                       <TableHead className="text-right">الإجراءات</TableHead>
@@ -447,11 +506,11 @@ const MobileVersions = () => {
                 <span className="font-bold text-blue-600 text-lg">{selected.platform}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="text-sm font-medium text-gray-600">رقم الإصدار مفصلا:</span>
+                <span className="text-sm font-medium text-gray-600">رقم الإصدار :</span>
                 <span className="font-bold text-purple-600">{selected.versionName}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="text-sm font-medium text-gray-600">رقم الإصدار:</span>
+                <span className="text-sm font-medium text-gray-600">ترتيب الإصدار:</span>
                 <span className="font-medium" dir="ltr">{selected.versionCode}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -503,12 +562,20 @@ const MobileVersions = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm">رقم الإصدار</label>
+              <label className="text-sm">ترتيب الإصدار</label>
               <Input value={form.versionCode} onChange={(e) => setForm(prev => ({ ...prev, versionCode: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-sm">رقم الإصدار مفصلا</label>
-              <Input value={form.versionName} onChange={(e) => setForm(prev => ({ ...prev, versionName: e.target.value }))} />
+              <label className="text-sm">رقم الإصدار </label>
+              <Input
+                value={form.versionName}
+                onChange={(e) => setForm(prev => ({
+                  ...prev,
+                  versionName: formatVersionName(e.target.value)
+                }))}
+                placeholder="مثال: 1.0.0"
+                dir="ltr"
+              />
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={!!form.isMandatory} onCheckedChange={(v) => setForm(prev => ({ ...prev, isMandatory: v }))} />
