@@ -1218,7 +1218,7 @@ const AccessCode = () => {
 
     //  دالة التحقق من نوع العملة بناءً على رقم الهاتف
     const getCurrencyType = (phone) => {
-        if (!phone) return 'USD'; // افتراضي دولار إذا لم يكن هناك رقم
+        if (!phone) return 'SAR'; // افتراضي دولار إذا لم يكن هناك رقم
 
         const cleanPhone = phone.toString().replace(/\s+/g, '');
 
@@ -2410,7 +2410,7 @@ const AccessCode = () => {
                         </DialogTrigger>
 
                         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
-                        onKeyDown={(e) => {
+                            onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
                                     e.preventDefault();
                                     handleGenerateCode();
@@ -2449,7 +2449,7 @@ const AccessCode = () => {
                                                     <SelectItem key={level.id} value={level.encode} disabled={!level.encode}>
                                                         <div className="flex flex-col">
                                                             <span className="font-medium">{level.encode}</span>
-                                                            <span className="text-xs text-muted-foreground">{level.name}</span>
+                                                            <span className="text-xs">{level.name}</span>
                                                         </div>
                                                     </SelectItem>
                                                 ))}
@@ -2472,43 +2472,43 @@ const AccessCode = () => {
 
                                 {/* مسار الاختيار */}
                                 {(selectedSpecialization || selectedCourse || selectedInstructor || selectedLevel) && (
-                                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm font-medium">
-                                            <span className="text-blue-700">المسار المختار:</span>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <Badge variant="outline" className="bg-white">
+                                    <div className="p-1.5 bg-blue-50 rounded border border-blue-200">
+                                        <div className="flex items-center gap-1 text-xs">
+                                            {/* <MapPin className="h-3 w-3 text-blue-600" /> */}
+                                            <span className="text-blue-700 font-medium">المسار:</span>
+                                            <div className="flex items-center gap-1 flex-wrap">
+                                                <span className="bg-white px-1.5 py-0.5 rounded-lg text-xs border border-amber-500">
                                                     {selectedSpecialization ? getSpecializationName(selectedSpecialization) : "---"}
-                                                </Badge>
-                                                <ChevronRight className="h-4 w-4 text-blue-500" />
-                                                <Badge variant="outline" className="bg-white">
+                                                </span>
+                                                <ChevronLeft className="h-2.5 w-2.5 text-blue-400" />
+                                                <span className="bg-white px-1.5 py-0.5 rounded-lg text-xs border border-amber-500">
                                                     {selectedCourse ? getCourseName(selectedCourse) : "---"}
-                                                </Badge>
-                                                <ChevronRight className="h-4 w-4 text-blue-500" />
-                                                <Badge variant="outline" className="bg-white">
+                                                </span>
+                                                <ChevronLeft className="h-2.5 w-2.5 text-blue-400" />
+                                                <span className="bg-white px-1.5 py-0.5 rounded-lg text-xs border border-amber-500">
                                                     {selectedInstructor ? getInstructorName(selectedInstructor) : "---"}
-                                                </Badge>
-                                                <ChevronRight className="h-4 w-4 text-blue-500" />
-                                                <Badge variant="outline" className="bg-white">
+                                                </span>
+                                                <ChevronLeft className="h-2.5 w-2.5 text-blue-400" />
+                                                <span className="bg-white px-1.5 py-0.5 rounded-lg text-xs border border-amber-500">
                                                     {selectedLevel ? getLevelName(selectedLevel) : "---"}
-                                                </Badge>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-
                                 {/* الهيكلية  */}
-                                <div className="bg-gradient-to-l from-purple-50 to-indigo-50 border rounded-lg border-amber-200 p-2 ">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
-                                        <div className="space-y-2">
-                                            <Label>الاختصاص</Label>
+                                <div className="bg-gradient-to-l from-purple-50 to-indigo-50 border rounded-md border-amber-200 p-2">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div>
+                                            <Label className="text-xs mb-1 block">الاختصاص</Label>
                                             <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="اختر الاختصاص" />
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="الاختصاص" />
                                                 </SelectTrigger>
                                                 <SelectContent searchable>
                                                     {specializations.map((spec) => (
-                                                        <SelectItem key={spec.id} value={spec.id.toString()}>
+                                                        <SelectItem key={spec.id} value={spec.id.toString()} className="text-xs">
                                                             {spec.name || spec.title}
                                                         </SelectItem>
                                                     ))}
@@ -2516,69 +2516,60 @@ const AccessCode = () => {
                                             </Select>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label>المادة</Label>
+                                        <div>
+                                            <Label className="text-xs mb-1 block">المادة</Label>
                                             <Select
                                                 value={selectedCourse}
                                                 onValueChange={setSelectedCourse}
                                                 disabled={!selectedSpecialization}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
-                                                </SelectTrigger >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="المادة" />
+                                                </SelectTrigger>
                                                 <SelectContent searchable>
                                                     {courses.map((course) => (
-                                                        <SelectItem key={course.id} value={course.id.toString()}>
+                                                        <SelectItem key={course.id} value={course.id.toString()} className="text-xs">
                                                             {course.title}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>المدرس</Label>
+                                        <div>
+                                            <Label className="text-xs mb-1 block">المدرس</Label>
                                             <Select
                                                 value={selectedInstructor}
                                                 onValueChange={setSelectedInstructor}
                                                 disabled={!selectedCourse}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="المدرس" />
                                                 </SelectTrigger>
                                                 <SelectContent searchable>
                                                     {instructors.map((instructor) => (
-                                                        <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                                        <SelectItem key={instructor.id} value={instructor.id.toString()} className="text-xs">
                                                             {instructor.name}
                                                         </SelectItem>
                                                     ))}
-                                                    {instructors.length === 0 && selectedCourse && (
-                                                        <div className="p-2 text-sm text-muted-foreground text-center">
-                                                            لا توجد مدرسين لهذه المادة
-                                                        </div>
-                                                    )}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label>المستوى *</Label>
+                                        <div>
+                                            <Label className="text-xs mb-1 block">المستوى *</Label>
                                             <Select
                                                 value={selectedLevel}
                                                 onValueChange={setSelectedLevel}
                                                 disabled={!selectedInstructor}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="المستوى" />
                                                 </SelectTrigger>
                                                 <SelectContent searchable>
                                                     {levels.map((level) => (
-                                                        <SelectItem key={level.id} value={level.id.toString()}>
+                                                        <SelectItem key={level.id} value={level.id.toString()} className="text-xs">
                                                             {level.name}
-                                                            {/* {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`} */}
-                                                            {/* {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`} */}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -2587,11 +2578,7 @@ const AccessCode = () => {
                                     </div>
                                 </div>
 
-                              
-
-                               
-
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-2">
                                         <Label>مدة الصلاحية (أشهر)</Label>
                                         <Select
@@ -2611,7 +2598,7 @@ const AccessCode = () => {
                                         </Select>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label>المبلغ المدفوع *</Label>
                                         <Input
                                             type="number"
@@ -2622,9 +2609,8 @@ const AccessCode = () => {
                                             step="0.01"
                                             required
                                         />
-                                    </div>
+                                    </div> */}
                                 </div>
-
 
                                 <div className="space-y-2">
                                     <Label>المستخدم *</Label>
@@ -2646,7 +2632,7 @@ const AccessCode = () => {
                                     </Select>
                                 </div>
 
-                                  {/* قسم التحقق من الكوبونات */}
+                                {/* قسم التحقق من الكوبونات */}
                                 {form.userId && selectedLevel && (
                                     <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
 
@@ -2672,9 +2658,9 @@ const AccessCode = () => {
                                                         {availableCoupons.map((coupon) => (
                                                             <SelectItem key={coupon.id} value={coupon.id.toString()}>
                                                                 <div className="flex items-center justify-between w-full">
-                                                                    <div className="flex flex-col items-start">
+                                                                    <div className="flex flex-col items-start mx-2">
                                                                         <span className="font-medium">{coupon.code}</span>
-                                                                        <span className="text-xs text-muted-foreground">
+                                                                        <span className="text-xs">
                                                                             {coupon.isPercent ? `${coupon.discount}% خصم` : `${coupon.discount} ل.س خصم`}
                                                                         </span>
                                                                     </div>
@@ -2697,7 +2683,7 @@ const AccessCode = () => {
                                     </div>
                                 )}
 
-                                 {/* معلومات السعر */}
+                                {/* معلومات السعر */}
                                 {(form.originalPrice || form.couponId) && (
                                     <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                         <div className="flex items-center justify-between">

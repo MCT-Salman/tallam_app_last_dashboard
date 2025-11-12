@@ -26,6 +26,7 @@ const PointsOfSale = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [selected, setSelected] = useState(null)
 
+
   const [form, setForm] = useState({ name: "", address: "", phone: "", areaId: "" })
   const [statusFilter, setStatusFilter] = useState("all")
 
@@ -97,8 +98,14 @@ const PointsOfSale = () => {
       if (res.data?.success) {
         showSuccessToast("تم إنشاء نقطة البيع بنجاح")
         // setAddDialogOpen(false)
-        resetForm()
+        // resetForm()
         fetchAll()
+        setForm(prev => ({
+          name: "",
+          address: "",
+          phone: "",
+          areaId: prev.areaId
+        }));
       }
     } catch (e) {
       showErrorToast(e?.response?.data?.message || "فشل إنشاء نقطة البيع")
@@ -139,8 +146,8 @@ const PointsOfSale = () => {
       const res = await updatePointOfSale(selected.id, payload)
       if (res.data?.success) {
         showSuccessToast("تم تحديث نقطة البيع بنجاح")
-        setEditDialogOpen(false)
-        resetForm()
+
+        // resetForm()
         const updatedArea = areas.find(a => a.id === Number(form.areaId))
         setPoints(prev => prev.map(point =>
           point.id === selected.id
@@ -152,6 +159,7 @@ const PointsOfSale = () => {
             : point
         ))
         setSelected(prev => prev ? { ...prev, ...payload, area: updatedArea ? { ...updatedArea } : prev.area } : prev)
+        setEditDialogOpen(false)
       }
     } catch (e) {
       showErrorToast(e?.response?.data?.message || "فشل تحديث نقطة البيع")
@@ -190,6 +198,20 @@ const PointsOfSale = () => {
       showErrorToast(e?.response?.data?.message || "فشل تغيير الحالة")
     }
   }
+
+  //  useEffect لتصفير البيانات عند إغلاق الدايلوج
+  useEffect(() => {
+    if (!addDialogOpen) {
+      resetForm();
+    }
+  }, [addDialogOpen]);
+
+  useEffect(() => {
+    if (!editDialogOpen) {
+      resetForm(); // تصفير البيانات عند الإغلاق
+      setSelected(null); // إزالة العنصر المحدد
+    }
+  }, [editDialogOpen]);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {

@@ -232,14 +232,15 @@ const Stories = () => {
 
     // حفظ القصة (إضافة أو تعديل)
     const handleSave = async () => {
-        if (!form.title.trim()) return showErrorToast("يرجى إدخال العنوان")
+        if (!form.startedAt) return showErrorToast("يرجى تحديد التاريخ")
+        if (!form.endedAt) return showErrorToast("يرجى تحديد التاريخ")
         if (!imageFile && !editItem) return showErrorToast("يرجى اختيار صورة")
 
         try {
             const storyData = new FormData()
 
             // إضافة البيانات الأساسية
-            storyData.append('title', form.title)
+            // storyData.append('title', form.title)
             storyData.append('orderIndex', form.orderIndex || "0")
             storyData.append('isActive', form.isActive.toString())
             storyData.append('isStory', form.isStory.toString())
@@ -252,7 +253,7 @@ const Stories = () => {
             }
 
             console.log(" Sending story data:", {
-                title: form.title,
+                // title: form.title,
                 orderIndex: form.orderIndex,
                 isActive: form.isActive,
                 isStory: form.isStory,
@@ -576,14 +577,14 @@ const Stories = () => {
                                 <DialogTitle className="text-right">{editItem ? "تعديل المحتوى" : "إضافة محتوى جديد"}</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label>العنوان *</Label>
                                     <Input
                                         value={form.title}
                                         onChange={(e) => handleFormChange("title", e.target.value)}
                                         placeholder="أدخل العنوان..."
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -876,7 +877,7 @@ const Stories = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="table-header">الصورة</TableHead>
-                                        <TableHead
+                                        {/* <TableHead
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("title")}
                                         >
@@ -886,7 +887,7 @@ const Stories = () => {
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}
                                             </div>
-                                        </TableHead>
+                                        </TableHead> */}
                                         <TableHead className="table-header">النوع</TableHead>
                                         <TableHead
                                             className="table-header cursor-pointer hover:bg-gray-100"
@@ -932,9 +933,9 @@ const Stories = () => {
                                                         }}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell font-medium">
+                                                {/* <TableCell className="table-cell font-medium">
                                                     {story.title}
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell className="table-cell">
                                                     <Badge variant={story.isStory ? "default" : "secondary"}>
                                                         {story.isStory ? "قصة" : "إعلان"}

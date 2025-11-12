@@ -90,8 +90,13 @@ const Areas = () => {
       if (res.data?.success) {
         showSuccessToast("تم إنشاء المنطقة بنجاح")
         // setAddDialogOpen(false)
-        resetForm()
+        // resetForm()
+
         fetchAll()
+         setForm(prev => ({
+          name: "",
+          cityId: prev.cityId
+        }));
       }
     } catch (e) {
       showErrorToast(e?.response?.data?.message || "فشل إنشاء المنطقة")
@@ -161,6 +166,20 @@ const Areas = () => {
       showErrorToast(e?.response?.data?.message || "فشل حذف المنطقة")
     }
   }
+
+    //  useEffect لتصفير البيانات عند إغلاق الدايلوج
+  useEffect(() => {
+    if (!addDialogOpen) {
+      resetForm();
+    }
+  }, [addDialogOpen]);
+
+  useEffect(() => {
+    if (!editDialogOpen) {
+      resetForm(); // تصفير البيانات عند الإغلاق
+      setSelected(null); // إزالة العنصر المحدد
+    }
+  }, [editDialogOpen]);
 
   const handleToggleActive = async (area) => {
     try {
