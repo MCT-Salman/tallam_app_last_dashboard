@@ -975,7 +975,7 @@ const Coupons = () => {
           {/* السبب */}
           {coupon.reason && (
             <div className="mt-6 bg-amber-50 rounded-xl p-5 border border-amber-200 shadow-sm">
-              <Label className="font-bold text-lg text-amber-800 mb-3 block flex items-center gap-2">
+              <Label className="font-bold text-lg text-amber-800 mb-3  flex items-center gap-2">
                 <Info className="w-5 h-5" />
                 السبب
               </Label>
