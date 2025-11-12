@@ -508,7 +508,14 @@ const Notifications = () => {
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                  e.preventDefault();
+                  handleSendNotification();
+                }
+              }}
+            >
               <DialogHeader>
                 <DialogTitle className="text-right">إرسال إشعار جديد</DialogTitle>
                 <DialogDescription className="text-right">

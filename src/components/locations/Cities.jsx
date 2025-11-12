@@ -85,7 +85,7 @@ const Cities = () => {
       const res = await createCity({ name: form.name.trim() })
       if (res.data?.success) {
         showSuccessToast("تم إنشاء المدينة بنجاح")
-        setAddDialogOpen(false)
+        // setAddDialogOpen(false)
         resetForm()
         fetchData()
       }
@@ -95,6 +95,7 @@ const Cities = () => {
       setSaving(false)
     }
   }
+
 
   const openEdit = (city) => {
     setSelected(city)
@@ -277,7 +278,14 @@ const Cities = () => {
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-right">إضافة مدينة</DialogTitle>
                 </DialogHeader>
@@ -409,7 +417,14 @@ const Cities = () => {
       </Card>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+              e.preventDefault();
+              handleUpdate();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-right">تعديل المدينة</DialogTitle>
           </DialogHeader>
@@ -447,8 +462,8 @@ const Cities = () => {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <span className="text-sm font-medium text-gray-600">الحالة:</span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${(selected.isActive ?? true)
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "bg-red-100 text-red-800 border border-red-200"
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
                   }`}>
                   {(selected.isActive ?? true) ? " نشط" : " معطل"}
                 </span>

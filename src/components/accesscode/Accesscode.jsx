@@ -4,17 +4,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
-     AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import {
+    AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogAction, AlertDialogCancel
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Clock, BadgeCheck, Ban, CalendarX, List, BookOpen, Layers, BarChart3, XCircle,
-     CreditCard, Users, UserCheck, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy,
-      User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter,
-       X, CheckCircle, Scan } from "lucide-react";
+import {
+    Plus, Clock, BadgeCheck, Ban, CalendarX, List, BookOpen, Layers, BarChart3, XCircle,
+    CreditCard, Users, UserCheck, Edit, Trash2, Search, ChevronLeft, ChevronRight, Eye, Copy,
+    User, Book, Calendar, DollarSign, FileText, ZoomIn, Phone, Info, Tag, Play, Pause, Filter,
+    X, CheckCircle, Scan
+} from "lucide-react";
 import {
     generateAccessCode,
     getAllAccessCodes,
@@ -1889,7 +1893,7 @@ const AccessCode = () => {
         useEffect(() => {
             const timer = setTimeout(() => {
                 setSearchTerm(localSearch);
-            }, 1000); 
+            }, 1000);
 
             return () => clearTimeout(timer);
         }, [localSearch]);
@@ -2162,7 +2166,7 @@ const AccessCode = () => {
         fetchAccessCodes();
         fetchUsers();
         fetchSpecializations();
-        fetchCodeLevels(); 
+        fetchCodeLevels();
     }, []);
 
     useEffect(() => {
@@ -2405,12 +2409,16 @@ const AccessCode = () => {
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                        onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                    e.preventDefault();
+                                    handleGenerateCode();
+                                }
+                            }}
+                        >
                             <DialogHeader>
                                 <DialogTitle className="text-right">توليد كود وصول جديد</DialogTitle>
-                                <DialogDescription className="text-right">
-                                    أدخل المعلومات المطلوبة لتوليد كود وصول جديد
-                                </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 mt-2">
                                 {/*  قسم الترميز الجديد */}
@@ -2421,7 +2429,6 @@ const AccessCode = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>اختر الترميز</Label>
                                         <Select
                                             value={selectedEncode}
                                             onValueChange={(value) => {
@@ -2461,10 +2468,6 @@ const AccessCode = () => {
                                             جاري تحميل بيانات الترميز...
                                         </div>
                                     )}
-
-                                    <div className="text-xs text-purple-600 bg-purple-100 p-2 rounded">
-                                         اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
-                                    </div>
                                 </div>
 
                                 {/* مسار الاختيار */}
@@ -2493,6 +2496,136 @@ const AccessCode = () => {
                                     </div>
                                 )}
 
+
+                                {/* الهيكلية  */}
+                                <div className="bg-gradient-to-l from-purple-50 to-indigo-50 border rounded-lg border-amber-200 p-2 ">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+                                        <div className="space-y-2">
+                                            <Label>الاختصاص</Label>
+                                            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="اختر الاختصاص" />
+                                                </SelectTrigger>
+                                                <SelectContent searchable>
+                                                    {specializations.map((spec) => (
+                                                        <SelectItem key={spec.id} value={spec.id.toString()}>
+                                                            {spec.name || spec.title}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>المادة</Label>
+                                            <Select
+                                                value={selectedCourse}
+                                                onValueChange={setSelectedCourse}
+                                                disabled={!selectedSpecialization}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
+                                                </SelectTrigger >
+                                                <SelectContent searchable>
+                                                    {courses.map((course) => (
+                                                        <SelectItem key={course.id} value={course.id.toString()}>
+                                                            {course.title}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>المدرس</Label>
+                                            <Select
+                                                value={selectedInstructor}
+                                                onValueChange={setSelectedInstructor}
+                                                disabled={!selectedCourse}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
+                                                </SelectTrigger>
+                                                <SelectContent searchable>
+                                                    {instructors.map((instructor) => (
+                                                        <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                                            {instructor.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                    {instructors.length === 0 && selectedCourse && (
+                                                        <div className="p-2 text-sm text-muted-foreground text-center">
+                                                            لا توجد مدرسين لهذه المادة
+                                                        </div>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>المستوى *</Label>
+                                            <Select
+                                                value={selectedLevel}
+                                                onValueChange={setSelectedLevel}
+                                                disabled={!selectedInstructor}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
+                                                </SelectTrigger>
+                                                <SelectContent searchable>
+                                                    {levels.map((level) => (
+                                                        <SelectItem key={level.id} value={level.id.toString()}>
+                                                            {level.name}
+                                                            {/* {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`} */}
+                                                            {/* {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`} */}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                              
+
+                               
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>مدة الصلاحية (أشهر)</Label>
+                                        <Select
+                                            value={form.validityInMonths}
+                                            onValueChange={(value) => handleFormChange("validityInMonths", value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="اختر المدة" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1">شهر</SelectItem>
+                                                <SelectItem value="1.5">شهر ونصف</SelectItem>
+                                                <SelectItem value="2">شهرين</SelectItem>
+                                                <SelectItem value="3">ثلاثة أشهر</SelectItem>
+                                                <SelectItem value="6">ستة أشهر</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>المبلغ المدفوع *</Label>
+                                        <Input
+                                            type="number"
+                                            value={form.amountPaid}
+                                            onChange={(e) => handleFormChange("amountPaid", e.target.value)}
+                                            placeholder="0.00"
+                                            min="0"
+                                            step="0.01"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+
                                 <div className="space-y-2">
                                     <Label>المستخدم *</Label>
                                     <Select
@@ -2505,110 +2638,22 @@ const AccessCode = () => {
                                         <SelectContent searchable>
                                             {users.map((user) => (
                                                 <SelectItem key={user.id} value={user.id.toString()}>
-                                                   <span>{user.name}</span> - <span dir="ltr">{user.phone}</span>
-                                                       
+                                                    <span>{user.name}</span> - <span dir="ltr">{user.phone}</span>
+
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
 
-                                {/* الهيكلية  */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>الاختصاص</Label>
-                                        <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر الاختصاص" />
-                                            </SelectTrigger>
-                                            <SelectContent searchable>
-                                                {specializations.map((spec) => (
-                                                    <SelectItem key={spec.id} value={spec.id.toString()}>
-                                                        {spec.name || spec.title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>المادة</Label>
-                                        <Select
-                                            value={selectedCourse}
-                                            onValueChange={setSelectedCourse}
-                                            disabled={!selectedSpecialization}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={selectedSpecialization ? "اختر المادة" : "اختر الاختصاص أولاً"} />
-                                            </SelectTrigger >
-                                            <SelectContent searchable>
-                                                {courses.map((course) => (
-                                                    <SelectItem key={course.id} value={course.id.toString()}>
-                                                        {course.title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>المدرس</Label>
-                                        <Select
-                                            value={selectedInstructor}
-                                            onValueChange={setSelectedInstructor}
-                                            disabled={!selectedCourse}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={selectedCourse ? "اختر المدرس" : "اختر المادة أولاً"} />
-                                            </SelectTrigger>
-                                            <SelectContent searchable>
-                                                {instructors.map((instructor) => (
-                                                    <SelectItem key={instructor.id} value={instructor.id.toString()}>
-                                                        {instructor.name}
-                                                    </SelectItem>
-                                                ))}
-                                                {instructors.length === 0 && selectedCourse && (
-                                                    <div className="p-2 text-sm text-muted-foreground text-center">
-                                                        لا توجد مدرسين لهذه المادة
-                                                    </div>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>المستوى *</Label>
-                                        <Select
-                                            value={selectedLevel}
-                                            onValueChange={setSelectedLevel}
-                                            disabled={!selectedInstructor}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={selectedInstructor ? "اختر المستوى" : "اختر المدرس أولاً"} />
-                                            </SelectTrigger>
-                                            <SelectContent searchable>
-                                                {levels.map((level) => (
-                                                    <SelectItem key={level.id} value={level.id.toString()}>
-                                                        {level.name}
-                                                        {/* {level.priceSAR > 0 && ` - ${level.priceSAR} ل.س`} */}
-                                                        {/* {level.priceUSD > 0 && level.priceSAR === 0 && ` - ${level.priceUSD} $`} */}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* قسم التحقق من الكوبونات */}
+                                  {/* قسم التحقق من الكوبونات */}
                                 {form.userId && selectedLevel && (
                                     <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                    
+
                                         {availableCoupons.length > 0 && (
                                             <div className="mt-2">
                                                 <Label className="text-sm font-medium text-green-700">
-                                                     تم العثور على {availableCoupons.length} كوبون متاح
+                                                    تم العثور على {availableCoupons.length} كوبون متاح
                                                 </Label>
                                             </div>
                                         )}
@@ -2652,7 +2697,7 @@ const AccessCode = () => {
                                     </div>
                                 )}
 
-                                {/* معلومات السعر */}
+                                 {/* معلومات السعر */}
                                 {(form.originalPrice || form.couponId) && (
                                     <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                         <div className="flex items-center justify-between">
@@ -2770,40 +2815,6 @@ const AccessCode = () => {
                                         )}
                                     </div>
                                 )}
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>مدة الصلاحية (أشهر)</Label>
-                                        <Select
-                                            value={form.validityInMonths}
-                                            onValueChange={(value) => handleFormChange("validityInMonths", value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر المدة" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="1">شهر</SelectItem>
-                                                <SelectItem value="1.5">شهر ونصف</SelectItem>
-                                                <SelectItem value="2">شهرين</SelectItem>
-                                                <SelectItem value="3">ثلاثة أشهر</SelectItem>
-                                                <SelectItem value="6">ستة أشهر</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>المبلغ المدفوع *</Label>
-                                        <Input
-                                            type="number"
-                                            value={form.amountPaid}
-                                            onChange={(e) => handleFormChange("amountPaid", e.target.value)}
-                                            placeholder="0.00"
-                                            min="0"
-                                            step="0.01"
-                                            required
-                                        />
-                                    </div>
-                                </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="receipt-image">صورة الإيصال *</Label>
@@ -3279,7 +3290,7 @@ const AccessCode = () => {
                             )}
 
                             <div className="text-xs text-purple-600 bg-purple-100 p-2 rounded">
-                                 اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
+                                اختر الترميز لتحميل بيانات المستوى تلقائياً (اختصاص - مدرس - مادة - مستوى)
                             </div>
                         </div>
 
@@ -3485,7 +3496,7 @@ const AccessCode = () => {
                                 {availableCouponsEdit.length > 0 && (
                                     <div className="mt-2">
                                         <Label className="text-sm font-medium text-green-700">
-                                             تم العثور على {availableCouponsEdit.length} كوبون متاح
+                                            تم العثور على {availableCouponsEdit.length} كوبون متاح
                                         </Label>
                                     </div>
                                 )}
@@ -3524,7 +3535,7 @@ const AccessCode = () => {
 
                                 {availableCouponsEdit.length === 0 && !couponCheckLoadingEdit && form.userId && selectedLevel && (
                                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                                         لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
+                                        لا توجد كوبونات متاحة للمستخدم والمستوى المحددين
                                     </div>
                                 )}
 

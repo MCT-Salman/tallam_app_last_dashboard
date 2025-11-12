@@ -386,11 +386,11 @@ const Stories = () => {
     const currentPageStories = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
         const endIndex = startIndex + itemsPerPage
-        return filteredAndSortedStories.slice(startIndex, endIndex) 
+        return filteredAndSortedStories.slice(startIndex, endIndex)
     }, [filteredAndSortedStories, currentPage, itemsPerPage])
 
     // Pagination calculations - تحديث الحسابات
-    const totalItems = filteredAndSortedStories.length 
+    const totalItems = filteredAndSortedStories.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalItems)
@@ -541,7 +541,7 @@ const Stories = () => {
         <Card>
             <CardHeader className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle>إدارة القصص والإعلانات ({allStories.length })</CardTitle>
+                    <CardTitle>إدارة القصص والإعلانات ({allStories.length})</CardTitle>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
@@ -564,7 +564,14 @@ const Stories = () => {
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                    e.preventDefault();
+                                    handleSave();
+                                }
+                            }}
+                        >
                             <DialogHeader>
                                 <DialogTitle className="text-right">{editItem ? "تعديل المحتوى" : "إضافة محتوى جديد"}</DialogTitle>
                             </DialogHeader>
@@ -1177,7 +1184,7 @@ const Stories = () => {
 
                                             {isCurrentlyActive(detailDialog.story) && detailDialog.story.isActive && (
                                                 <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-                                                     نشط حالياً
+                                                    نشط حالياً
                                                 </Badge>
                                             )}
 

@@ -96,7 +96,7 @@ const PointsOfSale = () => {
       })
       if (res.data?.success) {
         showSuccessToast("تم إنشاء نقطة البيع بنجاح")
-        setAddDialogOpen(false)
+        // setAddDialogOpen(false)
         resetForm()
         fetchAll()
       }
@@ -321,23 +321,18 @@ const PointsOfSale = () => {
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-right">إضافة نقطة بيع</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-2 text-right">
-                  <div className="space-y-2">
-                    <label className="text-sm">الاسم</label>
-                    <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} className="text-right" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">العنوان</label>
-                    <Input value={form.address} onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))} className="text-right" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">رقم الهاتف</label>
-                    <Input dir="ltr" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="text-right" />
-                  </div>
                   <div className="space-y-2">
                     <label className="text-sm">المنطقة</label>
                     <Select value={form.areaId} onValueChange={(v) => setForm(prev => ({ ...prev, areaId: v }))}>
@@ -350,6 +345,18 @@ const PointsOfSale = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm">الاسم</label>
+                    <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} className="text-right" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm">العنوان</label>
+                    <Input value={form.address} onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))} className="text-right" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm">رقم الهاتف</label>
+                    <Input dir="ltr" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="text-right" />
                   </div>
                   <Button onClick={handleCreate} disabled={saving} className="w-full">
                     {saving ? "جاري الحفظ..." : "حفظ"}
@@ -558,7 +565,14 @@ const PointsOfSale = () => {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+              e.preventDefault();
+              handleUpdate();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-right">تعديل نقطة البيع</DialogTitle>
           </DialogHeader>

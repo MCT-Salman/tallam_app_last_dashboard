@@ -1416,7 +1416,14 @@ const Coupons = () => {
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+            >
               <DialogHeader>
                 <DialogTitle className="text-right">{editItem ? "تعديل الكوبون" : "إضافة كوبون جديد"}</DialogTitle>
               </DialogHeader>

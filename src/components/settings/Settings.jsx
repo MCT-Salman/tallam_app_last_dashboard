@@ -31,7 +31,6 @@ const SettingsComp = () => {
     instagram: "",
     website: "",
     email: "",
-    whatsappOTP: "",
 
   })
   
@@ -58,7 +57,6 @@ const SettingsComp = () => {
     'instagram': 'رابط انستجرام',
     'website': 'الموقع الإلكتروني',
     'email': 'البريد الإلكتروني',
-    'whatsappOTP': 'واتساب OTP',
     'AllowShowCount': 'سماح بعرض عدد المشتركين'
   }
 
@@ -92,14 +90,12 @@ const SettingsComp = () => {
         const instagramSetting = settings.find(s => s.key === 'instagram')
         const websiteSetting = settings.find(s => s.key === 'website')
         const emailSetting = settings.find(s => s.key === 'email')
-        const whatsappOTPSetting = settings.find(s => s.key === 'whatsappOTP')
         
         setSocialSettings({
           facebook: facebookSetting?.value || "",
           instagram: instagramSetting?.value || "",
           website: websiteSetting?.value || "",
           email: emailSetting?.value || "",
-          whatsappOTP: whatsappOTPSetting?.value || ""
         })
       }
     } catch (err) {
@@ -143,7 +139,6 @@ const SettingsComp = () => {
         instagram: socialSettings.instagram,
         website: socialSettings.website,
         email: socialSettings.email,
-        whatsappOTP: socialSettings.whatsappOTP
       }
       
       const res = await updateAllSettings(data)
@@ -437,36 +432,6 @@ const SettingsComp = () => {
                       </div>
                     </div>
 
-                     {/* واتساب otp */}
-                    <div className="space-y-3 text-right">
-                      <div className="flex flex-wrap items-center gap-2 justify-start">
-                        <Label htmlFor="whatsappOTP" className="text-base font-medium">
-                          رقم واتساب otp
-                        </Label>
-                        <Smartphone   className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div className="relative">
-                        <Input
-                          id="whatsappOTP"
-                          dir="ltr"
-                          value={socialSettings.whatsappOTP}
-                          onChange={(e) => handleSocialChange("whatsappOTP", e.target.value)}
-                          placeholder="+963123456789"
-                          className="pr-4 text-right text-sm sm:text-base"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleUpdateSocialSetting("whatsappOTP", socialSettings.whatsappOTP)}
-                          disabled={saving}
-                          size="sm"
-                          variant="outline"
-                        >
-                          حفظ
-                        </Button>
-                      </div>
-                    </div>
-
                     {/* انستجرام */}
                     <div className="space-y-3 text-right">
                       <div className="flex flex-wrap items-center gap-2 justify-start">
@@ -653,7 +618,7 @@ const SettingsComp = () => {
               ) : (
                 <div className="space-y-4">
                   {allSettings.filter(setting => 
-                    !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email','whatsappOTP'].includes(setting.key)
+                    !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email'].includes(setting.key)
                   ).map((setting) => (
                     <Card key={setting.id} className="p-4">
                       <div className="flex items-center justify-between">
@@ -690,7 +655,7 @@ const SettingsComp = () => {
               )}
 
               {allSettings.filter(setting => 
-                !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email','whatsappOTP'].includes(setting.key)
+                !['whatsapp', 'telegram', 'facebook', 'instagram', 'website', 'email'].includes(setting.key)
               ).length === 0 && !loading && (
                 <div className="text-center py-8 text-muted-foreground">
                   لا توجد إعدادات عامة

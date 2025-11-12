@@ -492,7 +492,7 @@ const Lesson = () => {
             if (res.data?.success) {
                 showSuccessToast("تم رفع الملف بنجاح")
                 setFileToUpload(null)
-                setIsFileDialogOpen(false)
+                // setIsFileDialogOpen(false)
                 fetchFiles(selectedLevel)
             }
         } catch (err) {
@@ -784,47 +784,47 @@ const Lesson = () => {
         return match ? match[1] : ""
     }
 
-const buildGoogleDriveDownloadUrl = (url) => {
-    if (!url) return "";
-    
-    try {
-        let fileId = "";
-        
-        // جميع الأنماط المدعومة لروابط Google Drive
-        const patterns = [
-            /\/file\/d\/([a-zA-Z0-9_-]+)/,           // https://drive.google.com/file/d/FILE_ID/view
-            /id=([a-zA-Z0-9_-]+)/,                   // https://drive.google.com/open?id=FILE_ID
-            /\/d\/([a-zA-Z0-9_-]+)\//,               // https://drive.google.com/d/FILE_ID/
-            /\/open\?id=([a-zA-Z0-9_-]+)/,           // https://drive.google.com/open?id=FILE_ID
-            /download\?id=([a-zA-Z0-9_-]+)/,         // https://drive.usercontent.google.com/download?id=FILE_ID
-            /uc\?id=([a-zA-Z0-9_-]+)/,               // https://drive.google.com/uc?id=FILE_ID
-            /\/([a-zA-Z0-9_-]{25,})/                 // أي نمط يحتوي على معرف بطول 25 حرف أو أكثر
-        ];
-        
-        for (const pattern of patterns) {
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                fileId = match[1];
-                break;
+    const buildGoogleDriveDownloadUrl = (url) => {
+        if (!url) return "";
+
+        try {
+            let fileId = "";
+
+            // جميع الأنماط المدعومة لروابط Google Drive
+            const patterns = [
+                /\/file\/d\/([a-zA-Z0-9_-]+)/,           // https://drive.google.com/file/d/FILE_ID/view
+                /id=([a-zA-Z0-9_-]+)/,                   // https://drive.google.com/open?id=FILE_ID
+                /\/d\/([a-zA-Z0-9_-]+)\//,               // https://drive.google.com/d/FILE_ID/
+                /\/open\?id=([a-zA-Z0-9_-]+)/,           // https://drive.google.com/open?id=FILE_ID
+                /download\?id=([a-zA-Z0-9_-]+)/,         // https://drive.usercontent.google.com/download?id=FILE_ID
+                /uc\?id=([a-zA-Z0-9_-]+)/,               // https://drive.google.com/uc?id=FILE_ID
+                /\/([a-zA-Z0-9_-]{25,})/                 // أي نمط يحتوي على معرف بطول 25 حرف أو أكثر
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    fileId = match[1];
+                    break;
+                }
             }
+
+            // إذا كان الرابط يحتوي فقط على الـ ID (بدون رابط كامل)
+            if (!fileId && url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
+                fileId = url;
+            }
+
+            // إذا تم استخراج الـ ID بنجاح، قم ببناء الرابط المطلوب
+            if (fileId) {
+                return `https://drive.google.com/uc?id=${fileId}&export=download`;
+            }
+
+            return "";
+        } catch (error) {
+            console.error("Error building Google Drive URL:", error);
+            return "";
         }
-        
-        // إذا كان الرابط يحتوي فقط على الـ ID (بدون رابط كامل)
-        if (!fileId && url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
-            fileId = url;
-        }
-        
-        // إذا تم استخراج الـ ID بنجاح، قم ببناء الرابط المطلوب
-        if (fileId) {
-            return `https://drive.google.com/uc?id=${fileId}&export=download`;
-        }
-        
-        return "";
-    } catch (error) {
-        console.error("Error building Google Drive URL:", error);
-        return "";
-    }
-};
+    };
 
     const handleYoutubeUrlChange = async (url) => {
         handleFormChange("youtubeUrl", url);
@@ -874,30 +874,30 @@ const buildGoogleDriveDownloadUrl = (url) => {
         }
     };
 
- const LinkStatus = ({ validation }) => {
-    if (!validation.message) return null;
-    let icon;
-    let color;
-    if (validation.checking) {
-        icon = <Clock className="w-3 h-3 animate-spin" />;
-        color = "text-blue-600";
-    } else if (validation.isValid && validation.exists) {
-        icon = <CheckCircle className="w-3 h-3" />;
-        color = "text-green-600";
-    } else if (validation.isValid && !validation.exists) {
-        icon = <Clock className="w-3 h-3" />;
-        color = "text-yellow-600";
-    } else {
-        icon = <XCircle className="w-3 h-3" />;
-        color = "text-red-600";
-    }
-    return (
-        <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
-            {icon}
-            <span>{validation.message}</span>
-        </div>
-    );
-};
+    const LinkStatus = ({ validation }) => {
+        if (!validation.message) return null;
+        let icon;
+        let color;
+        if (validation.checking) {
+            icon = <Clock className="w-3 h-3 animate-spin" />;
+            color = "text-blue-600";
+        } else if (validation.isValid && validation.exists) {
+            icon = <CheckCircle className="w-3 h-3" />;
+            color = "text-green-600";
+        } else if (validation.isValid && !validation.exists) {
+            icon = <Clock className="w-3 h-3" />;
+            color = "text-yellow-600";
+        } else {
+            icon = <XCircle className="w-3 h-3" />;
+            color = "text-red-600";
+        }
+        return (
+            <div className={`flex items-center gap-1 text-xs mt-1 ${color}`}>
+                {icon}
+                <span>{validation.message}</span>
+            </div>
+        );
+    };
 
     const handleSave = async () => {
         if (!form.title.trim() || !form.orderIndex || !form.youtubeUrl) {
@@ -947,7 +947,7 @@ const buildGoogleDriveDownloadUrl = (url) => {
             }
 
             resetFormData();
-            setIsDialogOpen(false);
+            // setIsDialogOpen(false);
             fetchLevelLessons(selectedLevel);
         } catch (err) {
             console.error("❌ Save error:", err);
@@ -1047,7 +1047,7 @@ const buildGoogleDriveDownloadUrl = (url) => {
             }
 
             resetQuestionForm()
-            setIsQuestionDialogOpen(false)
+            // setIsQuestionDialogOpen(false)
             fetchQuestions(selectedLevel)
         } catch (err) {
             console.error("Error saving question:", err)
@@ -1463,10 +1463,6 @@ const buildGoogleDriveDownloadUrl = (url) => {
                                         {lesson.isFreePreview ? "متاحة" : "غير متاحة"}
                                     </Badge>
                                 </div>
-                                {/* <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">معرف الدرس</span>
-                                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{lesson.id || "غير محدد"}</span>
-                            </div> */}
                             </div>
                         </CardContent>
                     </Card>
@@ -1588,49 +1584,6 @@ const buildGoogleDriveDownloadUrl = (url) => {
                         </CardContent>
                     </Card>
                 )}
-
-                {/* الإجراءات */}
-                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            // handleToggleActive(lesson.id, lesson.isActive);
-                            setDetailDialog({ isOpen: false, lesson: null });
-                        }}
-                        className="flex items-center gap-2"
-                    >
-                        {lesson.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        {lesson.isActive ? "تعطيل الدرس" : "تفعيل الدرس"}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            // setEditItem(lesson);
-                            // setForm({...});
-                            // setIsDialogOpen(true);
-                            setDetailDialog({ isOpen: false, lesson: null });
-                        }}
-                        className="flex items-center gap-2"
-                    >
-                        <Edit className="w-4 h-4" />
-                        تعديل الدرس
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={() => {
-                            // setDeleteDialog({
-                            //     isOpen: true,
-                            //     itemId: lesson.id,
-                            //     itemName: lesson.title
-                            // });
-                            setDetailDialog({ isOpen: false, lesson: null });
-                        }}
-                        className="flex items-center gap-2"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                        حذف الدرس
-                    </Button>
-                </div> */}
             </div>
         )
     }
@@ -1727,47 +1680,6 @@ const buildGoogleDriveDownloadUrl = (url) => {
                         </div>
                     </CardContent>
                 </Card>
-
-                {/* الإجراءات */}
-                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        // handleEditQuestion(question);
-                        setQuestionDetailDialog({ isOpen: false, question: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Edit className="w-4 h-4" />
-                    تعديل السؤال
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        // handleAddOption(question.id);
-                        setQuestionDetailDialog({ isOpen: false, question: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Plus className="w-4 h-4" />
-                    إضافة خيار
-                </Button>
-                <Button
-                    variant="destructive"
-                    onClick={() => {
-                        // setDeleteDialog({
-                        //     isOpen: true,
-                        //     itemId: question.id,
-                        //     itemName: `السؤال ${question.order}`
-                        // });
-                        setQuestionDetailDialog({ isOpen: false, question: null });
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    حذف السؤال
-                </Button>
-            </div> */}
             </div>
         )
     }
@@ -2248,7 +2160,15 @@ const buildGoogleDriveDownloadUrl = (url) => {
                                             <Plus className="w-4 h-4 mr-1" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                                    <DialogContent
+                                        className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                                e.preventDefault();
+                                                handleSave();
+                                            }
+                                        }}
+                                    >
                                         <DialogHeader>
                                             <DialogTitle className="text-right">{editItem ? "تعديل الدرس" : "إضافة درس جديد"}</DialogTitle>
                                         </DialogHeader>
@@ -2548,7 +2468,14 @@ const buildGoogleDriveDownloadUrl = (url) => {
                                             <Upload className="w-4 h-4 mr-1" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-md">
+                                    <DialogContent className="sm:max-w-md"
+                                     onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                        e.preventDefault();
+                                        handleUploadFile();
+                                    }
+                                }}
+                                    >
                                         <DialogHeader>
                                             <DialogTitle className="text-right">رفع ملف جديد</DialogTitle>
                                         </DialogHeader>
@@ -2803,7 +2730,14 @@ const buildGoogleDriveDownloadUrl = (url) => {
                                                 <Plus className="w-4 h-4 ml-1" />
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                                        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+                                         onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                        e.preventDefault();
+                                        handleSaveQuestion();
+                                    }
+                                }}
+                                        >
                                             <DialogHeader>
                                                 <DialogTitle className="text-right">{editQuestionId ? "تعديل السؤال" : "إضافة سؤال جديد"}</DialogTitle>
                                             </DialogHeader>

@@ -4,17 +4,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
-     AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import {
+    AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogAction, AlertDialogCancel
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-    Plus, Edit, Trash2, Play, Filter, UserCheck, UserX, List,  BarChart3, 
+    Plus, Edit, Trash2, Play, Filter, UserCheck, UserX, List, BarChart3,
     X, Pause, Search, ChevronLeft, ChevronRight, Eye, User, Phone, Calendar, MapPin, Shield, Clock,
     Globe, Coins, LogOut
 } from "lucide-react"
-import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession,BASE_URL } from "@/api/api"
+import { getAllUsers, createUser, updateUser, deleteUser, toggleUserActive, deleteUserSession, BASE_URL } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
 const Account = () => {
@@ -207,7 +209,7 @@ const Account = () => {
 
     useEffect(() => {
         fetchAllUsersData()
-    }, []) 
+    }, [])
     // Pagination calculations - استخدام طول البيانات المفلترة
     const totalPages = Math.ceil(filteredAndSortedUsers.length / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
@@ -512,7 +514,14 @@ const Account = () => {
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                    e.preventDefault();
+                                    handleSave();
+                                }
+                            }}
+                        >
                             <DialogHeader>
                                 <DialogTitle className="text-right">{editItem ? "تعديل الحساب" : "إضافة حساب جديد"}</DialogTitle>
                             </DialogHeader>

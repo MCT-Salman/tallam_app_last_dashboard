@@ -16,7 +16,9 @@ import {
   Shield,
   FileText,
   Map,
-  CreditCard
+  CreditCard,
+  CreditCardIcon,
+   
 } from "lucide-react"
 
 // العناصر الفردية (خارج الأكورديون)
@@ -112,9 +114,14 @@ export const sidebarGroups = [
         icon: Shield
       },
       {
-        title: "إدارة المواقع",
+        title: "نقاط البيع",
         href: "/locations",
         icon: Map
+      },
+      {
+        title: "طرق الدفع",
+        href: "/payment-methods",
+        icon: CreditCardIcon
       },
       {
         title: "الإعدادات",

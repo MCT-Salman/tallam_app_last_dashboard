@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, BookOpen, Shield, FileText, Map, Link, Calendar, Clock , Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
+import { Plus, Edit, BookOpen, Shield, FileText, Map, Link, Calendar, Clock, Trash2, Play, Pause, Search, ChevronLeft, ChevronRight, Eye, ChevronRightIcon, Loader2 } from "lucide-react";
 import { getCourseLevels, createCourseLevel, updateCourseLevel, deleteCourseLevel, toggleCourseLevelStatus, BASE_URL } from "@/api/api";
 import { getCourses } from "@/api/api";
 import { getInstructors } from "@/api/api";
@@ -70,37 +70,37 @@ const CourseLevel = () => {
     });
 
     // دالة للتحقق من صحة الرابط
-const validateUrl = (url) => {
-    if (!url) return { isValid: true, message: "" };
-    
-    try {
-        // التحقق من أن الرابط يحتوي على بروتوكول
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            return { 
-                isValid: false, 
-                message: "يجب أن يبدأ الرابط بـ http:// أو https://" 
+    const validateUrl = (url) => {
+        if (!url) return { isValid: true, message: "" };
+
+        try {
+            // التحقق من أن الرابط يحتوي على بروتوكول
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return {
+                    isValid: false,
+                    message: "يجب أن يبدأ الرابط بـ http:// أو https://"
+                };
+            }
+
+            new URL(url);
+            return { isValid: true, message: "الرابط صحيح" };
+        } catch (error) {
+            return {
+                isValid: false,
+                message: "صيغة الرابط غير صحيحة"
             };
         }
-        
-        new URL(url);
-        return { isValid: true, message: "الرابط صحيح" };
-    } catch (error) {
-        return { 
-            isValid: false, 
-            message: "صيغة الرابط غير صحيحة" 
-        };
-    }
-};
+    };
 
-// دالة للتعامل مع تغيير رابط المعاينة
-const handlePreviewUrlChange = (value) => {
-    handleFormChange("previewUrl", value);
-    const validation = validateUrl(value);
-    setLinkValidation(prev => ({ 
-        ...prev, 
-        previewUrl: validation 
-    }));
-};
+    // دالة للتعامل مع تغيير رابط المعاينة
+    const handlePreviewUrlChange = (value) => {
+        handleFormChange("previewUrl", value);
+        const validation = validateUrl(value);
+        setLinkValidation(prev => ({
+            ...prev,
+            previewUrl: validation
+        }));
+    };
 
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
@@ -377,7 +377,7 @@ const handlePreviewUrlChange = (value) => {
             });
             setImageFile(null);
             setImagePreview(null);
-            setIsDialogOpen(false);
+            // setIsDialogOpen(false);
             fetchCourseLevels(selectedCourse);
         } catch (err) {
             console.error(err.response?.data || err);
@@ -797,204 +797,204 @@ const handlePreviewUrlChange = (value) => {
 
 
     // مكون عرض التفاصيل الكاملة للمستوى
-const LevelDetails = ({ item }) => {
-    if (!item) return null;
+    const LevelDetails = ({ item }) => {
+        if (!item) return null;
 
-    return (
-        <div className="space-y-6 text-right">
-            {/* الهيدر مع الصورة والمعلومات الأساسية */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-gradient-to-l from-gray-50 to-white rounded-lg border">
-                <div className="flex-shrink-0">
-                    <img
-                        src={getImageUrl(item.imageUrl)}
-                        alt={item.name}
-                        className="w-32 h-32 object-cover rounded-lg shadow-md"
-                        {...imageConfig}
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/tallaam_logo2.png";
-                        }}
-                    />
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.name || "بدون اسم"}</h3>
-                    <div className="flex flex-wrap gap-2">
-                        <Badge variant={item.isActive ? "default" : "secondary"} className="text-sm">
-                            {item.isActive ? "نشط" : "معطل"}
-                        </Badge>
-                        <Badge variant={item.isFree ? "default" : "outline"} className="text-sm">
-                            {item.isFree ? "مجاني" : "مدفوع"}
-                        </Badge>
-                        <Badge variant="secondary" className="text-sm">
-                            ترتيب: {item.order || 0}
-                        </Badge>
+        return (
+            <div className="space-y-6 text-right">
+                {/* الهيدر مع الصورة والمعلومات الأساسية */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-gradient-to-l from-gray-50 to-white rounded-lg border">
+                    <div className="flex-shrink-0">
+                        <img
+                            src={getImageUrl(item.imageUrl)}
+                            alt={item.name}
+                            className="w-32 h-32 object-cover rounded-lg shadow-md"
+                            {...imageConfig}
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/tallaam_logo2.png";
+                            }}
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.name || "بدون اسم"}</h3>
+                        <div className="flex flex-wrap gap-2">
+                            <Badge variant={item.isActive ? "default" : "secondary"} className="text-sm">
+                                {item.isActive ? "نشط" : "معطل"}
+                            </Badge>
+                            <Badge variant={item.isFree ? "default" : "outline"} className="text-sm">
+                                {item.isFree ? "مجاني" : "مدفوع"}
+                            </Badge>
+                            <Badge variant="secondary" className="text-sm">
+                                ترتيب: {item.order || 0}
+                            </Badge>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* الشبكة الرئيسية للمعلومات */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* المعلومات الأساسية */}
+                {/* الشبكة الرئيسية للمعلومات */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* المعلومات الأساسية */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <BookOpen className="w-5 h-5" />
+                                المعلومات الأساسية
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">اسم المستوى</span>
+                                    <span className="font-medium">{item.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">ترتيب المستوى</span>
+                                    <span className="font-medium">{item.order || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">حالة المستوى</span>
+                                    <Badge variant={item.isActive ? "default" : "secondary"}>
+                                        {item.isActive ? "نشط" : "معطل"}
+                                    </Badge>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">نوع المستوى</span>
+                                    <Badge variant={item.isFree ? "default" : "outline"}>
+                                        {item.isFree ? "مجاني" : "مدفوع"}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* المعلومات المالية والمدرب */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Shield className="w-5 h-5" />
+                                المعلومات المالية
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">السعر (USD)</span>
+                                    <span className="font-medium text-green-600">${item.priceUSD || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">السعر (SAR)</span>
+                                    <span className="font-medium text-green-600">{item.priceSAR || 0} ل.س</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">المدرب</span>
+                                    <span className="font-medium">{getInstructorName(item.instructorId)}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* الوصف */}
+                {item.description && (
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <FileText className="w-5 h-5" />
+                                الوصف
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-gray-700 leading-relaxed p-3 bg-gray-50 rounded-lg">
+                                {item.description}
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* معلومات المسار */}
                 <Card>
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <BookOpen className="w-5 h-5" />
-                            المعلومات الأساسية
+                            <Map className="w-5 h-5" />
+                            معلومات المسار
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">التخصص:</span>
+                            <span>{getSpecializationName(selectedSpecialization)}</span>
+                            <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium">المادة:</span>
+                            <span>{getCourseName(selectedCourse)}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* الروابط */}
+                {item.previewUrl && (
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Link className="w-5 h-5" />
+                                الروابط
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm font-medium text-gray-600">رابط المعاينة</span>
+                                    <a
+                                        href={item.previewUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline text-sm break-all"
+                                    >
+                                        {item.previewUrl.length > 40 ?
+                                            `${item.previewUrl.substring(0, 40)}...` :
+                                            item.previewUrl
+                                        }
+                                    </a>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* معلومات التوقيت */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Clock className="w-5 h-5" />
+                            معلومات التوقيت
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-3">
                             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">اسم المستوى</span>
-                                <span className="font-medium">{item.name}</span>
+                                <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء</span>
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                    <span className="font-medium">
+                                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
+                                    </span>
+                                </div>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">ترتيب المستوى</span>
-                                <span className="font-medium">{item.order || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">حالة المستوى</span>
-                                <Badge variant={item.isActive ? "default" : "secondary"}>
-                                    {item.isActive ? "نشط" : "معطل"}
-                                </Badge>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">نوع المستوى</span>
-                                <Badge variant={item.isFree ? "default" : "outline"}>
-                                    {item.isFree ? "مجاني" : "مدفوع"}
-                                </Badge>
+                                <span className="text-sm font-medium text-gray-600">آخر تحديث</span>
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                    <span className="font-medium">
+                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* المعلومات المالية والمدرب */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Shield className="w-5 h-5" />
-                            المعلومات المالية
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">السعر (USD)</span>
-                                <span className="font-medium text-green-600">${item.priceUSD || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">السعر (SAR)</span>
-                                <span className="font-medium text-green-600">{item.priceSAR || 0} ل.س</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">المدرب</span>
-                                <span className="font-medium">{getInstructorName(item.instructorId)}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* الوصف */}
-            {item.description && (
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <FileText className="w-5 h-5" />
-                            الوصف
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-gray-700 leading-relaxed p-3 bg-gray-50 rounded-lg">
-                            {item.description}
-                        </p>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* معلومات المسار */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Map className="w-5 h-5" />
-                        معلومات المسار
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium">التخصص:</span>
-                        <span>{getSpecializationName(selectedSpecialization)}</span>
-                        <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">المادة:</span>
-                        <span>{getCourseName(selectedCourse)}</span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* الروابط */}
-            {item.previewUrl && (
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Link className="w-5 h-5" />
-                            الروابط
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-600">رابط المعاينة</span>
-                                <a
-                                    href={item.previewUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline text-sm break-all"
-                                >
-                                    {item.previewUrl.length > 40 ? 
-                                        `${item.previewUrl.substring(0, 40)}...` : 
-                                        item.previewUrl
-                                    }
-                                </a>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* معلومات التوقيت */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Clock className="w-5 h-5" />
-                        معلومات التوقيت
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm font-medium text-gray-600">تاريخ الإنشاء</span>
-                            <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-500" />
-                                <span className="font-medium">
-                                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : "غير محدد"}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm font-medium text-gray-600">آخر تحديث</span>
-                            <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-500" />
-                                <span className="font-medium">
-                                    {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US') : "غير محدد"}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* الإجراءات */}
-            {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
+                {/* الإجراءات */}
+                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
                 <Button
                     variant="outline"
                     onClick={() => {
@@ -1047,9 +1047,9 @@ const LevelDetails = ({ item }) => {
                     حذف المستوى
                 </Button>
             </div> */}
-        </div>
-    );
-};
+            </div>
+        );
+    };
 
 
     return (
@@ -1169,7 +1169,14 @@ const LevelDetails = ({ item }) => {
                                 </Button>
                             </DialogTrigger>
 
-                            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                        e.preventDefault();
+                                        handleSave();
+                                    }
+                                }}
+                            >
                                 <DialogHeader >
                                     <DialogTitle className="text-right">{editItem ? "تعديل المستوى" : "إضافة مستوى جديد"}</DialogTitle>
                                     <DialogDescription className="text-right">
@@ -1291,10 +1298,10 @@ const LevelDetails = ({ item }) => {
                                     <div className="space-y-2">
                                         <Label htmlFor="level-image">صورة المستوى *</Label>
                                         <div className="flex-1">
-                                        <p className="text-xl font-mono font-bold bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg border border-blue-100 text-blue-700 text-center">
-                                            أبعاد الصورة  177w - 177h
-                                        </p>
-                                    </div>
+                                            <p className="text-xl font-mono font-bold bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg border border-blue-100 text-blue-700 text-center">
+                                                أبعاد الصورة  177w - 177h
+                                            </p>
+                                        </div>
                                         <Input
                                             id="level-image"
                                             type="file"
@@ -1434,7 +1441,7 @@ const LevelDetails = ({ item }) => {
                     </>
                 )}
             </CardHeader>
- <CardContent>
+            <CardContent>
                 {!selectedCourse ? (
                     <div className="text-center py-8 text-muted-foreground">
                         {!selectedSpecialization ? "يرجى اختيار تخصص أولاً" : "يرجى اختيار مادة لعرض مستوياتها"}
@@ -1709,14 +1716,14 @@ const LevelDetails = ({ item }) => {
             </Dialog> */}
 
             {/* Level Details Dialog */}
-<Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
-    <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader>
-            <DialogTitle className="text-xl text-right">تفاصيل المستوى</DialogTitle>
-        </DialogHeader>
-        {detailsDialog.item && <LevelDetails item={detailsDialog.item} />}
-    </DialogContent>
-</Dialog>
+            <Dialog open={detailsDialog.isOpen} onOpenChange={(isOpen) => setDetailsDialog(prev => ({ ...prev, isOpen }))}>
+                <DialogContent className="sm:max-w-3xl max-h-[95vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl text-right">تفاصيل المستوى</DialogTitle>
+                    </DialogHeader>
+                    {detailsDialog.item && <LevelDetails item={detailsDialog.item} />}
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 };

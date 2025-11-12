@@ -29,6 +29,7 @@ import Review from "@/components/review/Review"
 import Admins_Accounts from "@/components/account/Admins_Accounts"
 import TeacherReports from "./components/financial/TeacherReports"
 import LocationsManagement from "@/components/locations/LocationsManagement"
+import PaymentMethods from "./components/payments/PaymentMethods"
 
 const App = () => {
   return (
@@ -170,7 +171,7 @@ const App = () => {
               <Route path="/payment-methods" element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <LocationsManagement initialTab="payments" />
+                    <PaymentMethods />
                   </DashboardLayout>
                 </ProtectedRoute>
               } />

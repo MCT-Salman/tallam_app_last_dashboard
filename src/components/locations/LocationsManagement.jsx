@@ -10,7 +10,6 @@ const TABS = [
   { value: "cities", label: "المدن", component: <Cities /> },
   { value: "areas", label: "المناطق", component: <Areas /> },
   { value: "points", label: "نقاط البيع", component: <PointsOfSale /> },
-  { value: "payments", label: "طرق الدفع", component: <PaymentMethods /> },
 ]
 
 const LocationsManagement = ({ initialTab = "cities" }) => {
@@ -47,7 +46,7 @@ const LocationsManagement = ({ initialTab = "cities" }) => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Desktop Tabs */}
-        <TabsList className="hidden md:grid md:grid-cols-4 gap-2 bg-muted rounded-lg p-1">
+        <TabsList className="hidden md:grid md:grid-cols-3 gap-2 bg-muted rounded-lg p-1">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.value}

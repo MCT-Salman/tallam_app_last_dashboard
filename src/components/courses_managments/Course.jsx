@@ -230,7 +230,7 @@ const Course = () => {
             setForm({ title: "", description: "", specializationId: "" });
             setImageFile(null);
             setImagePreview(null);
-            setIsDialogOpen(false);
+            // setIsDialogOpen(false);
             fetchCourses();
         } catch (err) {
             console.error(err.response?.data || err);
@@ -612,7 +612,15 @@ const Course = () => {
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="sm:max-w-md">
+                        <DialogContent className="sm:max-w-md" 
+                        
+                         onKeyDown={(e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleSave();
+      }
+    }}
+                        >
                             <DialogHeader>
                                 <DialogTitle className="text-right">{editItem ? "تعديل المادة" : "إضافة مادة جديد"}</DialogTitle>
                             </DialogHeader>

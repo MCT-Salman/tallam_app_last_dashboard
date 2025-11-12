@@ -93,7 +93,7 @@ const PaymentMethods = () => {
       })
       if (res.data?.success) {
         showSuccessToast("تم إنشاء وسيلة الدفع بنجاح")
-        setAddDialogOpen(false)
+        // setAddDialogOpen(false)
         resetForm()
         fetchAll()
       }
@@ -297,7 +297,14 @@ const PaymentMethods = () => {
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-right">إضافة وسيلة دفع</DialogTitle>
                 </DialogHeader>
@@ -499,7 +506,14 @@ const PaymentMethods = () => {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+              e.preventDefault();
+              handleUpdate();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-right">تعديل وسيلة الدفع</DialogTitle>
           </DialogHeader>

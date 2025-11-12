@@ -36,12 +36,12 @@ const Specialization = () => {
     // دالة لتنظيف وتكوين مسار الصورة
     const getImageUrl = (imageUrl) => {
         if (!imageUrl) return "/default-avatar.png";
-        
+
         // إذا كان الرابط يحتوي على النطاق الأساسي بالفعل
         if (imageUrl.includes('http')) {
             return imageUrl;
         }
-        
+
         const cleanBaseUrl = BASE_URL.replace(/\/$/, "");
         const cleanImageUrl = imageUrl.replace(/^\//, "");
         return `${cleanBaseUrl}/${cleanImageUrl}`;
@@ -162,16 +162,16 @@ const Specialization = () => {
 
         try {
             let imageToSend = imageFile;
-            
+
             if (editItem && !imageFile) {
                 const imageUrl = getImageUrl(editItem.imageUrl);
                 imageToSend = await urlToFile(imageUrl, `specialization-${editItem.id}.jpg`);
-                
+
                 if (!imageToSend) {
                     return showErrorToast("فشل في تحميل الصورة القديمة");
                 }
             }
-            
+
             if (!editItem && !imageFile) {
                 return showErrorToast("يرجى اختيار صورة");
             }
@@ -191,7 +191,7 @@ const Specialization = () => {
             setForm({ name: "" });
             setImageFile(null);
             setImagePreview(null);
-            setIsDialogOpen(false);
+            // setIsDialogOpen(false);
             fetchSpecializations();
         } catch (err) {
             console.error(err.response?.data || err);
@@ -270,7 +270,7 @@ const Specialization = () => {
         const [imgError, setImgError] = useState(false);
         const imageUrl = specialization.imageUrl ? getImageUrl(specialization.imageUrl) : null;
         const sizeClass = size === "large" ? "w-32 h-32" : size === "small" ? "w-8 h-8" : "w-16 h-16";
-        
+
         const handleImageError = (e) => {
             console.warn(`Failed to load image: ${imageUrl}`);
             setImgError(true);
@@ -280,8 +280,8 @@ const Specialization = () => {
         return (
             <div className={`${sizeClass} ${className} bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden border`}>
                 {imageUrl && !imgError ? (
-                    <img 
-                        src={imageUrl} 
+                    <img
+                        src={imageUrl}
                         alt={specialization.name}
                         className={`${sizeClass} object-cover`}
                         crossOrigin="anonymous"
@@ -440,10 +440,10 @@ const Specialization = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t">
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => setDetailDialog({ isOpen: true, specialization: item })}
                         className="text-xs"
@@ -451,9 +451,9 @@ const Specialization = () => {
                         <Eye className="w-3 h-3 ml-1" />
                         التفاصيل
                     </Button>
-                    <Button 
-                        size="sm" 
-                        variant="outline" 
+                    <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleToggleActive(item.id, item.isActive)}
                         className="text-xs"
                     >
@@ -508,7 +508,14 @@ const Specialization = () => {
                                 إضافة <Plus className="w-4 h-4 cursor-pointer" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
+                        <DialogContent className="sm:max-w-md"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                                    e.preventDefault();
+                                    handleSave();
+                                }
+                            }}
+                        >
                             <DialogHeader>
                                 <DialogTitle className="text-right">{editItem ? "تعديل التخصص" : "إضافة تخصص جديد"}</DialogTitle>
                             </DialogHeader>
@@ -569,7 +576,7 @@ const Specialization = () => {
                             <SelectItem value="active">نشط</SelectItem>
                             <SelectItem value="inactive">معطل</SelectItem>
                         </SelectContent>
-                    </Select>                   
+                    </Select>
 
                     {/* Items Per Page */}
                     <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
@@ -591,7 +598,7 @@ const Specialization = () => {
                         عرض {filteredAndSortedSpecializations.length} من أصل {allSpecializations.length} تخصص
                         {(searchTerm || statusFilter !== "all") && ` (مفلتر)`}
                     </div>
-                    
+
                     {(searchTerm || statusFilter !== "all") && (
                         <Button variant="outline" size="sm" onClick={resetFilters}>
                             إعادة تعيين الفلترة
@@ -613,18 +620,18 @@ const Specialization = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="table-header">الصورة</TableHead>
-                                        <TableHead 
+                                        <TableHead
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("name")}
                                         >
                                             <div className="flex items-center gap-1">
-                                                الاسم 
+                                                الاسم
                                                 {sortBy === "name" && (
                                                     <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
                                                 )}
                                             </div>
                                         </TableHead>
-                                        <TableHead 
+                                        <TableHead
                                             className="table-header cursor-pointer hover:bg-gray-100"
                                             onClick={() => handleSort("isActive")}
                                         >
@@ -651,17 +658,17 @@ const Specialization = () => {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="table-cell text-right space-x-2">
-                                                <Button 
-                                                    size="icon" 
-                                                    variant="ghost" 
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
                                                     onClick={() => setDetailDialog({ isOpen: true, specialization: item })}
                                                     title="عرض التفاصيل"
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </Button>
-                                                <Button 
-                                                    size="icon" 
-                                                    variant="ghost" 
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
                                                     onClick={() => handleToggleActive(item.id, item.isActive)}
                                                     title={item.isActive ? "تعطيل" : "تفعيل"}
                                                 >
@@ -721,7 +728,7 @@ const Specialization = () => {
                                 <div className="text-sm text-muted-foreground">
                                     عرض {startItem} إلى {endItem} من {totalItems} تخصص
                                 </div>
-                                
+
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="outline"
@@ -731,7 +738,7 @@ const Specialization = () => {
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
-                                    
+
                                     <div className="flex items-center gap-1">
                                         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                             let pageNumber;
@@ -744,7 +751,7 @@ const Specialization = () => {
                                             } else {
                                                 pageNumber = currentPage - 2 + i;
                                             }
-                                            
+
                                             return (
                                                 <Button
                                                     key={pageNumber}
@@ -758,7 +765,7 @@ const Specialization = () => {
                                             );
                                         })}
                                     </div>
-                                    
+
                                     <Button
                                         variant="outline"
                                         size="sm"

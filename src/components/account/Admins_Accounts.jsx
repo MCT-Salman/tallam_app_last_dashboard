@@ -6,12 +6,16 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader,
-   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel
+} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Edit, Trash2, Eye, List,  BarChart3,  X, User, Mail, Phone, Calendar,
-   UserCheck, UserX, Globe, Clock, Shield, Search, ChevronLeft, ChevronRight, Filter, Play, Pause } from "lucide-react"
+import {
+  Plus, Edit, Trash2, Eye, List, BarChart3, X, User, Mail, Phone, Calendar,
+  UserCheck, UserX, Globe, Clock, Shield, Search, ChevronLeft, ChevronRight, Filter, Play, Pause
+} from "lucide-react"
 import { createAdmin, getAdminsList, updateAdmin, deleteAdmin } from "@/api/api"
 import { showSuccessToast, showErrorToast } from "@/hooks/useToastMessages"
 
@@ -449,141 +453,148 @@ const Admins_Accounts = () => {
               إدارة المدراء ({admins.length})
             </CardTitle>
 
-             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              إضافة مدير جديد
-              <Plus className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-right">إضافة مدير جديد</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-2 text-right">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* الاسم */}
-                <div className="space-y-2">
-                  <Label>الاسم الكامل *</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => handleFormChange("name", e.target.value)}
-                    placeholder="أدخل الاسم الكامل"
-                    className="text-right"
-                  />
-                </div>
-
-                {/* اسم المستخدم */}
-                <div className="space-y-2">
-                  <Label>اسم المستخدم *</Label>
-                  <Input
-                    value={form.username}
-                    onChange={(e) => handleFormChange("username", e.target.value)}
-                    placeholder="أدخل اسم المستخدم"
-                    className="text-right"
-                  />
-                </div>
-
-                {/* البريد الإلكتروني */}
-                <div className="space-y-2">
-                  <Label>البريد الإلكتروني *</Label>
-                  <Input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => handleFormChange("email", e.target.value)}
-                    placeholder="admin@example.com"
-                    className="text-right"
-                  />
-                </div>
-
-                {/* رقم الهاتف */}
-                <div className="space-y-2">
-                  <Label>رقم الهاتف *</Label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => handleFormChange("phone", e.target.value)}
-                    placeholder="+963123456789"
-                    className="text-right"
-                    dir="ltr"
-                  />
-                </div>
-
-                {/* كلمة المرور */}
-                <div className="space-y-2">
-                  <Label>كلمة المرور *</Label>
-                  <Input
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => handleFormChange("password", e.target.value)}
-                    placeholder="أدخل كلمة المرور"
-                    className="text-right"
-                  />
-                </div>
-
-                {/* الجنس */}
-                <div className="space-y-2">
-                  <Label>الجنس</Label>
-                  <Select value={form.sex} onValueChange={(value) => handleFormChange("sex", value)}>
-                    <SelectTrigger className="text-right">
-                      <SelectValue placeholder="اختر الجنس" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ذكر">ذكر</SelectItem>
-                      <SelectItem value="أنثى">أنثى</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* تاريخ الميلاد */}
-                <div className="space-y-2">
-                  <Label>تاريخ الميلاد</Label>
-                  <Input
-                    type="date"
-                    value={form.birthDate}
-                    onChange={(e) => handleFormChange("birthDate", e.target.value)}
-                    className="text-right"
-                  />
-                </div>
-
-                {/* تاريخ الانتهاء */}
-                <div className="space-y-2">
-                  <Label>تاريخ انتهاء الصلاحية</Label>
-                  <Input
-                    type="date"
-                    value={form.expiresAt}
-                    onChange={(e) => handleFormChange("expiresAt", e.target.value)}
-                    className="text-right"
-                  />
-                </div>
-
-                {/* الدور */}
-                <div className="space-y-2">
-                  <Label>الدور</Label>
-                  <Select value={form.role} onValueChange={(value) => handleFormChange("role", value)}>
-                    <SelectTrigger className="text-right">
-                      <SelectValue placeholder="اختر الدور" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ADMIN">مدير</SelectItem>
-                      <SelectItem value="SUPER_ADMIN">مدير عام</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Separator />
-
-              <Button
-                onClick={handleCreateAdmin}
-                disabled={saving}
-                className="w-full flex items-center gap-2"
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  إضافة مدير جديد
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    handleCreateAdmin();
+                  }
+                }}
               >
-                <User className="w-4 h-4" />
-                {saving ? "جاري الإنشاء..." : "إنشاء حساب المدير"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                <DialogHeader>
+                  <DialogTitle className="text-right">إضافة مدير جديد</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-2 text-right">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* الاسم */}
+                    <div className="space-y-2">
+                      <Label>الاسم الكامل *</Label>
+                      <Input
+                        value={form.name}
+                        onChange={(e) => handleFormChange("name", e.target.value)}
+                        placeholder="أدخل الاسم الكامل"
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* اسم المستخدم */}
+                    <div className="space-y-2">
+                      <Label>اسم المستخدم *</Label>
+                      <Input
+                        value={form.username}
+                        onChange={(e) => handleFormChange("username", e.target.value)}
+                        placeholder="أدخل اسم المستخدم"
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* البريد الإلكتروني */}
+                    <div className="space-y-2">
+                      <Label>البريد الإلكتروني *</Label>
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => handleFormChange("email", e.target.value)}
+                        placeholder="admin@example.com"
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* رقم الهاتف */}
+                    <div className="space-y-2">
+                      <Label>رقم الهاتف *</Label>
+                      <Input
+                        value={form.phone}
+                        onChange={(e) => handleFormChange("phone", e.target.value)}
+                        placeholder="+963123456789"
+                        className="text-right"
+                        dir="ltr"
+                      />
+                    </div>
+
+                    {/* كلمة المرور */}
+                    <div className="space-y-2">
+                      <Label>كلمة المرور *</Label>
+                      <Input
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => handleFormChange("password", e.target.value)}
+                        placeholder="أدخل كلمة المرور"
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* الجنس */}
+                    <div className="space-y-2">
+                      <Label>الجنس</Label>
+                      <Select value={form.sex} onValueChange={(value) => handleFormChange("sex", value)}>
+                        <SelectTrigger className="text-right">
+                          <SelectValue placeholder="اختر الجنس" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ذكر">ذكر</SelectItem>
+                          <SelectItem value="أنثى">أنثى</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* تاريخ الميلاد */}
+                    <div className="space-y-2">
+                      <Label>تاريخ الميلاد</Label>
+                      <Input
+                        type="date"
+                        value={form.birthDate}
+                        onChange={(e) => handleFormChange("birthDate", e.target.value)}
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* تاريخ الانتهاء */}
+                    <div className="space-y-2">
+                      <Label>تاريخ انتهاء الصلاحية</Label>
+                      <Input
+                        type="date"
+                        value={form.expiresAt}
+                        onChange={(e) => handleFormChange("expiresAt", e.target.value)}
+                        className="text-right"
+                      />
+                    </div>
+
+                    {/* الدور */}
+                    <div className="space-y-2">
+                      <Label>الدور</Label>
+                      <Select value={form.role} onValueChange={(value) => handleFormChange("role", value)}>
+                        <SelectTrigger className="text-right">
+                          <SelectValue placeholder="اختر الدور" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ADMIN">مدير</SelectItem>
+                          <SelectItem value="SUPER_ADMIN">مدير عام</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <Button
+                    onClick={handleCreateAdmin}
+                    disabled={saving}
+                    className="w-full flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    {saving ? "جاري الإنشاء..." : "إنشاء حساب المدير"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Filters Section */}

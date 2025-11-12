@@ -89,7 +89,7 @@ const Areas = () => {
       const res = await createArea({ name: form.name.trim(), cityId: Number(form.cityId) })
       if (res.data?.success) {
         showSuccessToast("تم إنشاء المنطقة بنجاح")
-        setAddDialogOpen(false)
+        // setAddDialogOpen(false)
         resetForm()
         fetchAll()
       }
@@ -296,15 +296,18 @@ const Areas = () => {
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-right">إضافة منطقة</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-2 text-right">
-                  <div className="space-y-2">
-                    <label className="text-sm">اسم المنطقة</label>
-                    <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} className="text-right" />
-                  </div>
                   <div className="space-y-2">
                     <label className="text-sm">المدينة</label>
                     <Select value={form.cityId} onValueChange={(v) => setForm(prev => ({ ...prev, cityId: v }))}>
@@ -317,6 +320,10 @@ const Areas = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm">اسم المنطقة</label>
+                    <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} className="text-right" />
                   </div>
                   <Button onClick={handleCreate} disabled={saving} className="w-full">
                     {saving ? "جاري الحفظ..." : "حفظ"}
@@ -443,7 +450,14 @@ const Areas = () => {
       </Card>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+              e.preventDefault();
+              handleUpdate();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-right">تعديل المنطقة</DialogTitle>
           </DialogHeader>
@@ -500,8 +514,8 @@ const Areas = () => {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <span className="text-sm font-medium text-gray-600">الحالة:</span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${(selected.isActive ?? true)
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "bg-red-100 text-red-800 border border-red-200"
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
                   }`}>
                   {(selected.isActive ?? true) ? " نشط" : " معطل"}
                 </span>
