@@ -18,6 +18,7 @@ import {
   Map,
   CreditCard,
   CreditCardIcon,
+  Package
    
 } from "lucide-react"
 
@@ -126,7 +127,7 @@ export const sidebarGroups = [
       {
         title: "إصدارات التطبيق",
         href: "/mobile-versions",
-        icon: FileText
+        icon: Package
       },
       {
         title: "الإعدادات",
