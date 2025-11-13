@@ -500,7 +500,7 @@ const Instructor = () => {
                     {...imageConfig}
                     onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "/default-avatar.png";
+                        e.target.src = "/tallaam_logo2.png";
                     }}
                 />
                 {/* حالة المدرب في الزاوية */}
@@ -670,7 +670,7 @@ const Instructor = () => {
                                                 {...imageConfig}
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = "/default-avatar.png";
+                                                    e.target.src = "/tallaam_logo2.png";
                                                 }}
                                             />
                                         </div>

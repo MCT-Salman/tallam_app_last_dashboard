@@ -34,18 +34,25 @@ export default function Login() {
     // قراءة رسالة انتهاء الجلسة من URL
     const sessionExpired = searchParams.get('sessionExpired');
     const message = searchParams.get('message');
-    
+
     if (sessionExpired && message) {
       setError(decodeURIComponent(message));
     }
   }, [searchParams]);
 
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const from = location.state?.from?.pathname || "/dashboard"
+  //     navigate(from, { replace: true })
+  //   }
+  // }, [isAuthenticated, navigate, location])
+
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || "/dashboard"
-      navigate(from, { replace: true })
+    if (isAuthenticated && !loading) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, location])
+  }, [isAuthenticated, loading, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -76,6 +83,42 @@ export default function Login() {
       setSubmitting(false)
     }
   }
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+
+  //   if (submitting) return;
+
+  //   setError("");
+  //   setSubmitting(true);
+
+  //   if (!formData.identifier.trim() || !formData.password.trim()) {
+  //     setError("يرجى إدخال اسم المستخدم وكلمة المرور");
+  //     setSubmitting(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     await login(formData.identifier, formData.password);
+  //     // الانتظار قليلاً لضمان حفظ state
+  //     setTimeout(() => {
+  //       const from = location.state?.from?.pathname || "/dashboard";
+  //       navigate(from, { replace: true });
+  //     }, 100);
+  //   } catch (err) {
+  //     console.error("Login error:", err);
+  //     const errorMessage =
+  //       err.response?.data?.res?.message ||
+  //       err.response?.data?.message ||
+  //       err.response?.data?.error ||
+  //       err.message ||
+  //       "فشل تسجيل الدخول. يُرجى التحقق من اسم المستخدم وكلمة المرور.";
+  //     setError(errorMessage);
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   return (
     <div

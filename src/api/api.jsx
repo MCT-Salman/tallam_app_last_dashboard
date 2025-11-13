@@ -63,6 +63,10 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        if (originalRequest?.url?.includes('/admin/login')) {
+            return Promise.reject(error); // لا تعامل مع أخطاء login
+        }
+
         // التحقق من حالة الخطأ وعدد المحاولات
         if ((error.response?.status === 401) &&
             ((originalRequest._retryCount || 0) < RETRY_CONFIG.MAX_RETRY_ATTEMPTS)) {
@@ -193,13 +197,13 @@ export const getSpecializations = (params) =>
 export const updateSpecialization = (id, data) => {
     const formData = new FormData();
     formData.append('name', data.name);
-    
+
     // نرسل الصورة فقط إذا كانت موجودة (ملف جديد)
     if (data.imageUrl instanceof File) {
         formData.append('imageUrl', data.imageUrl);
     }
     // إذا كان null، لا نرسل حقل imageUrl إطلاقاً
-    
+
     return api.put(`/catalog/admin/specializations/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -325,13 +329,13 @@ export const updateCourseLevel = (id, data) => {
     formData.append('order', data.order);
     formData.append('priceUSD', data.priceUSD);
     formData.append('priceSAR', data.priceSAR);
-    formData.append('isFree', data.isFree.toString()); 
+    formData.append('isFree', data.isFree.toString());
     formData.append('previewUrl', data.previewUrl);
     formData.append('downloadUrl', data.downloadUrl || '');
     formData.append('instructorId', data.instructorId);
-    
+
     if (data.imageUrl) {
-        formData.append('imageUrl', data.imageUrl); 
+        formData.append('imageUrl', data.imageUrl);
     }
 
     return api.put(`/lessons/admin/levels/${id}`, formData, {
@@ -434,10 +438,10 @@ export const uploadFile = (data) => api.post('/files/admin/files', data, {
 
 // PUT - تعديل ملف (إذا كان مدعوماً)
 export const updateFile = (id, data) => {
-  // إذا كان الـ API يدعم التعديل
-  return api.put(`/files/admin/files/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data; charset=utf-8' },
-  });
+    // إذا كان الـ API يدعم التعديل
+    return api.put(`/files/admin/files/${id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data; charset=utf-8' },
+    });
 };
 
 // DELETE - حذف ملف (إذا كان مدعوماً)
@@ -445,111 +449,111 @@ export const deleteFile = (id) => api.delete(`/files/admin/files/${id}`);
 
 // GET - جلب قائمة الملفات (دالة مساعدة)
 export const getFiles = (params) => {
-  // إذا كان هناك levelId في params، استخدم endpoint المستوى
-  if (params?.courseLevelId) {
-    return getFilesByLevel(params.courseLevelId, params);
-  }
-  // وإلا استخدم endpoint عام إذا كان متوفراً
-  return api.get('/files/admin/files', { params });
+    // إذا كان هناك levelId في params، استخدم endpoint المستوى
+    if (params?.courseLevelId) {
+        return getFilesByLevel(params.courseLevelId, params);
+    }
+    // وإلا استخدم endpoint عام إذا كان متوفراً
+    return api.get('/files/admin/files', { params });
 };
 
 // POST - جلب الملفات (للتوافق مع الكود الحالي)
 export const getFilesPost = (data) => {
-  // إذا كان هناك courseLevelId في data، استخدم endpoint المستوى
-  if (data?.courseLevelId) {
-    return getFilesByLevel(data.courseLevelId, { 
-      page: data.page, 
-      limit: data.limit,
-      search: data.search 
-    });
-  }
-  // رجع الرفض إذا لم يكن هناك مستوى محدد
-  return Promise.reject(new Error('يجب تحديد courseLevelId'));
+    // إذا كان هناك courseLevelId في data، استخدم endpoint المستوى
+    if (data?.courseLevelId) {
+        return getFilesByLevel(data.courseLevelId, {
+            page: data.page,
+            limit: data.limit,
+            search: data.search
+        });
+    }
+    // رجع الرفض إذا لم يكن هناك مستوى محدد
+    return Promise.reject(new Error('يجب تحديد courseLevelId'));
 };
 
 // --- إدارة القصص ---
-export const getStories = (params) => 
+export const getStories = (params) =>
     api.get('/story/admin/stories', { params });
 
-export const createStory = (data) => 
+export const createStory = (data) =>
     api.post('/story/admin/stories', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-export const getStory = (id) => 
+export const getStory = (id) =>
     api.get(`/story/admin/stories/${id}`);
 
-export const updateStory = (id, data) => 
+export const updateStory = (id, data) =>
     api.put(`/story/admin/stories/${id}`, data, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-export const deleteStory = (id) => 
+export const deleteStory = (id) =>
     api.delete(`/story/admin/stories/${id}`);
 
 // --- إدارة أكواد الوصول ---
 // توليد كود جديد
 export const generateAccessCode = async (formData) => {
-  const response = await api.post('/access-codes/admin/generate', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-  return response;
+    const response = await api.post('/access-codes/admin/generate', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response;
 };
 
 // جلب جميع الأكواد
 export const getAllAccessCodes = async () => {
-  const response = await api.get('/access-codes/admin/all');
-  return response;
+    const response = await api.get('/access-codes/admin/all');
+    return response;
 };
 
 // جلب أكواد مستخدم معين
 export const getAccessCodesByUserId = async (userId) => {
-  const response = await api.get(`/access-codes/admin/user/${userId}`);
-  return response;
+    const response = await api.get(`/access-codes/admin/user/${userId}`);
+    return response;
 };
 
 // جلب أكواد كورس معين
 export const getAccessCodesByCourse = async (courseId) => {
-  const response = await api.get(`/access-codes/admin/course/${courseId}`);
-  return response;
+    const response = await api.get(`/access-codes/admin/course/${courseId}`);
+    return response;
 };
 
 // حذف الكود
 export const deleteAccessCode = async (accessCodeId) => {
-  const response = await api.delete(`/access-codes/admin/access-code/${accessCodeId}`);
-  return response;
+    const response = await api.delete(`/access-codes/admin/access-code/${accessCodeId}`);
+    return response;
 };
 
 // تحديث حالة الكود (تفعيل/تعطيل)
 export const updateAccessCodeStatus = async (accessCodeId, isActive) => {
-  const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}/active`, {
-    isActive
-  });
-  return response;
+    const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}/active`, {
+        isActive
+    });
+    return response;
 };
 
 // تعديل الكود
 export const updateAccessCode = async (accessCodeId, data) => {
-  const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}`, data);
-  return response;
+    const response = await api.put(`/access-codes/admin/access-code/${accessCodeId}`, data);
+    return response;
 };
 
 // --- Coupons API ---
 
 // جلب الكوبونات النشطة للمستوى
 export const getActiveCouponsByLevel = async (levelId) => {
-  const response = await api.get(`/coupons/admin/level/${levelId}/active`);
-  return response;
+    const response = await api.get(`/coupons/admin/level/${levelId}/active`);
+    return response;
 };
 
 // حساب السعر النهائي مع الكوبون
 export const calculateFinalPrice = async (couponId, courseLevelId) => {
-  const response = await api.post(`/coupons/admin/coupon/${couponId}`, {
-    courseLevelId
-  });
-  return response;
+    const response = await api.post(`/coupons/admin/coupon/${couponId}`, {
+        courseLevelId
+    });
+    return response;
 };
 
 
@@ -557,8 +561,8 @@ export const calculateFinalPrice = async (couponId, courseLevelId) => {
 
 // جلب جميع الاقتراحات
 export const getSuggestions = async (params = {}) => {
-  const response = await api.get('/suggestions/admin', { params });
-  return response;
+    const response = await api.get('/suggestions/admin', { params });
+    return response;
 };
 
 // --- إدارة الإشعارات ---
@@ -571,8 +575,8 @@ export const createNotificationForUsers = (data) => api.post('/notifications/adm
 
 // POST - إنشاء إشعار بث لجميع المستخدمين (إذا كان مدعوماً)
 export const createBroadcastNotification = (data) => {
-  // إذا كان هناك endpoint منفصل للبث
-  return api.post('/notifications/admin/broadcast', data);
+    // إذا كان هناك endpoint منفصل للبث
+    return api.post('/notifications/admin/broadcast', data);
 };
 
 // DELETE - حذف إشعار
@@ -581,30 +585,30 @@ export const deleteNotification = (id) => api.delete(`/notifications/admin/${id}
 
 // POST - إنشاء إشعار لمستخدم واحد (للتوافق مع الكود الحالي)
 export const createNotification = (data) => {
-  // استخدام نفس endpoint المستخدمين المتعددين ولكن بمستخدم واحد
-  return createNotificationForUsers({
-    ...data,
-    userIds: [data.userId] // تحويل userId إلى مصفوفة userIds
-  });
+    // استخدام نفس endpoint المستخدمين المتعددين ولكن بمستخدم واحد
+    return createNotificationForUsers({
+        ...data,
+        userIds: [data.userId] // تحويل userId إلى مصفوفة userIds
+    });
 };
 
 
 // --- إدارة التحويلات المالية والفواتير ---
 
 // جلب جميع المعاملات مع التصفية والترتيب
-export const getTransactions = (params) => 
+export const getTransactions = (params) =>
     api.get('/transactions/admin', { params });
 
 // جلب معاملة محددة بالرقم
-export const getTransactionById = (id) => 
+export const getTransactionById = (id) =>
     api.get(`/transactions/admin/${id}`);
 
 // جلب إحصائيات المعاملات
-export const getTransactionStats = (params) => 
+export const getTransactionStats = (params) =>
     api.get('/transactions/admin/stats/overview', { params });
 
 // جلب تحليلات المعاملات حسب التاريخ
-export const getTransactionsByDate = (params) => 
+export const getTransactionsByDate = (params) =>
     api.get('/transactions/admin/analytics/date', { params });
 
 

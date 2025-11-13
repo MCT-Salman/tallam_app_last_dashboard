@@ -438,7 +438,7 @@ const Stories = () => {
                         {...imageConfig}
                         onError={(e) => {
                             e.target.onerror = null
-                            e.target.src = "/default-story.png"
+                            e.target.src = "/tallaam_logo2.png"
                         }}
                     />
                     {/* حالة القصة في الزاوية */}
@@ -649,7 +649,7 @@ const Stories = () => {
                                                 {...imageConfig}
                                                 onError={(e) => {
                                                     e.target.onerror = null
-                                                    e.target.src = "/default-story.png"
+                                                    e.target.src = "/tallaam_logo2.png"
                                                 }}
                                             />
                                         </div>
@@ -666,7 +666,7 @@ const Stories = () => {
                                                 {...imageConfig}
                                                 onError={(e) => {
                                                     e.target.onerror = null
-                                                    e.target.src = "/default-story.png"
+                                                    e.target.src = "/tallaam_logo2.png"
                                                 }}
                                             />
                                         </div>
@@ -929,7 +929,7 @@ const Stories = () => {
                                                         {...imageConfig}
                                                         onError={(e) => {
                                                             e.target.onerror = null
-                                                            e.target.src = "/default-story.png"
+                                                            e.target.src = "/tallaam_logo2.png"
                                                         }}
                                                     />
                                                 </TableCell>
@@ -1158,7 +1158,7 @@ const Stories = () => {
                                             {...imageConfig}
                                             onError={(e) => {
                                                 e.target.onerror = null
-                                                e.target.src = "/default-story.png"
+                                                e.target.src = "/tallaam_logo2.png"
                                             }}
                                         />
                                         {/* شارة الترتيب */}

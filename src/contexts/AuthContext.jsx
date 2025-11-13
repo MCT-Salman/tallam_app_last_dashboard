@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
 
  const login = useCallback(async (identifier, password) => {
   try {
-    // لا تفعّل setLoading هنا — هذا يخص التهيئة فقط
     const response = await apiLogin(identifier, password);
     console.log(' API Response:', response.data);
     
@@ -59,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
-    setLoading(true);
+    // setLoading(true);
     throw error;
   }
 }, []);
@@ -98,20 +97,33 @@ export const AuthProvider = ({ children }) => {
     console.log(' جميع بيانات المستخدم تم حذفها');
   }, []);
 
-  // دالة محدثة لتحديث التوكن
+  // دالة  لتحديث التوكن
+  // const refreshAuthToken = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     const newAccessToken = await refreshTokenUtil();
+  //     setToken(newAccessToken);
+  //     setLoading(false);
+  //     return newAccessToken;
+  //   } catch (error) {
+  //     setLoading(false);
+  //     logout();
+  //     throw error;
+  //   }
+  // }, [logout]);
+
   const refreshAuthToken = useCallback(async () => {
-    try {
-      setLoading(true);
-      const newAccessToken = await refreshTokenUtil();
-      setToken(newAccessToken);
-      setLoading(false);
-      return newAccessToken;
-    } catch (error) {
-      setLoading(false);
-      logout();
-      throw error;
-    }
-  }, [logout]);
+  try {
+    const newAccessToken = await refreshTokenUtil();
+    setToken(newAccessToken);
+    return newAccessToken;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    // استخدام setTimeout لتجنب تحديث state أثناء render
+    setTimeout(() => logout(), 0);
+    throw error;
+  }
+}, [logout]);
 
   const validateToken = useCallback(() => {
     const token = localStorage.getItem('accessToken');
@@ -121,7 +133,15 @@ export const AuthProvider = ({ children }) => {
     }
     
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(
+  decodeURIComponent(
+    atob(token.split('.')[1])
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  )
+);
       const expiry = payload.exp * 1000;
       const isValid = Date.now() < expiry;
       
@@ -187,7 +207,8 @@ export const AuthProvider = ({ children }) => {
     };
     
     initializeAuth();
-  }, [logout]);
+  }, []);
+  // }, [logout]);
 
   // إدارة مراقبة التوكن
   useEffect(() => {
