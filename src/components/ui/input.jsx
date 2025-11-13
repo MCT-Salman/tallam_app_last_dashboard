@@ -172,12 +172,12 @@ const Input = React.forwardRef(({ className, type, variant = "default", ...props
           </div>
           
           {/* النص الثانوي */}
-          <div className={cn(
+          {/* <div className={cn(
             "text-sm mt-1 transition-colors duration-300",
             variant === "neon" ? "text-gray-400" : "text-gray-500"
           )}>
             انقر أو اسحب الصورة هنا
-          </div>
+          </div> */}
           
           {/* تأثير عند التركيز */}
           <div className={cn(
