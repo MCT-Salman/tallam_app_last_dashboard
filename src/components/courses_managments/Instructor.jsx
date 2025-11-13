@@ -438,52 +438,6 @@ const Instructor = () => {
                         </CardContent>
                     </Card>
                 )}
-
-                {/* الإجراءات */}
-                {/* <div className="flex flex-wrap gap-3 justify-center pt-4 border-t">
-                    <Button
-                        variant="outline"
-                        onClick={() => handleToggleActive(instructor.id, instructor.isActive)}
-                        className="flex items-center gap-2"
-                    >
-                        {instructor.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        {instructor.isActive ? "تعطيل الحساب" : "تفعيل الحساب"}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setEditItem(instructor)
-                            setForm({
-                                name: instructor.name || "",
-                                bio: instructor.bio || "",
-                                specializationId: instructor.specializationId || ""
-                            })
-                            setImageFile(null);
-                            setImagePreview(instructor.avatarUrl ? getImageUrl(instructor.avatarUrl) : null);
-                            setIsDialogOpen(true)
-                            setDetailDialog({ isOpen: false, instructor: null })
-                        }}
-                        className="flex items-center gap-2"
-                    >
-                        <Edit className="w-4 h-4" />
-                        تعديل المدرب
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={() => {
-                            setDeleteDialog({
-                                isOpen: true,
-                                itemId: instructor.id,
-                                itemName: instructor.name || "بدون اسم"
-                            })
-                            setDetailDialog({ isOpen: false, instructor: null })
-                        }}
-                        className="flex items-center gap-2"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                        حذف المدرب
-                    </Button>
-                </div> */}
             </div>
         )
     }
