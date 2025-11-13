@@ -27,7 +27,7 @@ const PointsOfSale = () => {
   const [selected, setSelected] = useState(null)
 
 
-  const [form, setForm] = useState({ name: "", address: "", phone: "", areaId: "" })
+  const [form, setForm] = useState({ name: "", address: "",  areaId: "" })
   const [statusFilter, setStatusFilter] = useState("all")
 
   const fetchAll = async () => {
@@ -80,10 +80,10 @@ const PointsOfSale = () => {
     setCurrentPage(1)
   }, [searchTerm, itemsPerPage, statusFilter])
 
-  const resetForm = () => setForm({ name: "", address: "", phone: "", areaId: "" })
+  const resetForm = () => setForm({ name: "", address: "", areaId: "" })
 
   const handleCreate = async () => {
-    if (!form.name.trim() || !form.address.trim() || !form.phone.trim() || !form.areaId) {
+    if (!form.name.trim() || !form.address.trim() ||  !form.areaId) {
       showErrorToast("يرجى ملء جميع الحقول")
       return
     }
@@ -92,7 +92,7 @@ const PointsOfSale = () => {
       const res = await createPointOfSale({
         name: form.name.trim(),
         address: form.address.trim(),
-        phone: form.phone.trim(),
+        // phone: form.phone.trim(),
         areaId: Number(form.areaId)
       })
       if (res.data?.success) {
@@ -103,7 +103,7 @@ const PointsOfSale = () => {
         setForm(prev => ({
           name: "",
           address: "",
-          phone: "",
+          // phone: "",
           areaId: prev.areaId
         }));
       }
@@ -119,7 +119,7 @@ const PointsOfSale = () => {
     setForm({
       name: point.name || "",
       address: point.address || "",
-      phone: point.phone || "",
+      // phone: point.phone || "",
       areaId: String(point.areaId || point.area?.id || "")
     })
     setEditDialogOpen(true)
@@ -131,7 +131,7 @@ const PointsOfSale = () => {
 
   const handleUpdate = async () => {
     if (!selected) return
-    if (!form.name.trim() || !form.address.trim() || !form.phone.trim() || !form.areaId) {
+    if (!form.name.trim() || !form.address.trim()  || !form.areaId) {
       showErrorToast("يرجى ملء جميع الحقول")
       return
     }
@@ -140,7 +140,7 @@ const PointsOfSale = () => {
       const payload = {
         name: form.name.trim(),
         address: form.address.trim(),
-        phone: form.phone.trim(),
+        // phone: form.phone.trim(),
         areaId: Number(form.areaId)
       }
       const res = await updatePointOfSale(selected.id, payload)
@@ -295,10 +295,10 @@ const PointsOfSale = () => {
             <span className="text-muted-foreground">العنوان</span>
             <span className="font-medium text-right">{point.address}</span>
           </div>
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
             <span className="text-muted-foreground">الهاتف</span>
             <span dir="ltr" className="font-medium">{point.phone}</span>
-          </div>
+          </div> */}
           <div className="flex justify-between">
             <span className="text-muted-foreground">تاريخ الإنشاء</span>
             <span>{point.createdAt ?? "-"}</span>
@@ -376,10 +376,10 @@ const PointsOfSale = () => {
                     <label className="text-sm">العنوان</label>
                     <Input value={form.address} onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))} className="text-right" />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <label className="text-sm">رقم الهاتف</label>
                     <Input dir="ltr" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="text-right" />
-                  </div>
+                  </div> */}
                   <Button onClick={handleCreate} disabled={saving} className="w-full">
                     {saving ? "جاري الحفظ..." : "حفظ"}
                   </Button>
@@ -436,7 +436,7 @@ const PointsOfSale = () => {
                     <TableRow>
                       <TableHead>الاسم</TableHead>
                       <TableHead>العنوان</TableHead>
-                      <TableHead>الهاتف</TableHead>
+                      {/* <TableHead>الهاتف</TableHead> */}
                       <TableHead>المنطقة</TableHead>
                       <TableHead>المدينة</TableHead>
                       <TableHead>الحالة</TableHead>
@@ -448,7 +448,7 @@ const PointsOfSale = () => {
                       <TableRow key={p.id}>
                         <TableCell className="font-medium">{p.name}</TableCell>
                         <TableCell>{p.address}</TableCell>
-                        <TableCell dir="ltr">{p.phone}</TableCell>
+                        {/* <TableCell dir="ltr">{p.phone}</TableCell> */}
                         <TableCell>{p.area?.name}</TableCell>
                         <TableCell>{p.area?.city?.name}</TableCell>
                         <TableCell>
@@ -537,12 +537,12 @@ const PointsOfSale = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+              {/* <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <span className="text-sm font-medium text-gray-600">رقم الهاتف:</span>
                 <span className="font-bold text-green-600 bg-white px-3 py-1 rounded-md border border-green-200" dir="ltr">
                   {selected.phone}
                 </span>
-              </div>
+              </div> */}
 
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <span className="text-sm font-medium text-gray-600">الحالة:</span>
@@ -607,10 +607,10 @@ const PointsOfSale = () => {
               <label className="text-sm">العنوان</label>
               <Input value={form.address} onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))} className="text-right" />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label className="text-sm">رقم الهاتف</label>
               <Input dir="ltr" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="text-right" />
-            </div>
+            </div> */}
             <div className="space-y-2">
               <label className="text-sm">المنطقة</label>
               <Select value={form.areaId} onValueChange={(v) => setForm(prev => ({ ...prev, areaId: v }))}>
